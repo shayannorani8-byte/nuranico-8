@@ -15,17 +15,17 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
 
           supabaseResponse = NextResponse.next({
             request,
           });
 
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
+          cookiesToSet.forEach(({ name, value, options }) => {
+            supabaseResponse.cookies.set(name, value, options);
+          });
         },
       },
     }
@@ -35,9 +35,18 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && request.nextUrl.pathname.startsWith('/admin')) {
+  const pathname = request.nextUrl.pathname;
+
+  const isAdminPath = pathname.startsWith('/admin');
+
+  const isPublicAdminPath =
+    pathname === '/admin/login' ||
+    pathname.startsWith('/admin/reset-password');
+
+  if (!user && isAdminPath && !isPublicAdminPath) {
     const url = request.nextUrl.clone();
     url.pathname = '/admin/login';
+
     return NextResponse.redirect(url);
   }
 

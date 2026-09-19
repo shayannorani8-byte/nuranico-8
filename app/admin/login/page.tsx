@@ -1,9 +1,12 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { supabaseBrowser } from '@/lib/supabase-browser';
 
 export default function AdminLoginPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,23 +18,20 @@ export default function AdminLoginPage() {
     setLoading(true);
     setError('');
 
-    console.log('[NURANICO LOGIN START]');
-    const result = await signIn('credentials', {
-      email: email.trim(),
-      password,
-      redirect: false,
-      callbackUrl: '/admin',
-    });
+    const { error: loginError } =
+      await supabaseBrowser.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
-    console.log('[NURANICO LOGIN RESULT]', result);
-
-    if (result?.error) {
+    if (loginError) {
       setError('ایمیل یا رمز عبور صحیح نیست.');
       setLoading(false);
       return;
     }
 
-    window.location.href = '/admin';
+    router.replace('/admin');
+    router.refresh();
   }
 
   return (
@@ -110,7 +110,6 @@ export default function AdminLoginPage() {
             autoComplete="username"
             required
             dir="ltr"
-            placeholder=""
             style={{
               width: '100%',
               boxSizing: 'border-box',
@@ -141,7 +140,6 @@ export default function AdminLoginPage() {
             autoComplete="current-password"
             required
             dir="ltr"
-            placeholder=""
             style={{
               width: '100%',
               boxSizing: 'border-box',
