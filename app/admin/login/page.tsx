@@ -1,4 +1,3 @@
-cat > app/admin/login/page.tsx <<'EOF'
 'use client';
 
 import { FormEvent, useState } from 'react';
