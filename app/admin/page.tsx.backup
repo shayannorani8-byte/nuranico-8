@@ -1,0 +1,3304 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import { supabaseBrowser } from '@/lib/supabase-browser';
+
+type Section =
+  | 'dashboard'
+  | 'content'
+  | 'portfolio'
+  | 'hero'
+  | 'brands'
+  | 'media'
+  | 'appearance'
+  | 'settings';
+
+type Portfolio = {
+  id: number;
+  title_fa: string;
+  title_en: string | null;
+  description_fa: string | null;
+  description_en: string | null;
+  category: string;
+  cover_url: string | null;
+  media_url: string | null;
+  media_type: string;
+  featured: boolean;
+  published: boolean;
+  sort_order: number;
+};
+
+type Brand = {
+  id: number;
+  name: string;
+  logo_url: string | null;
+  website_url: string | null;
+  published: boolean;
+  sort_order: number;
+};
+
+type MediaAsset = {
+  id: number;
+  name: string;
+  file_url: string;
+  file_path: string | null;
+  file_type: string | null;
+  mime_type: string | null;
+  file_size: number | null;
+  alt_text_fa: string | null;
+  alt_text_en: string | null;
+};
+
+type HeroSlide = {
+  id: number;
+  title_fa: string | null;
+  title_en: string | null;
+  description_fa: string | null;
+  description_en: string | null;
+  media_url: string | null;
+  media_type: string;
+  button_text_fa: string | null;
+  button_text_en: string | null;
+  button_url: string | null;
+  sort_order: number;
+  published: boolean;
+};
+
+const destinations = [
+  { key: 'home', label: 'Home' },
+  { key: 'work', label: 'Work' },
+  { key: 'film', label: 'Film & Teasers' },
+  { key: 'photography', label: 'Photography' },
+  { key: 'content', label: 'Content' },
+  { key: 'featured', label: 'Featured' },
+  { key: 'bts', label: 'Behind the Scenes' },
+];
+
+export default function AdminPage() {
+  const [section, setSection] = useState<Section>('dashboard');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const [portfolio, setPortfolio] = useState<Portfolio[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [media, setMedia] = useState<MediaAsset[]>([]);
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
+  const [destMap, setDestMap] = useState<Record<number, string[]>>({});
+
+  const [content, setContent] = useState<any>({});
+  const [settings, setSettings] = useState<any>({});
+
+  const [editingPortfolio, setEditingPortfolio] =
+    useState<Portfolio | null>(null);
+
+  const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
+
+  const [editingHero, setEditingHero] = useState<HeroSlide | null>(null);
+
+  const stats = useMemo(
+    () => ({
+      projects: portfolio.length,
+      brands: brands.length,
+      media: media.length,
+      hero: heroSlides.length,
+    }),
+    [portfolio, brands, media, heroSlides]
+  );
+
+  useEffect(() => {
+    loadAll();
+  }, []);
+
+  async function loadAll() {
+    setLoading(true);
+
+    const [
+      contentRes,
+      settingsRes,
+      portfolioRes,
+      brandsRes,
+      mediaRes,
+      destinationsRes,
+      heroRes,
+    ] = await Promise.all([
+      supabaseBrowser.from('site_content').select('*').limit(1).maybeSingle(),
+      supabaseBrowser.from('site_settings').select('*').limit(1).maybeSingle(),
+      supabaseBrowser
+        .from('portfolio')
+        .select('*')
+        .order('sort_order', { ascending: true }),
+      supabaseBrowser
+        .from('brands')
+        .select('*')
+        .order('sort_order', { ascending: true }),
+      supabaseBrowser
+        .from('media_assets')
+        .select('*')
+        .order('created_at', { ascending: false }),
+      supabaseBrowser.from('project_destinations').select('*'),
+      supabaseBrowser
+        .from('hero_slides')
+        .select('*')
+        .order('sort_order', { ascending: true }),
+    ]);
+
+    if (contentRes.data) setContent(contentRes.data);
+    if (settingsRes.data) setSettings(settingsRes.data);
+    if (portfolioRes.data) setPortfolio(portfolioRes.data);
+    if (brandsRes.data) setBrands(brandsRes.data);
+    if (mediaRes.data) setMedia(mediaRes.data);
+    if (heroRes.data) setHeroSlides(heroRes.data);
+
+    if (destinationsRes.data) {
+      const map: Record<number, string[]> = {};
+
+      destinationsRes.data.forEach((row: any) => {
+        if (!map[row.project_id]) map[row.project_id] = [];
+        map[row.project_id].push(row.destination);
+      });
+
+      setDestMap(map);
+    }
+
+    setLoading(false);
+  }  async function saveContent() {
+    setSaving(true);
+    setMessage('');
+
+    const id = content?.id;
+
+    const result = id
+      ? await supabaseBrowser
+          .from('site_content')
+          .update(content)
+          .eq('id', id)
+      : await supabaseBrowser.from('site_content').insert(content);
+
+    if (result.error) {
+      setMessage(result.error.message);
+    } else {
+      setMessage('Content saved successfully.');
+      await loadAll();
+    }
+
+    setSaving(false);
+  }
+
+  async function saveSettings() {
+    setSaving(true);
+    setMessage('');
+
+    const id = settings?.id;
+
+    const result = id
+      ? await supabaseBrowser
+          .from('site_settings')
+          .update(settings)
+          .eq('id', id)
+      : await supabaseBrowser.from('site_settings').insert(settings);
+
+    if (result.error) {
+      setMessage(result.error.message);
+    } else {
+      setMessage('Settings saved successfully.');
+      await loadAll();
+    }
+
+    setSaving(false);
+  }
+
+  async function saveProject() {
+    if (!editingPortfolio) return;
+
+    setSaving(true);
+    setMessage('');
+
+    const { id, ...payload } = editingPortfolio;
+
+    const result = id
+      ? await supabaseBrowser
+          .from('portfolio')
+          .update(payload)
+          .eq('id', id)
+          .select()
+          .single()
+      : await supabaseBrowser
+          .from('portfolio')
+          .insert(payload)
+          .select()
+          .single();
+
+    if (result.error) {
+      setMessage(result.error.message);
+      setSaving(false);
+      return;
+    }
+
+    const projectId = result.data.id;
+
+    await supabaseBrowser
+      .from('project_destinations')
+      .delete()
+      .eq('project_id', projectId);
+
+    const selected = destMap[editingPortfolio.id] || [];
+
+    if (selected.length) {
+      await supabaseBrowser.from('project_destinations').insert(
+        selected.map((destination) => ({
+          project_id: projectId,
+          destination,
+        }))
+      );
+    }
+
+    setMessage('Project saved successfully.');
+    await loadAll();
+    setSaving(false);
+  }
+
+  async function deleteProject(id: number) {
+    if (!confirm('Delete this project?')) return;
+
+    setSaving(true);
+
+    await supabaseBrowser
+      .from('project_destinations')
+      .delete()
+      .eq('project_id', id);
+
+    await supabaseBrowser
+      .from('project_media')
+      .delete()
+      .eq('project_id', id);
+
+    await supabaseBrowser
+      .from('project_seo')
+      .delete()
+      .eq('project_id', id);
+
+    await supabaseBrowser
+      .from('project_social')
+      .delete()
+      .eq('project_id', id);
+
+    await supabaseBrowser
+      .from('portfolio')
+      .delete()
+      .eq('id', id);
+
+    setEditingPortfolio(null);
+    await loadAll();
+
+    setSaving(false);
+  }
+
+  function toggleDestination(projectId: number, destination: string) {
+    setDestMap((current) => {
+      const existing = current[projectId] || [];
+
+      return {
+        ...current,
+        [projectId]: existing.includes(destination)
+          ? existing.filter((item) => item !== destination)
+          : [...existing, destination],
+      };
+    });
+  }
+
+  async function saveBrand() {
+    if (!editingBrand) return;
+
+    setSaving(true);
+
+    const { id, ...payload } = editingBrand;
+
+    const result = id
+      ? await supabaseBrowser
+          .from('brands')
+          .update(payload)
+          .eq('id', id)
+      : await supabaseBrowser.from('brands').insert(payload);
+
+    if (result.error) {
+      setMessage(result.error.message);
+    } else {
+      setMessage('Brand saved successfully.');
+      setEditingBrand(null);
+      await loadAll();
+    }
+
+    setSaving(false);
+  }
+
+  async function deleteBrand(id: number) {
+    if (!confirm('Delete this brand?')) return;
+
+    await supabaseBrowser.from('brands').delete().eq('id', id);
+    await loadAll();
+  }
+
+  async function saveHero() {
+    if (!editingHero) return;
+
+    setSaving(true);
+
+    const { id, ...payload } = editingHero;
+
+    const result = id
+      ? await supabaseBrowser
+          .from('hero_slides')
+          .update(payload)
+          .eq('id', id)
+      : await supabaseBrowser.from('hero_slides').insert(payload);
+
+    if (result.error) {
+      setMessage(result.error.message);
+    } else {
+      setMessage('Hero slide saved successfully.');
+      setEditingHero(null);
+      await loadAll();
+    }
+
+    setSaving(false);
+  }
+
+  async function deleteHero(id: number) {
+    if (!confirm('Delete this hero slide?')) return;
+
+    await supabaseBrowser.from('hero_slides').delete().eq('id', id);
+    await loadAll();
+  }
+
+  async function uploadFile(file: File) {
+    const extension = file.name.split('.').pop() || 'file';
+
+    const filename = `${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}.${extension}`;
+
+    const path = `admin/${filename}`;
+
+    const upload = await supabaseBrowser.storage
+      .from('nuranico-media')
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (upload.error) {
+      setMessage(upload.error.message);
+      return null;
+    }
+
+    const publicUrl = supabaseBrowser.storage
+      .from('nuranico-media')
+      .getPublicUrl(path).data.publicUrl;
+
+    const inserted = await supabaseBrowser
+      .from('media_assets')
+      .insert({
+        name: file.name,
+        file_url: publicUrl,
+        file_path: path,
+        file_type: file.type.startsWith('video') ? 'video' : 'image',
+        mime_type: file.type,
+        file_size: file.size,
+      })
+      .select()
+      .single();
+
+    if (inserted.error) {
+      setMessage(inserted.error.message);
+      return null;
+    }
+
+    await loadAll();
+
+    return inserted.data;
+  }
+
+  async function logout() {
+    await supabaseBrowser.auth.signOut();
+    window.location.href = '/admin/login';
+  }
+  if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#111',
+          color: '#777',
+        }}
+      >
+        Loading NURANICO CMS...
+      </div>
+    );
+  }
+
+  if (!authenticated) {
+    return null;
+  }
+
+  return (
+    <main
+      style={{
+        minHeight: '100vh',
+        background: '#111',
+        color: '#f5f5f5',
+        padding: '40px',
+        fontFamily: 'Arial, Helvetica, sans-serif',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
+        }}
+      >
+        <header
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '40px',
+            borderBottom: '1px solid #292929',
+            paddingBottom: '25px',
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: '24px',
+                letterSpacing: '.2em',
+                marginBottom: '8px',
+              }}
+            >
+              NURANICO
+            </div>
+
+            <div
+              style={{
+                color: '#777',
+                fontSize: '13px',
+              }}
+            >
+              Content Management System
+            </div>
+          </div>
+
+          <button
+            onClick={logout}
+            style={{
+              background: 'transparent',
+              border: '1px solid #333',
+              color: '#aaa',
+              padding: '10px 16px',
+              borderRadius: '7px',
+              cursor: 'pointer',
+            }}
+          >
+            Logout
+          </button>
+        </header>
+
+        {message && (
+          <div
+            style={{
+              marginBottom: '20px',
+              padding: '14px 18px',
+              background: '#1d1d1d',
+              border: '1px solid #333',
+              borderRadius: '8px',
+              color: '#ddd',
+            }}
+          >
+            {message}
+          </div>
+        )}
+
+        <nav
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '8px',
+            marginBottom: '30px',
+          }}
+        >
+          {[
+            ['dashboard', 'Dashboard'],
+            ['content', 'Content'],
+            ['portfolio', 'Projects'],
+            ['hero', 'Hero'],
+            ['brands', 'Brands'],
+            ['media', 'Media'],
+            ['appearance', 'Appearance'],
+            ['settings', 'Settings'],
+          ].map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setSection(id as Section)}
+              style={{
+                background:
+                  section === id ? '#fff' : '#191919',
+                color:
+                  section === id ? '#111' : '#aaa',
+                border: '1px solid #333',
+                padding: '10px 15px',
+                borderRadius: '7px',
+                cursor: 'pointer',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        {section === 'dashboard' && (
+          <section>
+            <h1
+              style={{
+                fontWeight: 400,
+                fontSize: '28px',
+                marginBottom: '25px',
+              }}
+            >
+              Dashboard
+            </h1>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns:
+                  'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: '15px',
+              }}
+            >
+              <div
+                style={{
+                  background: '#191919',
+                  border: '1px solid #292929',
+                  borderRadius: '10px',
+                  padding: '25px',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '32px',
+                    marginBottom: '8px',
+                  }}
+                >
+                  {portfolio.length}
+                </div>
+
+                <div
+                  style={{
+                    color: '#777',
+                    fontSize: '12px',
+                  }}
+                >
+                  Projects
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: '#191919',
+                  border: '1px solid #292929',
+                  borderRadius: '10px',
+                  padding: '25px',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '32px',
+                    marginBottom: '8px',
+                  }}
+                >
+                  {brands.length}
+                </div>
+
+                <div
+                  style={{
+                    color: '#777',
+                    fontSize: '12px',
+                  }}
+                >
+                  Brands
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: '#191919',
+                  border: '1px solid #292929',
+                  borderRadius: '10px',
+                  padding: '25px',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '32px',
+                    marginBottom: '8px',
+                  }}
+                >
+                  {mediaAssets.length}
+                </div>
+
+                <div
+                  style={{
+                    color: '#777',
+                    fontSize: '12px',
+                  }}
+                >
+                  Media Files
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: '#191919',
+                  border: '1px solid #292929',
+                  borderRadius: '10px',
+                  padding: '25px',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '32px',
+                    marginBottom: '8px',
+                  }}
+                >
+                  {heroSlides.length}
+                </div>
+
+                <div
+                  style={{
+                    color: '#777',
+                    fontSize: '12px',
+                  }}
+                >
+                  Hero Slides
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {section === 'content' && (
+          <section>
+            <h1
+              style={{
+                fontWeight: 400,
+                fontSize: '28px',
+                marginBottom: '25px',
+              }}
+            >
+              Site Content
+            </h1>
+
+            <div
+              style={{
+                background: '#171717',
+                border: '1px solid #292929',
+                borderRadius: '10px',
+                padding: '25px',
+              }}
+            >
+              {Object.keys(content)
+                .filter(
+                  (key) =>
+                    key !== 'id' &&
+                    key !== 'created_at' &&
+                    key !== 'updated_at'
+                )
+                .map((key) => (
+                  <div
+                    key={key}
+                    style={{
+                      marginBottom: '18px',
+                    }}
+                  >
+                    <label
+                      style={{
+                        display: 'block',
+                        color: '#777',
+                        fontSize: '11px',
+                        marginBottom: '7px',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {key.replaceAll('_', ' ')}
+                    </label>
+
+                    <textarea
+                      value={content[key] ?? ''}
+                      onChange={(e) =>
+                        setContent({
+                          ...content,
+                          [key]: e.target.value,
+                        })
+                      }
+                      style={{
+                        width: '100%',
+                        minHeight: '90px',
+                        background: '#101010',
+                        color: '#eee',
+                        border: '1px solid #303030',
+                        borderRadius: '7px',
+                        padding: '12px',
+                        resize: 'vertical',
+                      }}
+                    />
+                  </div>
+                ))}
+
+              <button
+                onClick={saveContent}
+                disabled={saving}
+                style={{
+                  background: '#fff',
+                  color: '#111',
+                  border: 0,
+                  padding: '11px 18px',
+                  borderRadius: '7px',
+                  cursor: 'pointer',
+                }}
+              >
+                {saving ? 'Saving...' : 'Save Content'}
+              </button>
+            </div>
+          </section>
+        )}
+
+        {section === 'portfolio' && (
+          <section>
+            <h1
+              style={{
+                fontWeight: 400,
+                fontSize: '28px',
+                marginBottom: '25px',
+              }}
+            >
+              Projects
+            </h1>
+
+            <div
+              style={{
+                background: '#171717',
+                border: '1px solid #292929',
+                borderRadius: '10px',
+                padding: '25px',
+                marginBottom: '20px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '25px',
+                }}
+              >
+                <h2
+                  style={{
+                    fontSize: '18px',
+                    fontWeight: 400,
+                    margin: 0,
+                  }}
+                >
+                  {editingPortfolio.id
+                    ? 'Edit Project'
+                    : 'New Project'}
+                </h2>
+
+                <button
+                  onClick={() =>
+                    setEditingPortfolio(emptyPortfolio)
+                  }
+                  style={{
+                    background: '#242424',
+                    color: '#fff',
+                    border: '1px solid #383838',
+                    padding: '9px 14px',
+                    borderRadius: '7px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  New Project
+                </button>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns:
+                    'repeat(auto-fit, minmax(250px, 1fr))',
+                  gap: '18px',
+                }}
+              >
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Title FA
+                  </label>
+
+                  <input
+                    value={editingPortfolio.title_fa}
+                    onChange={(e) =>
+                      setEditingPortfolio({
+                        ...editingPortfolio,
+                        title_fa: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Title EN
+                  </label>
+
+                  <input
+                    value={editingPortfolio.title_en || ''}
+                    onChange={(e) =>
+                      setEditingPortfolio({
+                        ...editingPortfolio,
+                        title_en: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Category
+                  </label>
+
+                  <select
+                    value={editingPortfolio.category}
+                    onChange={(e) =>
+                      setEditingPortfolio({
+                        ...editingPortfolio,
+                        category: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  >
+                    <option value="video">Video</option>
+                    <option value="film">Film</option>
+                    <option value="teaser">Teaser</option>
+                    <option value="photography">
+                      Photography
+                    </option>
+                    <option value="content">Content</option>
+                    <option value="advertising">
+                      Advertising
+                    </option>
+                    <option value="reels">
+                      Instagram Reels
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Sort Order
+                  </label>
+
+                  <input
+                    type="number"
+                    value={editingPortfolio.sort_order}
+                    onChange={(e) =>
+                      setEditingPortfolio({
+                        ...editingPortfolio,
+                        sort_order: Number(e.target.value),
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+                </div>
+
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Description FA
+                  </label>
+
+                  <textarea
+                    value={editingPortfolio.description_fa || ''}
+                    onChange={(e) =>
+                      setEditingPortfolio({
+                        ...editingPortfolio,
+                        description_fa: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      minHeight: '100px',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                      resize: 'vertical',
+                    }}
+                  />
+                </div>
+
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Description EN
+                  </label>
+
+                  <textarea
+                    value={editingPortfolio.description_en || ''}
+                    onChange={(e) =>
+                      setEditingPortfolio({
+                        ...editingPortfolio,
+                        description_en: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      minHeight: '100px',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                      resize: 'vertical',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Cover URL
+                  </label>
+
+                  <input
+                    value={editingPortfolio.cover_url || ''}
+                    onChange={(e) =>
+                      setEditingPortfolio({
+                        ...editingPortfolio,
+                        cover_url: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                      marginBottom: '10px',
+                    }}
+                  />
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadFile(file);
+                    }}
+                  />
+
+                  {editingPortfolio.cover_url && (
+                    <img
+                      src={editingPortfolio.cover_url}
+                      alt=""
+                      style={{
+                        display: 'block',
+                        width: '220px',
+                        height: '130px',
+                        objectFit: 'cover',
+                        marginTop: '10px',
+                        borderRadius: '7px',
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Main Media URL
+                  </label>
+
+                  <input
+                    value={editingPortfolio.media_url || ''}
+                    onChange={(e) =>
+                      setEditingPortfolio({
+                        ...editingPortfolio,
+                        media_url: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                      marginBottom: '10px',
+                    }}
+                  />
+
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadFile(file);
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  marginTop: '25px',
+                  paddingTop: '20px',
+                  borderTop: '1px solid #292929',
+                }}
+              >
+                <div
+                  style={{
+                    color: '#777',
+                    fontSize: '11px',
+                    marginBottom: '10px',
+                  }}
+                >
+                  DISPLAY IN
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '8px',
+                  }}
+                >
+                  {destinations.map((destination) => {
+                    const selected = (
+                      editingPortfolio.destinations || []
+                    ).includes(destination.id);
+
+                    return (
+                      <label
+                        key={destination.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '7px',
+                          padding: '9px 12px',
+                          background: selected
+                            ? '#292929'
+                            : '#101010',
+                          border: '1px solid #333',
+                          borderRadius: '7px',
+                          color: selected ? '#fff' : '#888',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() =>
+                            toggleDestination(destination.id)
+                          }
+                        />
+
+                        {destination.label}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  marginTop: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={editingPortfolio.published}
+                  onChange={(e) =>
+                    setEditingPortfolio({
+                      ...editingPortfolio,
+                      published: e.target.checked,
+                    })
+                  }
+                />
+
+                <span style={{ color: '#aaa' }}>
+                  Published
+                </span>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '10px',
+                  marginTop: '25px',
+                }}
+              >
+                <button
+                  onClick={savePortfolio}
+                  disabled={saving}
+                  style={{
+                    background: '#fff',
+                    color: '#111',
+                    border: 0,
+                    padding: '11px 18px',
+                    borderRadius: '7px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {saving ? 'Saving...' : 'Save Project'}
+                </button>
+
+                {editingPortfolio.id > 0 && (
+                  <button
+                    onClick={() =>
+                      deletePortfolio(editingPortfolio.id)
+                    }
+                    style={{
+                      background: 'transparent',
+                      color: '#ff8888',
+                      border: '1px solid #553333',
+                      padding: '11px 18px',
+                      borderRadius: '7px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Delete Project
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: '#171717',
+                border: '1px solid #292929',
+                borderRadius: '10px',
+                padding: '25px',
+              }}
+            >
+              <h2
+                style={{
+                  fontWeight: 400,
+                  fontSize: '18px',
+                  marginTop: 0,
+                  marginBottom: '20px',
+                }}
+              >
+                All Projects
+              </h2>
+
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                }}
+              >
+                {portfolio.map((project) => (
+                  <div
+                    key={project.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '15px',
+                      padding: '12px',
+                      background: '#111',
+                      border: '1px solid #292929',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    {project.cover_url ? (
+                      <img
+                        src={project.cover_url}
+                        alt=""
+                        style={{
+                          width: '70px',
+                          height: '55px',
+                          objectFit: 'cover',
+                          borderRadius: '5px',
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: '70px',
+                          height: '55px',
+                          background: '#222',
+                          borderRadius: '5px',
+                        }}
+                      />
+                    )}
+
+                    <div style={{ flex: 1 }}>
+                      <div style={{ marginBottom: '5px' }}>
+                        {project.title_en ||
+                          project.title_fa ||
+                          'Untitled'}
+                      </div>
+
+                      <div
+                        style={{
+                          color: '#666',
+                          fontSize: '11px',
+                        }}
+                      >
+                        {project.category} ·{' '}
+                        {project.published
+                          ? 'Published'
+                          : 'Draft'}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => editProject(project)}
+                      style={{
+                        background: '#242424',
+                        color: '#fff',
+                        border: '1px solid #383838',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                ))}
+
+                {!portfolio.length && (
+                  <div
+                    style={{
+                      color: '#666',
+                      padding: '15px 0',
+                    }}
+                  >
+                    No projects yet.
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {section === 'hero' && (
+          <section>
+            <h1
+              style={{
+                fontWeight: 400,
+                fontSize: '28px',
+                marginBottom: '25px',
+              }}
+            >
+              Hero Slider
+            </h1>
+
+            <div
+              style={{
+                background: '#171717',
+                border: '1px solid #292929',
+                borderRadius: '10px',
+                padding: '25px',
+                marginBottom: '20px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '25px',
+                }}
+              >
+                <h2
+                  style={{
+                    fontSize: '18px',
+                    fontWeight: 400,
+                    margin: 0,
+                  }}
+                >
+                  {editingHero?.id ? 'Edit Slide' : 'New Slide'}
+                </h2>
+
+                <button
+                  onClick={() => setEditingHero(emptyHero)}
+                  style={{
+                    background: '#242424',
+                    color: '#fff',
+                    border: '1px solid #383838',
+                    padding: '9px 14px',
+                    borderRadius: '7px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  New Slide
+                </button>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns:
+                    'repeat(auto-fit, minmax(250px, 1fr))',
+                  gap: '18px',
+                }}
+              >
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Title FA
+                  </label>
+
+                  <input
+                    value={editingHero?.title_fa || ''}
+                    onChange={(e) =>
+                      setEditingHero({
+                        ...editingHero,
+                        title_fa: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Title EN
+                  </label>
+
+                  <input
+                    value={editingHero?.title_en || ''}
+                    onChange={(e) =>
+                      setEditingHero({
+                        ...editingHero,
+                        title_en: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    gridColumn: '1 / -1',
+                  }}
+                >
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Description FA
+                  </label>
+
+                  <textarea
+                    value={editingHero?.description_fa || ''}
+                    onChange={(e) =>
+                      setEditingHero({
+                        ...editingHero,
+                        description_fa: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      minHeight: '90px',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                      resize: 'vertical',
+                    }}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    gridColumn: '1 / -1',
+                  }}
+                >
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Description EN
+                  </label>
+
+                  <textarea
+                    value={editingHero?.description_en || ''}
+                    onChange={(e) =>
+                      setEditingHero({
+                        ...editingHero,
+                        description_en: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      minHeight: '90px',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                      resize: 'vertical',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Media URL
+                  </label>
+
+                  <input
+                    value={editingHero?.media_url || ''}
+                    onChange={(e) =>
+                      setEditingHero({
+                        ...editingHero,
+                        media_url: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                      marginBottom: '10px',
+                    }}
+                  />
+
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+
+                      if (file) {
+                        uploadFile(file).then((asset) => {
+                          if (!asset) return;
+
+                          setEditingHero({
+                            ...editingHero,
+                            media_url: asset.file_url,
+                            media_type:
+                              asset.file_type || 'image',
+                          });
+                        });
+                      }
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Media Type
+                  </label>
+
+                  <select
+                    value={editingHero?.media_type || 'image'}
+                    onChange={(e) =>
+                      setEditingHero({
+                        ...editingHero,
+                        media_type: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  >
+                    <option value="image">Image</option>
+                    <option value="video">Video</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Button Text FA
+                  </label>
+
+                  <input
+                    value={editingHero?.button_text_fa || ''}
+                    onChange={(e) =>
+                      setEditingHero({
+                        ...editingHero,
+                        button_text_fa: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Button Text EN
+                  </label>
+
+                  <input
+                    value={editingHero?.button_text_en || ''}
+                    onChange={(e) =>
+                      setEditingHero({
+                        ...editingHero,
+                        button_text_en: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Button URL
+                  </label>
+
+                  <input
+                    value={editingHero?.button_url || ''}
+                    onChange={(e) =>
+                      setEditingHero({
+                        ...editingHero,
+                        button_url: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Sort Order
+                  </label>
+
+                  <input
+                    type="number"
+                    value={editingHero?.sort_order || 0}
+                    onChange={(e) =>
+                      setEditingHero({
+                        ...editingHero,
+                        sort_order: Number(e.target.value),
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  marginTop: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={editingHero?.published ?? true}
+                  onChange={(e) =>
+                    setEditingHero({
+                      ...editingHero,
+                      published: e.target.checked,
+                    })
+                  }
+                />
+
+                <span style={{ color: '#aaa' }}>
+                  Published
+                </span>
+              </div>
+
+              {editingHero?.media_url && (
+                <div
+                  style={{
+                    marginTop: '20px',
+                  }}
+                >
+                  {editingHero.media_type === 'video' ? (
+                    <video
+                      src={editingHero.media_url}
+                      controls
+                      muted
+                      style={{
+                        width: '320px',
+                        maxHeight: '190px',
+                        objectFit: 'contain',
+                        background: '#000',
+                        borderRadius: '7px',
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src={editingHero.media_url}
+                      alt=""
+                      style={{
+                        width: '320px',
+                        maxHeight: '190px',
+                        objectFit: 'contain',
+                        background: '#000',
+                        borderRadius: '7px',
+                      }}
+                    />
+                  )}
+                </div>
+              )}
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '10px',
+                  marginTop: '25px',
+                }}
+              >
+                <button
+                  onClick={saveHero}
+                  disabled={saving}
+                  style={{
+                    background: '#fff',
+                    color: '#111',
+                    border: 0,
+                    padding: '11px 18px',
+                    borderRadius: '7px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {saving ? 'Saving...' : 'Save Slide'}
+                </button>
+
+                {editingHero?.id > 0 && (
+                  <button
+                    onClick={() =>
+                      deleteHero(editingHero.id)
+                    }
+                    style={{
+                      background: 'transparent',
+                      color: '#ff8888',
+                      border: '1px solid #553333',
+                      padding: '11px 18px',
+                      borderRadius: '7px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Delete Slide
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: '#171717',
+                border: '1px solid #292929',
+                borderRadius: '10px',
+                padding: '25px',
+              }}
+            >
+              <h2
+                style={{
+                  fontWeight: 400,
+                  fontSize: '18px',
+                  marginTop: 0,
+                  marginBottom: '20px',
+                }}
+              >
+                Existing Slides
+              </h2>
+
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                }}
+              >
+                {heroSlides.map((slide) => (
+                  <div
+                    key={slide.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '15px',
+                      padding: '12px',
+                      background: '#111',
+                      border: '1px solid #292929',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    {slide.media_url ? (
+                      slide.media_type === 'video' ? (
+                        <video
+                          src={slide.media_url}
+                          muted
+                          style={{
+                            width: '80px',
+                            height: '55px',
+                            objectFit: 'cover',
+                            borderRadius: '5px',
+                          }}
+                        />
+                      ) : (
+                        <img
+                          src={slide.media_url}
+                          alt=""
+                          style={{
+                            width: '80px',
+                            height: '55px',
+                            objectFit: 'cover',
+                            borderRadius: '5px',
+                          }}
+                        />
+                      )
+                    ) : (
+                      <div
+                        style={{
+                          width: '80px',
+                          height: '55px',
+                          background: '#222',
+                          borderRadius: '5px',
+                        }}
+                      />
+                    )}
+
+                    <div style={{ flex: 1 }}>
+                      <div
+                        style={{
+                          marginBottom: '5px',
+                        }}
+                      >
+                        {slide.title_en ||
+                          slide.title_fa ||
+                          'Untitled Slide'}
+                      </div>
+
+                      <div
+                        style={{
+                          color: '#666',
+                          fontSize: '11px',
+                        }}
+                      >
+                        Order {slide.sort_order} ·{' '}
+                        {slide.published
+                          ? 'Published'
+                          : 'Hidden'}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setEditingHero(slide)}
+                      style={{
+                        background: '#242424',
+                        color: '#fff',
+                        border: '1px solid #383838',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                ))}
+
+                {!heroSlides.length && (
+                  <div
+                    style={{
+                      color: '#666',
+                      padding: '15px 0',
+                    }}
+                  >
+                    No hero slides yet.
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {section === 'brands' && (
+          <section>
+            <h1
+              style={{
+                fontWeight: 400,
+                fontSize: '28px',
+                marginBottom: '25px',
+              }}
+            >
+              Brands
+            </h1>
+
+            <div
+              style={{
+                background: '#171717',
+                border: '1px solid #292929',
+                borderRadius: '10px',
+                padding: '25px',
+                marginBottom: '20px',
+              }}
+            >
+              <h2
+                style={{
+                  fontWeight: 400,
+                  fontSize: '18px',
+                  marginTop: 0,
+                  marginBottom: '25px',
+                }}
+              >
+                {editingBrand.id ? 'Edit Brand' : 'New Brand'}
+              </h2>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns:
+                    'repeat(auto-fit, minmax(250px, 1fr))',
+                  gap: '18px',
+                }}
+              >
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Brand Name
+                  </label>
+
+                  <input
+                    value={editingBrand.name}
+                    onChange={(e) =>
+                      setEditingBrand({
+                        ...editingBrand,
+                        name: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Website URL
+                  </label>
+
+                  <input
+                    value={editingBrand.website_url || ''}
+                    onChange={(e) =>
+                      setEditingBrand({
+                        ...editingBrand,
+                        website_url: e.target.value,
+                      })
+                    }
+                    placeholder="https://example.com"
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Logo URL
+                  </label>
+
+                  <input
+                    value={editingBrand.logo_url || ''}
+                    onChange={(e) =>
+                      setEditingBrand({
+                        ...editingBrand,
+                        logo_url: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                      marginBottom: '10px',
+                    }}
+                  />
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+
+                      if (file) {
+                        uploadFile(file).then((asset) => {
+                          if (!asset) return;
+
+                          setEditingBrand({
+                            ...editingBrand,
+                            logo_url: asset.file_url,
+                          });
+                        });
+                      }
+                    }}
+                  />
+
+                  {editingBrand.logo_url && (
+                    <img
+                      src={editingBrand.logo_url}
+                      alt={editingBrand.name || 'Brand logo'}
+                      style={{
+                        display: 'block',
+                        width: '180px',
+                        height: '100px',
+                        objectFit: 'contain',
+                        background: '#0b0b0b',
+                        borderRadius: '7px',
+                        marginTop: '10px',
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Sort Order
+                  </label>
+
+                  <input
+                    type="number"
+                    value={editingBrand.sort_order}
+                    onChange={(e) =>
+                      setEditingBrand({
+                        ...editingBrand,
+                        sort_order: Number(e.target.value),
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  marginTop: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={editingBrand.published}
+                  onChange={(e) =>
+                    setEditingBrand({
+                      ...editingBrand,
+                      published: e.target.checked,
+                    })
+                  }
+                />
+
+                <span style={{ color: '#aaa' }}>
+                  Published
+                </span>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '10px',
+                  marginTop: '25px',
+                }}
+              >
+                <button
+                  onClick={saveBrand}
+                  disabled={saving}
+                  style={{
+                    background: '#fff',
+                    color: '#111',
+                    border: 0,
+                    padding: '11px 18px',
+                    borderRadius: '7px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {saving ? 'Saving...' : 'Save Brand'}
+                </button>
+
+                <button
+                  onClick={() => setEditingBrand(emptyBrand)}
+                  style={{
+                    background: 'transparent',
+                    color: '#aaa',
+                    border: '1px solid #333',
+                    padding: '11px 18px',
+                    borderRadius: '7px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: '#171717',
+                border: '1px solid #292929',
+                borderRadius: '10px',
+                padding: '25px',
+              }}
+            >
+              <h2
+                style={{
+                  fontWeight: 400,
+                  fontSize: '18px',
+                  marginTop: 0,
+                  marginBottom: '20px',
+                }}
+              >
+                All Brands
+              </h2>
+
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                }}
+              >
+                {brands.map((brand) => (
+                  <div
+                    key={brand.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '15px',
+                      padding: '12px',
+                      background: '#111',
+                      border: '1px solid #292929',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    {brand.logo_url ? (
+                      <img
+                        src={brand.logo_url}
+                        alt={brand.name}
+                        style={{
+                          width: '75px',
+                          height: '55px',
+                          objectFit: 'contain',
+                          background: '#0b0b0b',
+                          borderRadius: '5px',
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: '75px',
+                          height: '55px',
+                          background: '#222',
+                          borderRadius: '5px',
+                        }}
+                      />
+                    )}
+
+                    <div style={{ flex: 1 }}>
+                      <div
+                        style={{
+                          marginBottom: '5px',
+                        }}
+                      >
+                        {brand.name || 'Unnamed Brand'}
+                      </div>
+
+                      <div
+                        style={{
+                          color: '#666',
+                          fontSize: '11px',
+                        }}
+                      >
+                        {brand.published
+                          ? 'Published'
+                          : 'Hidden'}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setEditingBrand(brand)}
+                      style={{
+                        background: '#242424',
+                        color: '#fff',
+                        border: '1px solid #383838',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => deleteBrand(brand.id)}
+                      style={{
+                        background: 'transparent',
+                        color: '#ff8888',
+                        border: '1px solid #553333',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+
+                {!brands.length && (
+                  <div
+                    style={{
+                      color: '#666',
+                      padding: '15px 0',
+                    }}
+                  >
+                    No brands yet.
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {section === 'brands' && (
+          <section>
+            <h1
+              style={{
+                fontWeight: 400,
+                fontSize: '28px',
+                marginBottom: '25px',
+              }}
+            >
+              Brands
+            </h1>
+
+            <div
+              style={{
+                background: '#171717',
+                border: '1px solid #292929',
+                borderRadius: '10px',
+                padding: '25px',
+                marginBottom: '20px',
+              }}
+            >
+              <h2
+                style={{
+                  fontWeight: 400,
+                  fontSize: '18px',
+                  marginTop: 0,
+                  marginBottom: '25px',
+                }}
+              >
+                {editingBrand.id ? 'Edit Brand' : 'New Brand'}
+              </h2>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns:
+                    'repeat(auto-fit, minmax(250px, 1fr))',
+                  gap: '18px',
+                }}
+              >
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Brand Name
+                  </label>
+
+                  <input
+                    value={editingBrand.name}
+                    onChange={(e) =>
+                      setEditingBrand({
+                        ...editingBrand,
+                        name: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Website URL
+                  </label>
+
+                  <input
+                    value={editingBrand.website_url || ''}
+                    onChange={(e) =>
+                      setEditingBrand({
+                        ...editingBrand,
+                        website_url: e.target.value,
+                      })
+                    }
+                    placeholder="https://example.com"
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Logo URL
+                  </label>
+
+                  <input
+                    value={editingBrand.logo_url || ''}
+                    onChange={(e) =>
+                      setEditingBrand({
+                        ...editingBrand,
+                        logo_url: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                      marginBottom: '10px',
+                    }}
+                  />
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+
+                      if (file) {
+                        uploadFile(file).then((asset) => {
+                          if (!asset) return;
+
+                          setEditingBrand({
+                            ...editingBrand,
+                            logo_url: asset.file_url,
+                          });
+                        });
+                      }
+                    }}
+                  />
+
+                  {editingBrand.logo_url && (
+                    <img
+                      src={editingBrand.logo_url}
+                      alt={editingBrand.name || 'Brand logo'}
+                      style={{
+                        display: 'block',
+                        width: '180px',
+                        height: '100px',
+                        objectFit: 'contain',
+                        background: '#0b0b0b',
+                        borderRadius: '7px',
+                        marginTop: '10px',
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Sort Order
+                  </label>
+
+                  <input
+                    type="number"
+                    value={editingBrand.sort_order}
+                    onChange={(e) =>
+                      setEditingBrand({
+                        ...editingBrand,
+                        sort_order: Number(e.target.value),
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  marginTop: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={editingBrand.published}
+                  onChange={(e) =>
+                    setEditingBrand({
+                      ...editingBrand,
+                      published: e.target.checked,
+                    })
+                  }
+                />
+
+                <span style={{ color: '#aaa' }}>
+                  Published
+                </span>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '10px',
+                  marginTop: '25px',
+                }}
+              >
+                <button
+                  onClick={saveBrand}
+                  disabled={saving}
+                  style={{
+                    background: '#fff',
+                    color: '#111',
+                    border: 0,
+                    padding: '11px 18px',
+                    borderRadius: '7px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {saving ? 'Saving...' : 'Save Brand'}
+                </button>
+
+                <button
+                  onClick={() => setEditingBrand(emptyBrand)}
+                  style={{
+                    background: 'transparent',
+                    color: '#aaa',
+                    border: '1px solid #333',
+                    padding: '11px 18px',
+                    borderRadius: '7px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: '#171717',
+                border: '1px solid #292929',
+                borderRadius: '10px',
+                padding: '25px',
+              }}
+            >
+              <h2
+                style={{
+                  fontWeight: 400,
+                  fontSize: '18px',
+                  marginTop: 0,
+                  marginBottom: '20px',
+                }}
+              >
+                All Brands
+              </h2>
+
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                }}
+              >
+                {brands.map((brand) => (
+                  <div
+                    key={brand.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '15px',
+                      padding: '12px',
+                      background: '#111',
+                      border: '1px solid #292929',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    {brand.logo_url ? (
+                      <img
+                        src={brand.logo_url}
+                        alt={brand.name}
+                        style={{
+                          width: '75px',
+                          height: '55px',
+                          objectFit: 'contain',
+                          background: '#0b0b0b',
+                          borderRadius: '5px',
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: '75px',
+                          height: '55px',
+                          background: '#222',
+                          borderRadius: '5px',
+                        }}
+                      />
+                    )}
+
+                    <div style={{ flex: 1 }}>
+                      <div style={{ marginBottom: '5px' }}>
+                        {brand.name || 'Unnamed Brand'}
+                      </div>
+
+                      <div
+                        style={{
+                          color: '#666',
+                          fontSize: '11px',
+                        }}
+                      >
+                        {brand.published ? 'Published' : 'Hidden'}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setEditingBrand(brand)}
+                      style={{
+                        background: '#242424',
+                        color: '#fff',
+                        border: '1px solid #383838',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => deleteBrand(brand.id)}
+                      style={{
+                        background: 'transparent',
+                        color: '#ff8888',
+                        border: '1px solid #553333',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+
+                {!brands.length && (
+                  <div
+                    style={{
+                      color: '#666',
+                      padding: '15px 0',
+                    }}
+                  >
+                    No brands yet.
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {section === 'media' && (
+          <section>
+            <h1
+              style={{
+                fontWeight: 400,
+                fontSize: '28px',
+                marginBottom: '25px',
+              }}
+            >
+              Media Library
+            </h1>
+
+            <div
+              style={{
+                background: '#171717',
+                border: '1px solid #292929',
+                borderRadius: '10px',
+                padding: '25px',
+                marginBottom: '20px',
+              }}
+            >
+              <h2
+                style={{
+                  fontWeight: 400,
+                  fontSize: '18px',
+                  marginTop: 0,
+                  marginBottom: '20px',
+                }}
+              >
+                Upload Media
+              </h2>
+
+              <input
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                onChange={async (e) => {
+                  const files = Array.from(e.target.files || []);
+
+                  for (const file of files) {
+                    await uploadFile(file);
+                  }
+
+                  e.target.value = '';
+                }}
+              />
+
+              <div
+                style={{
+                  color: '#666',
+                  fontSize: '11px',
+                  marginTop: '10px',
+                }}
+              >
+                JPG, PNG, WEBP, MP4 and other supported image/video files.
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: '#171717',
+                border: '1px solid #292929',
+                borderRadius: '10px',
+                padding: '25px',
+              }}
+            >
+              <h2
+                style={{
+                  fontWeight: 400,
+                  fontSize: '18px',
+                  marginTop: 0,
+                  marginBottom: '20px',
+                }}
+              >
+                All Media
+              </h2>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns:
+                    'repeat(auto-fill, minmax(220px, 1fr))',
+                  gap: '15px',
+                }}
+              >
+                {media.map((item) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      background: '#111',
+                      border: '1px solid #292929',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '160px',
+                        background: '#0b0b0b',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {item.file_type?.startsWith('video/') ? (
+                        <video
+                          src={item.file_url}
+                          controls
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      ) : (
+                        <img
+                          src={item.file_url}
+                          alt={item.original_name || 'Media'}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      )}
+                    </div>
+
+                    <div
+                      style={{
+                        padding: '12px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: '12px',
+                          marginBottom: '6px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {item.original_name || 'Untitled'}
+                      </div>
+
+                      <div
+                        style={{
+                          color: '#666',
+                          fontSize: '10px',
+                        }}
+                      >
+                        {item.file_type || 'Unknown type'}
+                      </div>
+
+                      <div
+                        style={{
+                          color: '#555',
+                          fontSize: '10px',
+                          marginTop: '4px',
+                        }}
+                      >
+                        {item.file_size
+                          ? `${Math.round(item.file_size / 1024)} KB`
+                          : ''}
+                      </div>
+
+                      <button
+                        onClick={() =>
+                          navigator.clipboard?.writeText(item.file_url)
+                        }
+                        style={{
+                          marginTop: '12px',
+                          width: '100%',
+                          background: '#242424',
+                          color: '#fff',
+                          border: '1px solid #383838',
+                          padding: '8px 10px',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Copy URL
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {!media.length && (
+                  <div
+                    style={{
+                      color: '#666',
+                      padding: '15px 0',
+                    }}
+                  >
+                    No media uploaded yet.
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {section === 'appearance' && (
+          <section>
+            <h1
+              style={{
+                fontWeight: 400,
+                fontSize: '28px',
+                marginBottom: '25px',
+              }}
+            >
+              Appearance
+            </h1>
+
+            <div
+              style={{
+                background: '#171717',
+                border: '1px solid #292929',
+                borderRadius: '10px',
+                padding: '25px',
+              }}
+            >
+              <h2
+                style={{
+                  fontWeight: 400,
+                  fontSize: '18px',
+                  marginTop: 0,
+                  marginBottom: '20px',
+                }}
+              >
+                Site Appearance
+              </h2>
+
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '18px',
+                }}
+              >
+                {Object.entries(settings)
+                  .filter(
+                    ([key]) =>
+                      ![
+                        'id',
+                        'created_at',
+                        'updated_at',
+                        'logo_url',
+                        'favicon_url',
+                      ].includes(key)
+                  )
+                  .map(([key, value]) => (
+                    <div key={key}>
+                      <label
+                        style={{
+                          display: 'block',
+                          color: '#777',
+                          fontSize: '11px',
+                          marginBottom: '7px',
+                        }}
+                      >
+                        {key.replace(/_/g, ' ')}
+                      </label>
+
+                      <textarea
+                        value={
+                          typeof value === 'string'
+                            ? value
+                            : JSON.stringify(value, null, 2)
+                        }
+                        onChange={(e) => {
+                          let nextValue: any = e.target.value;
+
+                          try {
+                            if (
+                              typeof value === 'object' &&
+                              value !== null
+                            ) {
+                              nextValue = JSON.parse(e.target.value);
+                            }
+                          } catch {
+                            nextValue = e.target.value;
+                          }
+
+                          setSettings({
+                            ...settings,
+                            [key]: nextValue,
+                          });
+                        }}
+                        rows={4}
+                        style={{
+                          width: '100%',
+                          background: '#101010',
+                          color: '#eee',
+                          border: '1px solid #303030',
+                          borderRadius: '7px',
+                          padding: '11px',
+                          resize: 'vertical',
+                          fontFamily: 'inherit',
+                        }}
+                      />
+                    </div>
+                  ))}
+              </div>
+
+              <button
+                onClick={saveSettings}
+                disabled={saving}
+                style={{
+                  marginTop: '25px',
+                  background: '#fff',
+                  color: '#111',
+                  border: 0,
+                  padding: '11px 18px',
+                  borderRadius: '7px',
+                  cursor: 'pointer',
+                }}
+              >
+                {saving ? 'Saving...' : 'Save Appearance'}
+              </button>
+            </div>
+          </section>
+        )}
+
+        {section === 'settings' && (
+          <section>
+            <h1
+              style={{
+                fontWeight: 400,
+                fontSize: '28px',
+                marginBottom: '25px',
+              }}
+            >
+              Settings
+            </h1>
+
+            <div
+              style={{
+                background: '#171717',
+                border: '1px solid #292929',
+                borderRadius: '10px',
+                padding: '25px',
+              }}
+            >
+              <h2
+                style={{
+                  fontWeight: 400,
+                  fontSize: '18px',
+                  marginTop: 0,
+                  marginBottom: '25px',
+                }}
+              >
+                Site Settings
+              </h2>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns:
+                    'repeat(auto-fit, minmax(280px, 1fr))',
+                  gap: '20px',
+                }}
+              >
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Logo URL
+                  </label>
+
+                  <input
+                    value={settings.logo_url || ''}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        logo_url: e.target.value,
+                      })
+                    }
+                    placeholder="https://..."
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+
+                  {settings.logo_url && (
+                    <img
+                      src={settings.logo_url}
+                      alt="Site logo"
+                      style={{
+                        display: 'block',
+                        width: '180px',
+                        height: '90px',
+                        objectFit: 'contain',
+                        background: '#0b0b0b',
+                        borderRadius: '7px',
+                        marginTop: '10px',
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      color: '#777',
+                      fontSize: '11px',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Favicon URL
+                  </label>
+
+                  <input
+                    value={settings.favicon_url || ''}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        favicon_url: e.target.value,
+                      })
+                    }
+                    placeholder="https://..."
+                    style={{
+                      width: '100%',
+                      background: '#101010',
+                      color: '#eee',
+                      border: '1px solid #303030',
+                      borderRadius: '7px',
+                      padding: '11px',
+                    }}
+                  />
+
+                  {settings.favicon_url && (
+                    <img
+                      src={settings.favicon_url}
+                      alt="Favicon"
+                      style={{
+                        display: 'block',
+                        width: '64px',
+                        height: '64px',
+                        objectFit: 'contain',
+                        background: '#0b0b0b',
+                        borderRadius: '7px',
+                        marginTop: '10px',
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  marginTop: '25px',
+                  paddingTop: '20px',
+                  borderTop: '1px solid #292929',
+                  color: '#666',
+                  fontSize: '11px',
+                  lineHeight: 1.7,
+                }}
+              >
+                These settings control the main site branding assets.
+                Upload media from the Media Library first, then paste the
+                public URL here.
+              </div>
+
+              <button
+                onClick={saveSettings}
+                disabled={saving}
+                style={{
+                  marginTop: '20px',
+                  background: '#fff',
+                  color: '#111',
+                  border: 0,
+                  padding: '11px 18px',
+                  borderRadius: '7px',
+                  cursor: 'pointer',
+                }}
+              >
+                {saving ? 'Saving...' : 'Save Settings'}
+              </button>
+            </div>
+          </section>
+        )}
+
+      </div>
+    </main>
+  );
+}
