@@ -25,7 +25,7 @@ export default function AdminLoginPage() {
       });
 
     if (loginError) {
-      setError('ایمیل یا رمز عبور صحیح نیست.');
+      setError(loginError.message);
       setLoading(false);
       return;
     }
