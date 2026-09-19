@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 import Link from 'next/link';
 
@@ -26,13 +24,15 @@ export default function SiteHeader() {
           cta: 'شروع پروژه',
         };
 
+  const closeMenu = () => setMenuOpen(false);
+
   return (
     <header className={`site-nav ${menuOpen ? 'is-open' : ''}`}>
       <Link
         className="brand"
         href="/"
         aria-label="NURANICO"
-        onClick={() => setMenuOpen(false)}
+        onClick={closeMenu}
       >
         <span>
           NURANICO
@@ -41,11 +41,11 @@ export default function SiteHeader() {
       </Link>
 
       <nav className="desktop-nav" aria-label="Main navigation">
-        <Link href="/#work">{t.work}</Link>
-        <Link href="/#services">{t.services}</Link>
-        <Link href="/#about">{t.about}</Link>
-        <Link href="/#brands">{t.brands}</Link>
-        <Link href="/#contact">{t.contact}</Link>
+        <Link href="/work">{t.work}</Link>
+        <Link href="/services">{t.services}</Link>
+        <Link href="/about">{t.about}</Link>
+        <Link href="/clients">{t.brands}</Link>
+        <Link href="/contact">{t.contact}</Link>
       </nav>
 
       <div className="nav-actions">
@@ -78,23 +78,23 @@ export default function SiteHeader() {
       </div>
 
       <div className="mobile-menu">
-        <Link href="/#work" onClick={() => setMenuOpen(false)}>
+        <Link href="/work" onClick={closeMenu}>
           {t.work}
         </Link>
 
-        <Link href="/#services" onClick={() => setMenuOpen(false)}>
+        <Link href="/services" onClick={closeMenu}>
           {t.services}
         </Link>
 
-        <Link href="/#about" onClick={() => setMenuOpen(false)}>
+        <Link href="/about" onClick={closeMenu}>
           {t.about}
         </Link>
 
-        <Link href="/#brands" onClick={() => setMenuOpen(false)}>
+        <Link href="/clients" onClick={closeMenu}>
           {t.brands}
         </Link>
 
-        <Link href="/#contact" onClick={() => setMenuOpen(false)}>
+        <Link href="/contact" onClick={closeMenu}>
           {t.contact}
         </Link>
       </div>

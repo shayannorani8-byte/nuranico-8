@@ -1,4 +1,72 @@
-'use client';
-import SiteHeader from '../../components/SiteHeader';
-import {useEffect,useState} from 'react'; import Link from 'next/link';
-export default function ServicesPage(){const[lang,setLang]=useState<'en'|'fa'>('en');useEffect(()=>{const s=localStorage.getItem('nuranico-lang');if(s==='fa'||s==='en')setLang(s)},[]);useEffect(()=>{document.documentElement.lang=lang;document.documentElement.dir=lang==='fa'?'rtl':'ltr';localStorage.setItem('nuranico-lang',lang)},[lang]);const data=lang==='fa'?[['01','ساخت تیزر','روایت‌های سینمایی برای معرفی محصول، برند و کمپین.'],['02','عکاسی','تصاویر دقیق و ماندگار برای هویت بصری و تبلیغات.'],['03','تولید محتوا','محتوای متحرک و اجتماعی با زبان بصری یکپارچه.']]:[['01','Film & Teasers','Cinematic stories for products, brands and campaigns.'],['02','Photography','Precise imagery for campaigns, products and visual identity.'],['03','Content','Social-first content with a consistent visual language.']];return <main className="content-page"><SiteHeader /><section className="inner-hero"><p>01 / SERVICES</p><h1>{lang==='fa'?'از ایده تا فریم نهایی.':'From idea to final frame.'}</h1></section><section className="service-list">{data.map(([n,t,d])=><article key={n}><span>{n}</span><div><h2>{t}</h2><p>{d}</p></div><b>↗</b></article>)}</section><footer className="inner-footer"><span>NURANICO®</span><Link href="/">Back home ↗</Link></footer></main>}
+"use client";
+
+import SiteHeader from "../../components/SiteHeader";
+
+export default function ServicesPage() {
+  const services = [
+    {
+      number: "01",
+      title: "Film & Teasers",
+      text: "Cinematic stories for products, brands and campaigns.",
+      href: "/services/film-teasers",
+    },
+    {
+      number: "02",
+      title: "Photography",
+      text: "Precise imagery for campaigns, products and visual identity.",
+      href: "/services/photography",
+    },
+    {
+      number: "03",
+      title: "Content",
+      text: "Social-first content with a consistent visual language.",
+      href: "/services/content",
+    },
+  ];
+
+  return (
+    <main className="content-page">
+
+      <section className="inner-hero">
+        <p>01 / SERVICES</p>
+        <h1>From idea to final frame.</h1>
+      </section>
+
+      <section className="service-list">
+        {services.map((service) => (
+          <article key={service.number}>
+            <span>{service.number}</span>
+
+            <div>
+              <h2>{service.title}</h2>
+              <p>{service.text}</p>
+
+              <a
+                href={service.href}
+                style={{
+                  display: "inline-block",
+                  marginTop: "24px",
+                  padding: "12px 20px",
+                  border: "1px solid rgba(255,255,255,.35)",
+                  color: "#fff",
+                  textDecoration: "none",
+                  cursor: "pointer",
+                  position: "relative",
+                  zIndex: 9999,
+                }}
+              >
+                VIEW SERVICE ↗
+              </a>
+            </div>
+
+            <b>↗</b>
+          </article>
+        ))}
+      </section>
+
+      <footer className="content-footer">
+        <a href="/">Back home ↗</a>
+      </footer>
+    </main>
+  );
+}

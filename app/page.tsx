@@ -692,21 +692,37 @@ export default function HomePage() {
               number,
               title,
               description,
-            ]) => (
-              <article
-                className="service-card"
-                key={number}
-              >
-                <span>{number}</span>
+            ]) => {
+              const href =
+                number === '01'
+                  ? '/services/film-teasers'
+                  : number === '02'
+                    ? '/services/photography'
+                    : '/services/content';
 
-                <div>
-                  <h3>{title}</h3>
-                  <p>{description}</p>
-                </div>
+              return (
+                <a
+                  href={href}
+                  className="service-card"
+                  key={number}
+                  style={{
+                    display: 'grid',
+                    color: 'inherit',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span>{number}</span>
 
-                <b>↗</b>
-              </article>
-            )
+                  <div>
+                    <h3>{title}</h3>
+                    <p>{description}</p>
+                  </div>
+
+                  <b>↗</b>
+                </a>
+              );
+            }
           )}
         </div>
       </section>
