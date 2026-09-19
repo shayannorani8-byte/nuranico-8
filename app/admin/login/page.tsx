@@ -1,3 +1,4 @@
+cat > app/admin/login/page.tsx <<'EOF'
 'use client';
 
 import { FormEvent, useState } from 'react';
@@ -10,13 +11,16 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setLoading(true);
     setError('');
+    setMessage('');
 
     const { error } = await supabaseBrowser.auth.signInWithPassword({
       email: email.trim(),
@@ -31,6 +35,34 @@ export default function AdminLoginPage() {
 
     router.replace('/admin');
     router.refresh();
+  }
+
+  async function handleResetPassword() {
+    setError('');
+    setMessage('');
+
+    const cleanEmail = email.trim();
+
+    if (!cleanEmail) {
+      setError('ابتدا ایمیل حساب مدیر را وارد کنید.');
+      return;
+    }
+
+    setResetLoading(true);
+
+    const { error } =
+      await supabaseBrowser.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo: `${window.location.origin}/admin/reset-password`,
+      });
+
+    if (error) {
+      setError(error.message);
+      setResetLoading(false);
+      return;
+    }
+
+    setMessage('لینک تغییر رمز ارسال شد. ایمیل خود را بررسی کنید.');
+    setResetLoading(false);
   }
 
   return (
@@ -52,6 +84,7 @@ export default function AdminLoginPage() {
           padding: '40px',
           border: '1px solid rgba(255,255,255,0.12)',
           background: '#181818',
+          boxSizing: 'border-box',
         }}
       >
         <div style={{ marginBottom: '32px' }}>
@@ -144,7 +177,7 @@ export default function AdminLoginPage() {
               width: '100%',
               boxSizing: 'border-box',
               padding: '14px 15px',
-              marginBottom: '20px',
+              marginBottom: '10px',
               border: '1px solid rgba(255,255,255,0.14)',
               background: '#101010',
               color: '#ffffff',
@@ -152,6 +185,28 @@ export default function AdminLoginPage() {
               fontSize: '14px',
             }}
           />
+
+          <button
+            type="button"
+            onClick={handleResetPassword}
+            disabled={resetLoading}
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: '8px 0',
+              marginBottom: '20px',
+              border: 0,
+              background: 'transparent',
+              color: 'rgba(255,255,255,0.55)',
+              cursor: resetLoading ? 'wait' : 'pointer',
+              fontSize: '13px',
+              textAlign: 'right',
+            }}
+          >
+            {resetLoading
+              ? 'در حال ارسال لینک...'
+              : 'رمز عبور را فراموش کرده‌اید؟'}
+          </button>
 
           {error && (
             <div
@@ -166,6 +221,22 @@ export default function AdminLoginPage() {
               }}
             >
               {error}
+            </div>
+          )}
+
+          {message && (
+            <div
+              style={{
+                marginBottom: '18px',
+                padding: '12px 14px',
+                border: '1px solid rgba(80,255,130,0.25)',
+                background: 'rgba(80,255,130,0.07)',
+                color: '#a8e6b7',
+                fontSize: '13px',
+                lineHeight: 1.7,
+              }}
+            >
+              {message}
             </div>
           )}
 
@@ -190,3 +261,4 @@ export default function AdminLoginPage() {
     </main>
   );
 }
+EOF
