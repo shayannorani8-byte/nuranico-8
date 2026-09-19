@@ -1,38 +1,45 @@
-'use client';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { createAdminToken, getAdminCookieName } from '@/lib/admin-auth';
 
-import { FormEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabaseBrowser } from '@/lib/supabase-browser';
+async function loginAction(formData: FormData) {
+  'use server';
 
-export default function AdminLoginPage() {
-  const router = useRouter();
+  const email = String(formData.get('email') || '').trim();
+  const password = String(formData.get('password') || '');
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const adminEmail = process.env.ADMIN_EMAIL || '';
+  const adminPassword = process.env.ADMIN_PASSWORD || '';
 
-  async function handleLogin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    setLoading(true);
-    setError('');
-
-    const { error: loginError } =
-      await supabaseBrowser.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-
-    if (loginError) {
-      setError(loginError.message);
-      setLoading(false);
-      return;
-    }
-
-    router.replace('/admin');
-    router.refresh();
+  if (
+    !adminEmail ||
+    !adminPassword ||
+    email !== adminEmail ||
+    password !== adminPassword
+  ) {
+    redirect('/admin/login?error=1');
   }
+
+  const cookieStore = await cookies();
+
+  cookieStore.set(getAdminCookieName(), await createAdminToken(), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7,
+  });
+
+  redirect('/admin');
+}
+
+export default async function AdminLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const params = await searchParams;
+  const hasError = params.error === '1';
 
   return (
     <main
@@ -92,7 +99,7 @@ export default function AdminLoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleLogin}>
+        <form action={loginAction}>
           <label
             style={{
               display: 'block',
@@ -105,8 +112,7 @@ export default function AdminLoginPage() {
 
           <input
             type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            name="email"
             autoComplete="username"
             required
             dir="ltr"
@@ -135,8 +141,7 @@ export default function AdminLoginPage() {
 
           <input
             type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            name="password"
             autoComplete="current-password"
             required
             dir="ltr"
@@ -153,7 +158,7 @@ export default function AdminLoginPage() {
             }}
           />
 
-          {error && (
+          {hasError && (
             <div
               style={{
                 marginBottom: '18px',
@@ -165,25 +170,23 @@ export default function AdminLoginPage() {
                 lineHeight: 1.7,
               }}
             >
-              {error}
+              ایمیل یا رمز عبور اشتباه است.
             </div>
           )}
 
           <button
             type="submit"
-            disabled={loading}
             style={{
               width: '100%',
               padding: '15px',
               border: 0,
               background: '#ffffff',
               color: '#111111',
-              cursor: loading ? 'wait' : 'pointer',
+              cursor: 'pointer',
               fontSize: '14px',
-              opacity: loading ? 0.65 : 1,
             }}
           >
-            {loading ? 'در حال ورود...' : 'ورود به پنل'}
+            ورود به پنل
           </button>
         </form>
       </div>
