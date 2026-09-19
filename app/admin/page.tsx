@@ -742,6 +742,7 @@ export default function AdminPage() {
         {section === 'portfolio' && (
           <PortfolioManager
             items={portfolio}
+            brands={brands}
             editing={editingPortfolio}
             setEditing={setEditingPortfolio}
             saving={saving}
@@ -1372,6 +1373,7 @@ function ContentEditor({
 
 function PortfolioManager({
   items,
+  brands,
   editing,
   setEditing,
   saving,
@@ -1380,6 +1382,7 @@ function PortfolioManager({
   onUpload,
 }: {
   items: PortfolioItem[];
+  brands: Brand[];
   editing: PortfolioItem | null;
   setEditing: React.Dispatch<React.SetStateAction<PortfolioItem | null>>;
   saving: boolean;
