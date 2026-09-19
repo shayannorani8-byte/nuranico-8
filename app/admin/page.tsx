@@ -4,2120 +4,3339 @@ import {
   useEffect,
   useMemo,
   useState,
-  type CSSProperties,
-  type ReactNode,
+  type Dispatch,
+  type SetStateAction,
 } from 'react';
-import { supabaseBrowser } from '@/lib/supabase-browser';
 
 type Section =
   | 'dashboard'
-  | 'content'
-  | 'portfolio'
+  | 'projects'
+  | 'media'
   | 'hero'
   | 'brands'
-  | 'media'
-  | 'appearance'
+  | 'services'
+  | 'content'
+  | 'contact'
   | 'settings';
 
-type Portfolio = {
-  id: number;
-  title_fa: string;
-  title_en: string | null;
-  description_fa: string | null;
-  description_en: string | null;
+type Project = {
+  id: string;
+  title: string;
   category: string;
-  cover_url: string | null;
-  media_url: string | null;
-  media_type: string;
-  featured: boolean;
-  published: boolean;
-  sort_order: number;
+  status: 'Published' | 'Draft';
+  image: string;
+  description: string;
 };
 
-type Brand = {
-  id: number;
+type MediaItem = {
+  id: string;
   name: string;
-  logo_url: string | null;
-  website_url: string | null;
-  published: boolean;
-  sort_order: number;
-};
-
-type MediaAsset = {
-  id: number;
-  name: string;
-  file_url: string;
-  file_path: string | null;
-  file_type: string | null;
-  mime_type: string | null;
-  file_size: number | null;
-  alt_text_fa: string | null;
-  alt_text_en: string | null;
+  type: 'Image' | 'Video';
+  url: string;
 };
 
 type HeroSlide = {
-  id: number;
-  title_fa: string | null;
-  title_en: string | null;
-  description_fa: string | null;
-  description_en: string | null;
-  media_url: string | null;
-  media_type: string;
-  button_text_fa: string | null;
-  button_text_en: string | null;
-  button_url: string | null;
-  sort_order: number;
-  published: boolean;
-};
-
-const destinations = [
-  { key: 'home', label: 'Home' },
-  { key: 'work', label: 'Work' },
-  { key: 'film', label: 'Film & Teasers' },
-  { key: 'photography', label: 'Photography' },
-  { key: 'content', label: 'Content' },
-  { key: 'featured', label: 'Featured' },
-  { key: 'bts', label: 'Behind the Scenes' },
-];
-
-const emptyPortfolio: Portfolio = {
-  id: 0,
-  title_fa: '',
-  title_en: '',
-  description_fa: '',
-  description_en: '',
-  category: 'content',
-  cover_url: '',
-  media_url: '',
-  media_type: 'image',
-  featured: false,
-  published: true,
-  sort_order: 0,
-};
-
-const emptyBrand: Brand = {
-  id: 0,
-  name: '',
-  logo_url: '',
-  website_url: '',
-  published: true,
-  sort_order: 0,
-};
-
-const emptyHero: HeroSlide = {
-  id: 0,
-  title_fa: '',
-  title_en: '',
-  description_fa: '',
-  description_en: '',
-  media_url: '',
-  media_type: 'image',
-  button_text_fa: '',
-  button_text_en: '',
-  button_url: '',
-  sort_order: 0,
-  published: true,
-};
-
-export default function AdminPage() {
-  const [section, setSection] = useState<Section>('dashboard');
-
-  const [loading, setLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
-
-  const [portfolio, setPortfolio] = useState<Portfolio[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [media, setMedia] = useState<MediaAsset[]>([]);
-  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
-
-  const [content, setContent] = useState<Record<string, unknown>>({});
-  const [settings, setSettings] = useState<Record<string, unknown>>({});
-
-  const [destMap, setDestMap] = useState<Record<number, string[]>>({});
-
-  const [editingPortfolio, setEditingPortfolio] =
-    useState<Portfolio | null>(null);
-
-  const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
-
-  const [editingHero, setEditingHero] = useState<HeroSlide | null>(null);
-
-  const stats = useMemo(
-    () => ({
-      projects: portfolio.length,
-      brands: brands.length,
-      media: media.length,
-      hero: heroSlides.length,
-    }),
-    [portfolio, brands, media, heroSlides]
-  );
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  async function checkAuth() {
-    setLoading(true);
-
-    const {
-      data: { session },
-    } = await supabaseBrowser.auth.getSession();
-
-    if (!session) {
-      window.location.href = '/admin/login';
-      return;
-    }
-
-    setAuthenticated(true);
-    await loadAll();
-    setLoading(false);
-  }
-
-  async function loadAll() {
-    const [
-      contentRes,
-      settingsRes,
-      portfolioRes,
-      brandsRes,
-      mediaRes,
-      heroRes,
-      destinationRes,
-    ] = await Promise.all([
-      supabaseBrowser.from('site_content').select('*').limit(1).maybeSingle(),
-      supabaseBrowser.from('site_settings').select('*').limit(1).maybeSingle(),
-      supabaseBrowser
-        .from('portfolio')
-        .select('*')
-        .order('sort_order', { ascending: true }),
-      supabaseBrowser
-        .from('brands')
-        .select('*')
-        .order('sort_order', { ascending: true }),
-      supabaseBrowser
-        .from('media_assets')
-        .select('*')
-        .order('id', { ascending: false }),
-      supabaseBrowser
-        .from('hero_slides')
-        .select('*')
-        .order('sort_order', { ascending: true }),
-      supabaseBrowser.from('project_destinations').select('*'),
-    ]);
-
-    if (contentRes.data) {
-      setContent(contentRes.data);
-    }
-
-    if (settingsRes.data) {
-      setSettings(settingsRes.data);
-    }
-
-    if (portfolioRes.data) {
-      setPortfolio(portfolioRes.data as Portfolio[]);
-    }
-
-    if (brandsRes.data) {
-      setBrands(brandsRes.data as Brand[]);
-    }
-
-    if (mediaRes.data) {
-      setMedia(mediaRes.data as MediaAsset[]);
-    }
-
-    if (heroRes.data) {
-      setHeroSlides(heroRes.data as HeroSlide[]);
-    }
-
-    if (destinationRes.data) {
-      const map: Record<number, string[]> = {};
-
-      destinationRes.data.forEach((item: any) => {
-        if (!map[item.project_id]) {
-          map[item.project_id] = [];
-        }
-
-        map[item.project_id].push(item.destination);
-      });
-
-      setDestMap(map);
-    }
-  }
-
-  function notify(text: string) {
-    setMessage(text);
-
-    window.setTimeout(() => {
-      setMessage('');
-    }, 3500);
-  }
-
-  async function saveContent() {
-    setSaving(true);
-
-    const existing = await supabaseBrowser
-      .from('site_content')
-      .select('id')
-      .limit(1)
-      .maybeSingle();
-
-    let result;
-
-    if (existing.data?.id) {
-      result = await supabaseBrowser
-        .from('site_content')
-        .update(content)
-        .eq('id', existing.data.id);
-    } else {
-      result = await supabaseBrowser.from('site_content').insert(content);
-    }
-
-    if (result.error) {
-      notify(result.error.message);
-    } else {
-      notify('Site content saved.');
-      await loadAll();
-    }
-
-    setSaving(false);
-  }
-
-  async function saveSettings() {
-    setSaving(true);
-
-    const existing = await supabaseBrowser
-      .from('site_settings')
-      .select('id')
-      .limit(1)
-      .maybeSingle();
-
-    let result;
-
-    if (existing.data?.id) {
-      result = await supabaseBrowser
-        .from('site_settings')
-        .update(settings)
-        .eq('id', existing.data.id);
-    } else {
-      result = await supabaseBrowser.from('site_settings').insert(settings);
-    }
-
-    if (result.error) {
-      notify(result.error.message);
-    } else {
-      notify('Settings saved.');
-      await loadAll();
-    }
-
-    setSaving(false);
-  }
-
-  async function saveProject() {
-    if (!editingPortfolio) return;
-
-    setSaving(true);
-
-    const { id, ...payload } = editingPortfolio;
-
-    let result;
-
-    if (id) {
-      result = await supabaseBrowser
-        .from('portfolio')
-        .update(payload)
-        .eq('id', id);
-    } else {
-      result = await supabaseBrowser
-        .from('portfolio')
-        .insert(payload)
-        .select()
-        .single();
-    }
-
-    if (result.error) {
-      notify(result.error.message);
-      setSaving(false);
-      return;
-    }
-
-    const savedId = id || result.data?.id;
-
-    if (savedId) {
-      await supabaseBrowser
-        .from('project_destinations')
-        .delete()
-        .eq('project_id', savedId);
-
-      const selected = destMap[savedId] || [];
-
-      if (selected.length) {
-        await supabaseBrowser.from('project_destinations').insert(
-          selected.map((destination) => ({
-            project_id: savedId,
-            destination,
-          }))
-        );
-      }
-    }
-
-    notify('Project saved successfully.');
-    setEditingPortfolio(null);
-
-    await loadAll();
-
-    setSaving(false);
-  }
-
-  function editProject(project: Portfolio) {
-    setEditingPortfolio({ ...project });
-    setSection('portfolio');
-  }
-
-  async function deleteProject(id: number) {
-    if (!confirm('Delete this project?')) return;
-
-    setSaving(true);
-
-    await supabaseBrowser
-      .from('project_destinations')
-      .delete()
-      .eq('project_id', id);
-
-    await supabaseBrowser
-      .from('project_media')
-      .delete()
-      .eq('project_id', id);
-
-    await supabaseBrowser
-      .from('project_seo')
-      .delete()
-      .eq('project_id', id);
-
-    await supabaseBrowser
-      .from('project_social')
-      .delete()
-      .eq('project_id', id);
-
-    const result = await supabaseBrowser
-      .from('portfolio')
-      .delete()
-      .eq('id', id);
-
-    if (result.error) {
-      notify(result.error.message);
-    } else {
-      notify('Project deleted.');
-    }
-
-    setEditingPortfolio(null);
-    await loadAll();
-
-    setSaving(false);
-  }
-
-  function toggleDestination(projectId: number, destination: string) {
-    setDestMap((current) => {
-      const existing = current[projectId] || [];
-
-      return {
-        ...current,
-        [projectId]: existing.includes(destination)
-          ? existing.filter((item) => item !== destination)
-          : [...existing, destination],
-      };
-    });
-  }
-
-  async function saveBrand() {
-    if (!editingBrand) return;
-
-    setSaving(true);
-
-    const { id, ...payload } = editingBrand;
-
-    const result = id
-      ? await supabaseBrowser
-          .from('brands')
-          .update(payload)
-          .eq('id', id)
-      : await supabaseBrowser.from('brands').insert(payload);
-
-    if (result.error) {
-      notify(result.error.message);
-    } else {
-      notify('Brand saved.');
-      setEditingBrand(null);
-      await loadAll();
-    }
-
-    setSaving(false);
-  }
-
-  async function deleteBrand(id: number) {
-    if (!confirm('Delete this brand?')) return;
-
-    const result = await supabaseBrowser
-      .from('brands')
-      .delete()
-      .eq('id', id);
-
-    if (result.error) {
-      notify(result.error.message);
-    } else {
-      notify('Brand deleted.');
-    }
-
-    setEditingBrand(null);
-    await loadAll();
-  }
-
-  async function saveHero() {
-    if (!editingHero) return;
-
-    setSaving(true);
-
-    const { id, ...payload } = editingHero;
-
-    const result = id
-      ? await supabaseBrowser
-          .from('hero_slides')
-          .update(payload)
-          .eq('id', id)
-      : await supabaseBrowser.from('hero_slides').insert(payload);
-
-    if (result.error) {
-      notify(result.error.message);
-    } else {
-      notify('Hero slide saved.');
-      setEditingHero(null);
-      await loadAll();
-    }
-
-    setSaving(false);
-  }
-
-  async function deleteHero(id: number) {
-    if (!confirm('Delete this hero slide?')) return;
-
-    const result = await supabaseBrowser
-      .from('hero_slides')
-      .delete()
-      .eq('id', id);
-
-    if (result.error) {
-      notify(result.error.message);
-    } else {
-      notify('Hero slide deleted.');
-    }
-
-    setEditingHero(null);
-    await loadAll();
-  }
-
-  async function uploadFile(file: File) {
-    setSaving(true);
-
-    const extension = file.name.split('.').pop() || 'file';
-
-    const filename = `${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2)}.${extension}`;
-
-    const path = `admin/${filename}`;
-
-    const upload = await supabaseBrowser.storage
-      .from('nuranico-media')
-      .upload(path, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-
-    if (upload.error) {
-      notify(upload.error.message);
-      setSaving(false);
-      return null;
-    }
-
-    const publicUrl = supabaseBrowser.storage
-      .from('nuranico-media')
-      .getPublicUrl(path).data.publicUrl;
-
-    const inserted = await supabaseBrowser
-      .from('media_assets')
-      .insert({
-        name: file.name,
-        file_url: publicUrl,
-        file_path: path,
-        file_type: file.type.startsWith('video') ? 'video' : 'image',
-        mime_type: file.type,
-        file_size: file.size,
-      })
-      .select()
-      .single();
-
-    if (inserted.error) {
-      notify(inserted.error.message);
-      setSaving(false);
-      return null;
-    }
-
-    notify('File uploaded.');
-    await loadAll();
-
-    setSaving(false);
-
-    return inserted.data;
-  }
-
-  async function deleteMedia(item: MediaAsset) {
-    if (!confirm(`Delete "${item.name}"?`)) return;
-
-    setSaving(true);
-
-    if (item.file_path) {
-      await supabaseBrowser.storage
-        .from('nuranico-media')
-        .remove([item.file_path]);
-    }
-
-    const result = await supabaseBrowser
-      .from('media_assets')
-      .delete()
-      .eq('id', item.id);
-
-    if (result.error) {
-      notify(result.error.message);
-    } else {
-      notify('Media deleted.');
-    }
-
-    await loadAll();
-    setSaving(false);
-  }
-
-  async function logout() {
-    await supabaseBrowser.auth.signOut();
-    window.location.href = '/admin/login';
-  }
-
-  if (loading) {
-    return (
-      <div style={styles.loading}>
-        Loading NURANICO CMS...
-      </div>
-    );
-  }
-
-  if (!authenticated) {
-    return null;
-  }
-
-  return (
-    <main style={styles.page}>
-      <aside style={styles.sidebar}>
-        <div style={styles.logo}>NURANICO</div>
-
-        <div style={styles.sidebarLabel}>CMS</div>
-
-        <NavButton
-          active={section === 'dashboard'}
-          onClick={() => setSection('dashboard')}
-        >
-          Dashboard
-        </NavButton>
-
-        <NavButton
-          active={section === 'content'}
-          onClick={() => setSection('content')}
-        >
-          Site Content
-        </NavButton>
-
-        <NavButton
-          active={section === 'portfolio'}
-          onClick={() => setSection('portfolio')}
-        >
-          Projects
-        </NavButton>
-
-        <NavButton
-          active={section === 'hero'}
-          onClick={() => setSection('hero')}
-        >
-          Hero Slider
-        </NavButton>
-
-        <NavButton
-          active={section === 'brands'}
-          onClick={() => setSection('brands')}
-        >
-          Brands
-        </NavButton>
-
-        <NavButton
-          active={section === 'media'}
-          onClick={() => setSection('media')}
-        >
-          Media Library
-        </NavButton>
-
-        <NavButton
-          active={section === 'appearance'}
-          onClick={() => setSection('appearance')}
-        >
-          Appearance
-        </NavButton>
-
-        <NavButton
-          active={section === 'settings'}
-          onClick={() => setSection('settings')}
-        >
-          Settings
-        </NavButton>
-
-        <button style={styles.logout} onClick={logout}>
-          Logout
-        </button>
-      </aside>
-
-      <section style={styles.content}>
-        {message && <div style={styles.message}>{message}</div>}
-
-        {section === 'dashboard' && (
-          <>
-            <PageTitle
-              title="Dashboard"
-              subtitle="NURANICO content management"
-            />
-
-            <div style={styles.statsGrid}>
-              <Stat label="Projects" value={stats.projects} />
-              <Stat label="Brands" value={stats.brands} />
-              <Stat label="Media" value={stats.media} />
-              <Stat label="Hero Slides" value={stats.hero} />
-            </div>
-
-            <div style={styles.panel}>
-              <h2 style={styles.panelTitle}>Quick actions</h2>
-
-              <div style={styles.actionGrid}>
-                <button
-                  style={styles.actionButton}
-                  onClick={() => {
-                    setEditingPortfolio({ ...emptyPortfolio });
-                    setSection('portfolio');
-                  }}
-                >
-                  + New Project
-                </button>
-
-                <button
-                  style={styles.actionButton}
-                  onClick={() => {
-                    setEditingHero({ ...emptyHero });
-                    setSection('hero');
-                  }}
-                >
-                  + New Hero
-                </button>
-
-                <button
-                  style={styles.actionButton}
-                  onClick={() => {
-                    setEditingBrand({ ...emptyBrand });
-                    setSection('brands');
-                  }}
-                >
-                  + New Brand
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-
-        {section === 'content' && (
-          <>
-            <PageTitle
-              title="Site Content"
-              subtitle="Edit global website content as JSON"
-            />
-
-            <div style={styles.panel}>
-              <JsonEditor
-                value={content}
-                onChange={setContent}
-                label="Site Content"
-              />
-
-              <SaveButton
-                saving={saving}
-                onClick={saveContent}
-              />
-            </div>
-          </>
-        )}
-
-        {section === 'portfolio' && (
-          <>
-            <PageTitle
-              title="Projects"
-              subtitle="Manage your portfolio work"
-            />
-
-            <button
-              style={styles.primaryButton}
-              onClick={() =>
-                setEditingPortfolio({ ...emptyPortfolio })
-              }
-            >
-              + New Project
-            </button>
-
-            {editingPortfolio && (
-              <div style={styles.editor}>
-                <div style={styles.editorHeader}>
-                  <h2 style={styles.panelTitle}>
-                    {editingPortfolio.id
-                      ? 'Edit Project'
-                      : 'New Project'}
-                  </h2>
-
-                  <button
-                    style={styles.secondaryButton}
-                    onClick={() => setEditingPortfolio(null)}
-                  >
-                    Close
-                  </button>
-                </div>
-
-                <div style={styles.formGrid}>
-                  <Field
-                    label="Title FA"
-                    value={editingPortfolio.title_fa}
-                    onChange={(value) =>
-                      setEditingPortfolio({
-                        ...editingPortfolio,
-                        title_fa: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Title EN"
-                    value={editingPortfolio.title_en || ''}
-                    onChange={(value) =>
-                      setEditingPortfolio({
-                        ...editingPortfolio,
-                        title_en: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Category"
-                    value={editingPortfolio.category}
-                    onChange={(value) =>
-                      setEditingPortfolio({
-                        ...editingPortfolio,
-                        category: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Sort Order"
-                    type="number"
-                    value={String(editingPortfolio.sort_order)}
-                    onChange={(value) =>
-                      setEditingPortfolio({
-                        ...editingPortfolio,
-                        sort_order: Number(value) || 0,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Cover URL"
-                    value={editingPortfolio.cover_url || ''}
-                    onChange={(value) =>
-                      setEditingPortfolio({
-                        ...editingPortfolio,
-                        cover_url: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Media URL"
-                    value={editingPortfolio.media_url || ''}
-                    onChange={(value) =>
-                      setEditingPortfolio({
-                        ...editingPortfolio,
-                        media_url: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Media Type"
-                    value={editingPortfolio.media_type}
-                    onChange={(value) =>
-                      setEditingPortfolio({
-                        ...editingPortfolio,
-                        media_type: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Description FA"
-                    value={editingPortfolio.description_fa || ''}
-                    textarea
-                    onChange={(value) =>
-                      setEditingPortfolio({
-                        ...editingPortfolio,
-                        description_fa: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Description EN"
-                    value={editingPortfolio.description_en || ''}
-                    textarea
-                    onChange={(value) =>
-                      setEditingPortfolio({
-                        ...editingPortfolio,
-                        description_en: value,
-                      })
-                    }
-                  />
-                </div>
-
-                <div style={styles.checkboxRow}>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={editingPortfolio.featured}
-                      onChange={(event) =>
-                        setEditingPortfolio({
-                          ...editingPortfolio,
-                          featured: event.target.checked,
-                        })
-                      }
-                    />{' '}
-                    Featured
-                  </label>
-
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={editingPortfolio.published}
-                      onChange={(event) =>
-                        setEditingPortfolio({
-                          ...editingPortfolio,
-                          published: event.target.checked,
-                        })
-                      }
-                    />{' '}
-                    Published
-                  </label>
-                </div>
-
-                {editingPortfolio.id > 0 && (
-                  <div style={styles.destinationBox}>
-                    <h3 style={styles.smallTitle}>
-                      Destinations
-                    </h3>
-
-                    <div style={styles.destinationGrid}>
-                      {destinations.map((destination) => {
-                        const selected = (
-                          destMap[editingPortfolio.id] || []
-                        ).includes(destination.key);
-
-                        return (
-                          <button
-                            key={destination.key}
-                            type="button"
-                            style={{
-                              ...styles.destinationButton,
-                              ...(selected
-                                ? styles.destinationActive
-                                : {}),
-                            }}
-                            onClick={() =>
-                              toggleDestination(
-                                editingPortfolio.id,
-                                destination.key
-                              )
-                            }
-                          >
-                            {destination.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                <div style={styles.buttonRow}>
-                  <SaveButton
-                    saving={saving}
-                    onClick={saveProject}
-                  />
-
-                  {editingPortfolio.id > 0 && (
-                    <button
-                      style={styles.deleteButton}
-                      onClick={() =>
-                        deleteProject(editingPortfolio.id)
-                      }
-                    >
-                      Delete
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div style={styles.list}>
-              {portfolio.map((project) => (
-                <div style={styles.listItem} key={project.id}>
-                  <div>
-                    <strong>{project.title_en || project.title_fa}</strong>
-                    <span style={styles.muted}>
-                      {project.category}
-                    </span>
-                  </div>
-
-                  <div style={styles.rowActions}>
-                    <button
-                      style={styles.smallButton}
-                      onClick={() => editProject(project)}
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      style={styles.smallDelete}
-                      onClick={() => deleteProject(project.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              {!portfolio.length && (
-                <EmptyState text="No projects yet." />
-              )}
-            </div>
-          </>
-        )}
-
-        {section === 'hero' && (
-          <>
-            <PageTitle
-              title="Hero Slider"
-              subtitle="Manage homepage hero slides"
-            />
-
-            <button
-              style={styles.primaryButton}
-              onClick={() => setEditingHero({ ...emptyHero })}
-            >
-              + New Hero Slide
-            </button>
-
-            {editingHero && (
-              <div style={styles.editor}>
-                <div style={styles.editorHeader}>
-                  <h2 style={styles.panelTitle}>
-                    {editingHero.id
-                      ? 'Edit Hero'
-                      : 'New Hero'}
-                  </h2>
-
-                  <button
-                    style={styles.secondaryButton}
-                    onClick={() => setEditingHero(null)}
-                  >
-                    Close
-                  </button>
-                </div>
-
-                <div style={styles.formGrid}>
-                  <Field
-                    label="Title FA"
-                    value={editingHero.title_fa || ''}
-                    onChange={(value) =>
-                      setEditingHero({
-                        ...editingHero,
-                        title_fa: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Title EN"
-                    value={editingHero.title_en || ''}
-                    onChange={(value) =>
-                      setEditingHero({
-                        ...editingHero,
-                        title_en: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Media URL"
-                    value={editingHero.media_url || ''}
-                    onChange={(value) =>
-                      setEditingHero({
-                        ...editingHero,
-                        media_url: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Media Type"
-                    value={editingHero.media_type}
-                    onChange={(value) =>
-                      setEditingHero({
-                        ...editingHero,
-                        media_type: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Button Text FA"
-                    value={editingHero.button_text_fa || ''}
-                    onChange={(value) =>
-                      setEditingHero({
-                        ...editingHero,
-                        button_text_fa: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Button Text EN"
-                    value={editingHero.button_text_en || ''}
-                    onChange={(value) =>
-                      setEditingHero({
-                        ...editingHero,
-                        button_text_en: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Button URL"
-                    value={editingHero.button_url || ''}
-                    onChange={(value) =>
-                      setEditingHero({
-                        ...editingHero,
-                        button_url: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Sort Order"
-                    type="number"
-                    value={String(editingHero.sort_order)}
-                    onChange={(value) =>
-                      setEditingHero({
-                        ...editingHero,
-                        sort_order: Number(value) || 0,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Description FA"
-                    value={editingHero.description_fa || ''}
-                    textarea
-                    onChange={(value) =>
-                      setEditingHero({
-                        ...editingHero,
-                        description_fa: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Description EN"
-                    value={editingHero.description_en || ''}
-                    textarea
-                    onChange={(value) =>
-                      setEditingHero({
-                        ...editingHero,
-                        description_en: value,
-                      })
-                    }
-                  />
-                </div>
-
-                <label style={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    checked={editingHero.published}
-                    onChange={(event) =>
-                      setEditingHero({
-                        ...editingHero,
-                        published: event.target.checked,
-                      })
-                    }
-                  />{' '}
-                  Published
-                </label>
-
-                <div style={styles.buttonRow}>
-                  <SaveButton
-                    saving={saving}
-                    onClick={saveHero}
-                  />
-
-                  {editingHero.id > 0 && (
-                    <button
-                      style={styles.deleteButton}
-                      onClick={() =>
-                        deleteHero(editingHero.id)
-                      }
-                    >
-                      Delete
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div style={styles.list}>
-              {heroSlides.map((slide) => (
-                <div style={styles.listItem} key={slide.id}>
-                  <div>
-                    <strong>
-                      {slide.title_en ||
-                        slide.title_fa ||
-                        `Hero #${slide.id}`}
-                    </strong>
-
-                    <span style={styles.muted}>
-                      {slide.media_type}
-                    </span>
-                  </div>
-
-                  <button
-                    style={styles.smallButton}
-                    onClick={() =>
-                      setEditingHero({ ...slide })
-                    }
-                  >
-                    Edit
-                  </button>
-                </div>
-              ))}
-
-              {!heroSlides.length && (
-                <EmptyState text="No hero slides yet." />
-              )}
-            </div>
-          </>
-        )}
-
-        {section === 'brands' && (
-          <>
-            <PageTitle
-              title="Brands"
-              subtitle="Manage client and partner logos"
-            />
-
-            <button
-              style={styles.primaryButton}
-              onClick={() => setEditingBrand({ ...emptyBrand })}
-            >
-              + New Brand
-            </button>
-
-            {editingBrand && (
-              <div style={styles.editor}>
-                <div style={styles.editorHeader}>
-                  <h2 style={styles.panelTitle}>
-                    {editingBrand.id
-                      ? 'Edit Brand'
-                      : 'New Brand'}
-                  </h2>
-
-                  <button
-                    style={styles.secondaryButton}
-                    onClick={() => setEditingBrand(null)}
-                  >
-                    Close
-                  </button>
-                </div>
-
-                <div style={styles.formGrid}>
-                  <Field
-                    label="Brand Name"
-                    value={editingBrand.name}
-                    onChange={(value) =>
-                      setEditingBrand({
-                        ...editingBrand,
-                        name: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Logo URL"
-                    value={editingBrand.logo_url || ''}
-                    onChange={(value) =>
-                      setEditingBrand({
-                        ...editingBrand,
-                        logo_url: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Website URL"
-                    value={editingBrand.website_url || ''}
-                    onChange={(value) =>
-                      setEditingBrand({
-                        ...editingBrand,
-                        website_url: value,
-                      })
-                    }
-                  />
-
-                  <Field
-                    label="Sort Order"
-                    type="number"
-                    value={String(editingBrand.sort_order)}
-                    onChange={(value) =>
-                      setEditingBrand({
-                        ...editingBrand,
-                        sort_order: Number(value) || 0,
-                      })
-                    }
-                  />
-                </div>
-
-                <label style={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    checked={editingBrand.published}
-                    onChange={(event) =>
-                      setEditingBrand({
-                        ...editingBrand,
-                        published: event.target.checked,
-                      })
-                    }
-                  />{' '}
-                  Published
-                </label>
-
-                <div style={styles.buttonRow}>
-                  <SaveButton
-                    saving={saving}
-                    onClick={saveBrand}
-                  />
-
-                  {editingBrand.id > 0 && (
-                    <button
-                      style={styles.deleteButton}
-                      onClick={() =>
-                        deleteBrand(editingBrand.id)
-                      }
-                    >
-                      Delete
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div style={styles.list}>
-              {brands.map((brand) => (
-                <div style={styles.listItem} key={brand.id}>
-                  <div style={styles.brandItem}>
-                    {brand.logo_url ? (
-                      <img
-                        src={brand.logo_url}
-                        alt={brand.name}
-                        style={styles.brandLogo}
-                      />
-                    ) : (
-                      <div style={styles.logoPlaceholder}>
-                        LOGO
-                      </div>
-                    )}
-
-                    <div>
-                      <strong>{brand.name}</strong>
-
-                      <span style={styles.muted}>
-                        {brand.website_url || 'No website'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div style={styles.rowActions}>
-                    <button
-                      style={styles.smallButton}
-                      onClick={() =>
-                        setEditingBrand({ ...brand })
-                      }
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      style={styles.smallDelete}
-                      onClick={() => deleteBrand(brand.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              {!brands.length && (
-                <EmptyState text="No brands yet." />
-              )}
-            </div>
-          </>
-        )}
-
-        {section === 'media' && (
-          <>
-            <PageTitle
-              title="Media Library"
-              subtitle="Upload and manage images and videos"
-            />
-
-            <div style={styles.uploadBox}>
-              <label style={styles.uploadLabel}>
-                <input
-                  type="file"
-                  accept="image/*,video/*"
-                  style={{ display: 'none' }}
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-
-                    if (file) {
-                      uploadFile(file);
-                    }
-
-                    event.currentTarget.value = '';
-                  }}
-                />
-
-                <span style={styles.uploadIcon}>+</span>
-                Upload image or video
-              </label>
-            </div>
-
-            <div style={styles.mediaGrid}>
-              {media.map((item) => (
-                <div style={styles.mediaCard} key={item.id}>
-                  <div style={styles.mediaPreview}>
-                    {item.file_type === 'video' ? (
-                      <video
-                        src={item.file_url}
-                        muted
-                        controls
-                        style={styles.mediaElement}
-                      />
-                    ) : (
-                      <img
-                        src={item.file_url}
-                        alt={item.name}
-                        style={styles.mediaElement}
-                      />
-                    )}
-                  </div>
-
-                  <div style={styles.mediaInfo}>
-                    <strong>{item.name}</strong>
-
-                    <span style={styles.muted}>
-                      {item.file_type || item.mime_type || 'file'}
-                    </span>
-
-                    <button
-                      style={styles.smallDelete}
-                      onClick={() => deleteMedia(item)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {!media.length && (
-              <EmptyState text="No media uploaded yet." />
-            )}
-          </>
-        )}
-
-        {section === 'appearance' && (
-          <>
-            <PageTitle
-              title="Appearance"
-              subtitle="Global visual settings"
-            />
-
-            <div style={styles.panel}>
-              <JsonEditor
-                value={settings}
-                onChange={setSettings}
-                label="Appearance / Settings"
-              />
-
-              <SaveButton
-                saving={saving}
-                onClick={saveSettings}
-              />
-            </div>
-          </>
-        )}
-
-        {section === 'settings' && (
-          <>
-            <PageTitle
-              title="Settings"
-              subtitle="Website configuration"
-            />
-
-            <div style={styles.panel}>
-              <JsonEditor
-                value={settings}
-                onChange={setSettings}
-                label="Site Settings"
-              />
-
-              <SaveButton
-                saving={saving}
-                onClick={saveSettings}
-              />
-            </div>
-          </>
-        )}
-      </section>
-    </main>
-  );
-}
-
-function NavButton({
-  children,
-  active,
-  onClick,
-}: {
-  children: ReactNode;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        ...styles.navButton,
-        ...(active ? styles.navButtonActive : {}),
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function PageTitle({
-  title,
-  subtitle,
-}: {
+  id: string;
   title: string;
   subtitle: string;
-}) {
-  return (
-    <div style={styles.pageTitle}>
-      <h1>{title}</h1>
-      <p>{subtitle}</p>
-    </div>
-  );
-}
+  media: string;
+  active: boolean;
+};
 
-function Stat({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) {
-  return (
-    <div style={styles.stat}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
+type Brand = {
+  id: string;
+  name: string;
+  logo: string;
+};
+
+type Service = {
+  id: string;
+  title: string;
+  description: string;
+  active: boolean;
+};
+
+const initialProjects: Project[] = [
+  {
+    id: '1',
+    title: 'Luxury Campaign',
+    category: 'Advertising',
+    status: 'Published',
+    image: '',
+    description: 'Luxury advertising campaign.',
+  },
+  {
+    id: '2',
+    title: 'Fashion Film',
+    category: 'Film',
+    status: 'Published',
+    image: '',
+    description: 'Creative fashion film.',
+  },
+  {
+    id: '3',
+    title: 'Social Content',
+    category: 'Content',
+    status: 'Draft',
+    image: '',
+    description: 'Social media content project.',
+  },
+];
+
+const initialMedia: MediaItem[] = [
+  {
+    id: '1',
+    name: 'Hero Preview',
+    type: 'Video',
+    url: '',
+  },
+  {
+    id: '2',
+    name: 'Project Cover',
+    type: 'Image',
+    url: '',
+  },
+];
+
+const initialHero: HeroSlide[] = [
+  {
+    id: '1',
+    title: 'CREATE',
+    subtitle: 'Visual stories with intention.',
+    media: '',
+    active: true,
+  },
+  {
+    id: '2',
+    title: 'CAPTURE',
+    subtitle: 'Images that stay.',
+    media: '',
+    active: true,
+  },
+  {
+    id: '3',
+    title: 'DELIVER',
+    subtitle: 'Creative work for ambitious brands.',
+    media: '',
+    active: true,
+  },
+];
+
+const initialBrands: Brand[] = [
+  { id: '1', name: 'Brand One', logo: '' },
+  { id: '2', name: 'Brand Two', logo: '' },
+  { id: '3', name: 'Brand Three', logo: '' },
+];
+
+const initialServices: Service[] = [
+  {
+    id: '1',
+    title: 'Video Production',
+    description: 'Creative video production and teaser creation.',
+    active: true,
+  },
+  {
+    id: '2',
+    title: 'Photography',
+    description: 'Commercial and creative photography.',
+    active: true,
+  },
+  {
+    id: '3',
+    title: 'Content Production',
+    description: 'Social media and branded content.',
+    active: true,
+  },
+  {
+    id: '4',
+    title: 'Advertising',
+    description: 'Visual campaigns for brands.',
+    active: true,
+  },
+];
 
 function Field({
   label,
   value,
   onChange,
-  textarea = false,
-  type = 'text',
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  textarea?: boolean;
-  type?: string;
 }) {
   return (
-    <label style={styles.field}>
-      <span>{label}</span>
-
-      {textarea ? (
-        <textarea
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          style={styles.textarea}
-          rows={5}
-        />
-      ) : (
-        <input
-          type={type}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          style={styles.input}
-        />
-      )}
-    </label>
-  );
-}
-
-function SaveButton({
-  saving,
-  onClick,
-}: {
-  saving: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      style={styles.primaryButton}
-      onClick={onClick}
-      disabled={saving}
-    >
-      {saving ? 'Saving...' : 'Save Changes'}
-    </button>
-  );
-}
-
-function JsonEditor({
-  value,
-  onChange,
-  label,
-}: {
-  value: Record<string, unknown>;
-  onChange: (value: Record<string, unknown>) => void;
-  label: string;
-}) {
-  const [text, setText] = useState(() =>
-    JSON.stringify(value, null, 2)
-  );
-
-  useEffect(() => {
-    setText(JSON.stringify(value, null, 2));
-  }, [value]);
-
-  function handleChange(next: string) {
-    setText(next);
-
-    try {
-      const parsed = JSON.parse(next);
-
-      if (
-        parsed &&
-        typeof parsed === 'object' &&
-        !Array.isArray(parsed)
-      ) {
-        onChange(parsed);
-      }
-    } catch {
-      // Wait until JSON becomes valid.
-    }
-  }
-
-  return (
-    <label style={styles.field}>
-      <span>{label}</span>
-
-      <textarea
-        value={text}
-        onChange={(event) => handleChange(event.target.value)}
-        style={styles.codeArea}
-        spellCheck={false}
-        rows={18}
+    <div className="field">
+      <label>{label}</label>
+      <input
+        value={value || ""}
+        onChange={(event) => onChange(event.target.value)}
       />
-    </label>
-  );
-}
-
-function EmptyState({ text }: { text: string }) {
-  return (
-    <div style={styles.empty}>
-      {text}
     </div>
   );
 }
 
-const styles: Record<string, CSSProperties> = {
-  page: {
-    minHeight: '100vh',
-    display: 'flex',
-    background: '#101010',
-    color: '#f5f5f5',
-    fontFamily:
-      'Arial, Helvetica, sans-serif',
-  },
 
-  loading: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: '#101010',
-    color: '#aaa',
-    fontFamily:
-      'Arial, Helvetica, sans-serif',
-  },
+function ServicesSection({
+  services,
+  editingService,
+  setEditingService,
+  onAdd,
+  onUpdate,
+  onDelete,
+}: {
+  services: Service[];
+  editingService: string | null;
+  setEditingService: (id: string | null) => void;
+  onAdd: () => void;
+  onUpdate: (
+    id: string,
+    field: keyof Service,
+    value: string | boolean
+  ) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className="panel">
+      <div className="panel-header">
+        <div>
+          <div className="panel-title">Services</div>
+          <div className="panel-subtitle">
+            Manage the services shown on the NURANICO website.
+          </div>
+        </div>
 
-  sidebar: {
-    width: 230,
-    minHeight: '100vh',
-    padding: '32px 20px',
-    borderRight: '1px solid #262626',
-    background: '#0b0b0b',
-    position: 'sticky',
-    top: 0,
-    alignSelf: 'flex-start',
-    boxSizing: 'border-box',
-  },
+        <button
+          className="button primary"
+          type="button"
+          onClick={onAdd}
+        >
+          + Add Service
+        </button>
+      </div>
 
-  logo: {
-    fontSize: 22,
-    fontWeight: 700,
-    letterSpacing: 4,
-    marginBottom: 40,
-  },
+      <div className="service-list">
+        {services.map((service) => {
+          const editing = editingService === service.id;
 
-  sidebarLabel: {
-    color: '#555',
-    fontSize: 10,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: 12,
-  },
+          return (
+            <div className="service-card" key={service.id}>
+              {editing ? (
+                <div className="form-grid">
+                  <Field
+                    label="Title"
+                    value={service.title}
+                    onChange={(value) =>
+                      onUpdate(service.id, "title", value)
+                    }
+                  />
 
-  navButton: {
-    width: '100%',
-    border: 0,
-    background: 'transparent',
-    color: '#777',
-    textAlign: 'left',
-    padding: '12px 10px',
-    borderRadius: 8,
-    cursor: 'pointer',
-    marginBottom: 4,
-    fontSize: 13,
-  },
+                  <div className="field">
+                    <label>Description</label>
+                    <textarea
+                      value={service.description}
+                      onChange={(event) =>
+                        onUpdate(
+                          service.id,
+                          "description",
+                          event.target.value
+                        )
+                      }
+                    />
+                  </div>
 
-  navButtonActive: {
-    background: '#1d1d1d',
-    color: '#fff',
-  },
+                  <div className="field">
+                    <label>Active</label>
+                    <select
+                      value={service.active ? "true" : "false"}
+                      onChange={(event) =>
+                        onUpdate(
+                          service.id,
+                          "active",
+                          event.target.value === "true"
+                        )
+                      }
+                    >
+                      <option value="true">Active</option>
+                      <option value="false">Hidden</option>
+                    </select>
+                  </div>
 
-  logout: {
-    width: '100%',
-    marginTop: 40,
-    padding: '12px 10px',
-    border: '1px solid #292929',
-    borderRadius: 8,
-    background: 'transparent',
-    color: '#888',
-    cursor: 'pointer',
-  },
+                  <div className="admin-actions">
+                    <button
+                      className="button primary"
+                      type="button"
+                      onClick={() => setEditingService(null)}
+                    >
+                      Done
+                    </button>
 
-  content: {
-    flex: 1,
-    padding: '42px 50px',
-    maxWidth: 1400,
-    boxSizing: 'border-box',
-  },
+                    <button
+                      className="button"
+                      type="button"
+                      onClick={() => onDelete(service.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <div className="panel-title">{service.title}</div>
+                    <div className="panel-subtitle">
+                      {service.description}
+                    </div>
+                  </div>
 
-  message: {
-    position: 'fixed',
-    top: 22,
-    right: 22,
-    zIndex: 20,
-    background: '#fff',
-    color: '#111',
-    padding: '13px 18px',
-    borderRadius: 8,
-    fontSize: 13,
-    boxShadow: '0 10px 30px rgba(0,0,0,.3)',
-  },
+                  <div className="admin-actions">
+                    <span className="status">
+                      {service.active ? "Active" : "Hidden"}
+                    </span>
 
-  pageTitle: {
-    marginBottom: 30,
-  },
+                    <button
+                      className="button"
+                      type="button"
+                      onClick={() => setEditingService(service.id)}
+                    >
+                      Edit
+                    </button>
 
-  panelTitle: {
-    margin: 0,
-    fontSize: 18,
-    fontWeight: 500,
-  },
+                    <button
+                      className="button"
+                      type="button"
+                      onClick={() => onDelete(service.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
-  pageTitleH1: {
-    fontSize: 34,
-  },
+function ContentSection({
+  siteTitle,
+  setSiteTitle,
+  siteDescription,
+  setSiteDescription,
+}: {
+  siteTitle: string;
+  setSiteTitle: (value: string) => void;
+  siteDescription: string;
+  setSiteDescription: (value: string) => void;
+}) {
+  return (
+    <div className="panel">
+      <div className="panel-header">
+        <div>
+          <div className="panel-title">Website Content</div>
+          <div className="panel-subtitle">
+            Edit the main website title and description.
+          </div>
+        </div>
+      </div>
 
-  statsGrid: {
-    display: 'grid',
-    gridTemplateColumns:
-      'repeat(4, minmax(0, 1fr))',
-    gap: 14,
-    marginBottom: 30,
-  },
+      <div className="form-grid">
+        <Field
+          label="Site Title"
+          value={siteTitle}
+          onChange={setSiteTitle}
+        />
 
-  stat: {
-    background: '#171717',
-    border: '1px solid #242424',
-    borderRadius: 12,
-    padding: 24,
-  },
+        <div className="field">
+          <label>Site Description</label>
+          <textarea
+            value={siteDescription}
+            onChange={(event) =>
+              setSiteDescription(event.target.value)
+            }
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
-  panel: {
-    background: '#151515',
-    border: '1px solid #242424',
-    borderRadius: 12,
-    padding: 25,
-    marginBottom: 25,
-  },
+function ContactSection({
+  email,
+  setEmail,
+  instagram,
+  setInstagram,
+}: {
+  email: string;
+  setEmail: (value: string) => void;
+  instagram: string;
+  setInstagram: (value: string) => void;
+}) {
+  return (
+    <div className="panel">
+      <div className="panel-header">
+        <div>
+          <div className="panel-title">Contact</div>
+          <div className="panel-subtitle">
+            Manage the contact information displayed on the website.
+          </div>
+        </div>
+      </div>
 
-  actionGrid: {
-    display: 'grid',
-    gridTemplateColumns:
-      'repeat(3, minmax(0, 1fr))',
-    gap: 12,
-    marginTop: 20,
-  },
+      <div className="form-grid">
+        <Field
+          label="Email"
+          value={email}
+          onChange={setEmail}
+        />
 
-  actionButton: {
-    border: '1px solid #303030',
-    background: '#1c1c1c',
-    color: '#fff',
-    padding: 18,
-    borderRadius: 9,
-    cursor: 'pointer',
-    textAlign: 'left',
-  },
+        <Field
+          label="Instagram"
+          value={instagram}
+          onChange={setInstagram}
+        />
+      </div>
+    </div>
+  );
+}
 
-  primaryButton: {
-    border: 0,
-    background: '#f5f5f5',
-    color: '#111',
-    padding: '12px 18px',
-    borderRadius: 8,
-    cursor: 'pointer',
-    fontWeight: 600,
-    marginBottom: 22,
-  },
+function SettingsSection() {
+  const [englishFont, setEnglishFont] = useState('DM Sans');
+  const [persianFont, setPersianFont] = useState('Vazirmatn');
 
-  secondaryButton: {
-    border: '1px solid #333',
-    background: 'transparent',
-    color: '#aaa',
-    padding: '9px 14px',
-    borderRadius: 7,
-    cursor: 'pointer',
-  },
+  const [typography, setTypography] = useState({
+    headingSize: 48,
+    bodySize: 16,
+    smallSize: 11,
+    headingWeight: 600,
+    bodyWeight: 400,
+    letterSpacing: 0,
+  });
 
-  deleteButton: {
-    border: '1px solid #592b2b',
-    background: '#211414',
-    color: '#e88',
-    padding: '12px 18px',
-    borderRadius: 8,
-    cursor: 'pointer',
-  },
+  const [colors, setColors] = useState({
+    background: '#171716',
+    surface: '#101010',
+    primaryText: '#f1efe9',
+    secondaryText: '#99958d',
+    accent: '#e9e6df',
+    border: '#292927',
+  });
 
-  editor: {
-    background: '#151515',
-    border: '1px solid #292929',
-    borderRadius: 12,
-    padding: 25,
-    marginBottom: 30,
-  },
+  const palettes = {
+    'NURANICO Dark': {
+      background: '#171716',
+      surface: '#101010',
+      primaryText: '#f1efe9',
+      secondaryText: '#99958d',
+      accent: '#e9e6df',
+      border: '#292927',
+    },
+    'Pure Black': {
+      background: '#080808',
+      surface: '#111111',
+      primaryText: '#ffffff',
+      secondaryText: '#999999',
+      accent: '#ffffff',
+      border: '#292929',
+    },
+    'Warm Minimal': {
+      background: '#211f1b',
+      surface: '#151411',
+      primaryText: '#f4eee3',
+      secondaryText: '#aaa195',
+      accent: '#d8c3a5',
+      border: '#38332c',
+    },
+    'Soft Stone': {
+      background: '#292826',
+      surface: '#34322f',
+      primaryText: '#f2eee7',
+      secondaryText: '#b6b0a7',
+      accent: '#e2ddd4',
+      border: '#4a4742',
+    },
+  };
 
-  editorHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 25,
-  },
+  function updateColor(
+    key: keyof typeof colors,
+    value: string
+  ) {
+    setColors((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  }
 
-  formGrid: {
-    display: 'grid',
-    gridTemplateColumns:
-      'repeat(2, minmax(0, 1fr))',
-    gap: 18,
-  },
+  function applyPalette(
+    palette: typeof palettes[keyof typeof palettes]
+  ) {
+    setColors({ ...palette });
+  }
 
-  field: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 8,
-    marginBottom: 18,
-  },
+  function saveSettings() {
+    localStorage.setItem(
+      'nuranico-settings',
+      JSON.stringify({
+        englishFont,
+        persianFont,
+        typography,
+        colors,
+      })
+    );
+    alert('Settings saved.');
+  }
 
-  input: {
-    width: '100%',
-    boxSizing: 'border-box',
-    border: '1px solid #303030',
-    background: '#0e0e0e',
-    color: '#eee',
-    borderRadius: 7,
-    padding: '12px 13px',
-    outline: 'none',
-  },
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('nuranico-settings');
 
-  textarea: {
-    width: '100%',
-    boxSizing: 'border-box',
-    border: '1px solid #303030',
-    background: '#0e0e0e',
-    color: '#eee',
-    borderRadius: 7,
-    padding: '12px 13px',
-    outline: 'none',
-    resize: 'vertical',
-    fontFamily: 'inherit',
-  },
+      if (!saved) return;
 
-  codeArea: {
-    width: '100%',
-    boxSizing: 'border-box',
-    border: '1px solid #303030',
-    background: '#0b0b0b',
-    color: '#ddd',
-    borderRadius: 7,
-    padding: '14px',
-    outline: 'none',
-    resize: 'vertical',
-    fontFamily:
-      'SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-    fontSize: 12,
-    lineHeight: 1.6,
-  },
+      const parsed = JSON.parse(saved);
 
-  checkboxRow: {
-    display: 'flex',
-    gap: 25,
-    margin: '8px 0 25px',
-  },
+      if (parsed.englishFont) {
+        setEnglishFont(parsed.englishFont);
+      }
 
-  checkboxLabel: {
-    display: 'block',
-    margin: '10px 0 25px',
-    color: '#bbb',
-  },
+      if (parsed.persianFont) {
+        setPersianFont(parsed.persianFont);
+      }
 
-  destinationBox: {
-    borderTop: '1px solid #292929',
-    paddingTop: 20,
-    marginTop: 20,
-  },
+      if (parsed.typography) {
+        setTypography((current) => ({
+          ...current,
+          ...parsed.typography,
+        }));
+      }
 
-  smallTitle: {
-    fontSize: 13,
-    fontWeight: 500,
-    color: '#aaa',
-    marginBottom: 14,
-  },
+      if (parsed.colors) {
+        setColors((current) => ({
+          ...current,
+          ...parsed.colors,
+        }));
+      }
+    } catch {
+      // Ignore invalid local settings.
+    }
+  }, []);
 
-  destinationGrid: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
+  const colorFields: {
+    key: keyof typeof colors;
+    label: string;
+    description: string;
+  }[] = [
+    {
+      key: 'background',
+      label: 'Background',
+      description: 'Main website background.',
+    },
+    {
+      key: 'surface',
+      label: 'Surface',
+      description: 'Cards, panels and secondary surfaces.',
+    },
+    {
+      key: 'primaryText',
+      label: 'Primary Text',
+      description: 'Main headings and important text.',
+    },
+    {
+      key: 'secondaryText',
+      label: 'Secondary Text',
+      description: 'Descriptions and muted text.',
+    },
+    {
+      key: 'accent',
+      label: 'Accent',
+      description: 'Buttons, highlights and key actions.',
+    },
+    {
+      key: 'border',
+      label: 'Border',
+      description: 'Lines, outlines and separators.',
+    },
+  ];
 
-  destinationButton: {
-    border: '1px solid #303030',
-    background: '#101010',
-    color: '#777',
-    borderRadius: 20,
-    padding: '8px 13px',
-    cursor: 'pointer',
-  },
+  return (
+    <div>
+      <div className="page-intro">
+        <h2>Settings</h2>
+        <p>
+          Control NURANICO typography and visual colors from one place.
+        </p>
+      </div>
 
-  destinationActive: {
-    background: '#eee',
-    color: '#111',
-    borderColor: '#eee',
-  },
+      <div className="settings-section-card">
+        <div className="settings-section-head">
+          <div>
+            <div className="settings-section-title">
+              Typography
+            </div>
+            <div className="settings-section-copy">
+              Choose separate fonts for English and Persian content.
+            </div>
+          </div>
+        </div>
 
-  buttonRow: {
-    display: 'flex',
-    gap: 10,
-    alignItems: 'center',
-    marginTop: 25,
-  },
+        <div className="settings-fields">
+          <label className="settings-field">
+            <span>English Font</span>
+            <select
+              value={englishFont}
+              onChange={(event) =>
+                setEnglishFont(event.target.value)
+              }
+            >
+              <option>DM Sans</option>
+              <option>Space Grotesk</option>
+              <option>Inter</option>
+              <option>Montserrat</option>
+              <option>Manrope</option>
+            </select>
+          </label>
 
-  list: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 8,
-  },
+          <label className="settings-field">
+            <span>Persian Font</span>
+            <select
+              value={persianFont}
+              onChange={(event) =>
+                setPersianFont(event.target.value)
+              }
+            >
+              <option>Vazirmatn</option>
+              <option>Yekan Bakh</option>
+              <option>Tahoma</option>
+              <option>Arial</option>
+              <option>system-ui</option>
+            </select>
+          </label>
 
-  listItem: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    background: '#151515',
-    border: '1px solid #252525',
-    borderRadius: 9,
-    padding: '16px 18px',
-  },
+          <label className="settings-field">
+            <span>Heading Size</span>
+            <div className="settings-range-row">
+              <input
+                type="range"
+                min="24"
+                max="96"
+                step="1"
+                value={typography.headingSize}
+                onChange={(event) =>
+                  setTypography((current) => ({
+                    ...current,
+                    headingSize: Number(event.target.value),
+                  }))
+                }
+              />
+              <strong>{typography.headingSize}px</strong>
+            </div>
+          </label>
 
-  rowActions: {
-    display: 'flex',
-    gap: 7,
-  },
+          <label className="settings-field">
+            <span>Body Size</span>
+            <div className="settings-range-row">
+              <input
+                type="range"
+                min="10"
+                max="30"
+                step="1"
+                value={typography.bodySize}
+                onChange={(event) =>
+                  setTypography((current) => ({
+                    ...current,
+                    bodySize: Number(event.target.value),
+                  }))
+                }
+              />
+              <strong>{typography.bodySize}px</strong>
+            </div>
+          </label>
 
-  smallButton: {
-    border: '1px solid #303030',
-    background: '#202020',
-    color: '#ddd',
-    padding: '8px 12px',
-    borderRadius: 6,
-    cursor: 'pointer',
-  },
+          <label className="settings-field">
+            <span>Small Text Size</span>
+            <div className="settings-range-row">
+              <input
+                type="range"
+                min="8"
+                max="20"
+                step="1"
+                value={typography.smallSize}
+                onChange={(event) =>
+                  setTypography((current) => ({
+                    ...current,
+                    smallSize: Number(event.target.value),
+                  }))
+                }
+              />
+              <strong>{typography.smallSize}px</strong>
+            </div>
+          </label>
 
-  smallDelete: {
-    border: '1px solid #4a2929',
-    background: '#1c1111',
-    color: '#d88',
-    padding: '8px 12px',
-    borderRadius: 6,
-    cursor: 'pointer',
-  },
+          <label className="settings-field">
+            <span>Heading Weight</span>
+            <select
+              value={typography.headingWeight}
+              onChange={(event) =>
+                setTypography((current) => ({
+                  ...current,
+                  headingWeight: Number(event.target.value),
+                }))
+              }
+            >
+              <option value="300">Light</option>
+              <option value="400">Regular</option>
+              <option value="500">Medium</option>
+              <option value="600">Semibold</option>
+              <option value="700">Bold</option>
+              <option value="800">Extra Bold</option>
+            </select>
+          </label>
 
-  muted: {
-    display: 'block',
-    color: '#666',
-    fontSize: 11,
-    marginTop: 5,
-  },
+          <label className="settings-field">
+            <span>Body Weight</span>
+            <select
+              value={typography.bodyWeight}
+              onChange={(event) =>
+                setTypography((current) => ({
+                  ...current,
+                  bodyWeight: Number(event.target.value),
+                }))
+              }
+            >
+              <option value="300">Light</option>
+              <option value="400">Regular</option>
+              <option value="500">Medium</option>
+              <option value="600">Semibold</option>
+              <option value="700">Bold</option>
+            </select>
+          </label>
 
-  brandItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 14,
-  },
+          <label className="settings-field">
+            <span>Letter Spacing</span>
+            <div className="settings-range-row">
+              <input
+                type="range"
+                min="-2"
+                max="5"
+                step="0.1"
+                value={typography.letterSpacing}
+                onChange={(event) =>
+                  setTypography((current) => ({
+                    ...current,
+                    letterSpacing: Number(event.target.value),
+                  }))
+                }
+              />
+              <strong>{typography.letterSpacing}px</strong>
+            </div>
+          </label>
+        </div>
+      </div>
 
-  brandLogo: {
-    width: 48,
-    height: 48,
-    objectFit: 'contain',
-    background: '#fff',
-    borderRadius: 7,
-    padding: 5,
-    boxSizing: 'border-box',
-  },
+      <div className="settings-section-card">
+        <div className="settings-section-head">
+          <div>
+            <div className="settings-section-title">
+              Color Palette
+            </div>
+            <div className="settings-section-copy">
+              Change the main visual system without editing the site code.
+            </div>
+          </div>
+        </div>
 
-  logoPlaceholder: {
-    width: 48,
-    height: 48,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: '#222',
-    color: '#666',
-    borderRadius: 7,
-    fontSize: 9,
-  },
+        <div className="settings-palettes">
+          {Object.entries(palettes).map(([name, palette]) => (
+            <button
+              key={name}
+              type="button"
+              className="palette-card"
+              onClick={() => applyPalette(palette)}
+            >
+              <div className="palette-preview">
+                <i style={{ background: palette.background }} />
+                <i style={{ background: palette.surface }} />
+                <i style={{ background: palette.accent }} />
+                <i style={{ background: palette.primaryText }} />
+              </div>
+              <span>{name}</span>
+            </button>
+          ))}
+        </div>
 
-  uploadBox: {
-    border: '1px dashed #383838',
-    borderRadius: 12,
-    padding: 35,
-    marginBottom: 25,
-    textAlign: 'center',
-    background: '#141414',
-  },
+        <div className="settings-color-list">
+          {colorFields.map((field) => (
+            <div className="settings-color-row" key={field.key}>
+              <div>
+                <strong>{field.label}</strong>
+                <span>{field.description}</span>
+              </div>
 
-  uploadLabel: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    color: '#bbb',
-    cursor: 'pointer',
-  },
+              <div className="color-control">
+                <input
+                  type="color"
+                  value={colors[field.key]}
+                  onChange={(event) =>
+                    updateColor(field.key, event.target.value)
+                  }
+                />
+                <input
+                  type="text"
+                  value={colors[field.key]}
+                  onChange={(event) =>
+                    updateColor(field.key, event.target.value)
+                  }
+                  spellCheck={false}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-  uploadIcon: {
-    fontSize: 25,
-    color: '#fff',
-  },
+      <div className="settings-section-card">
+        <div className="settings-section-head">
+          <div>
+            <div className="settings-section-title">
+              Live Preview
+            </div>
+            <div className="settings-section-copy">
+              Preview the selected visual system before saving.
+            </div>
+          </div>
+        </div>
 
-  mediaGrid: {
-    display: 'grid',
-    gridTemplateColumns:
-      'repeat(3, minmax(0, 1fr))',
-    gap: 15,
-  },
+        <div
+          className="settings-preview"
+          style={{
+            background: colors.background,
+            borderColor: colors.border,
+            color: colors.primaryText,
+          }}
+        >
+          <div
+            className="settings-preview-small"
+            style={{ color: colors.secondaryText }}
+          >
+            NURANICO / CREATIVE STUDIO
+          </div>
 
-  mediaCard: {
-    background: '#151515',
-    border: '1px solid #272727',
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
+          <div className="settings-preview-title">
+            Visual stories.
+            <br />
+            Crafted with intent.
+          </div>
 
-  mediaPreview: {
-    width: '100%',
-    height: 190,
-    background: '#0b0b0b',
-  },
+          <div
+            className="settings-preview-line"
+            style={{ background: colors.border }}
+          />
 
-  mediaElement: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
+          <button
+            type="button"
+            style={{
+              background: colors.accent,
+              color: colors.background,
+            }}
+          >
+            VIEW PROJECTS →
+          </button>
+        </div>
+      </div>
 
-  mediaInfo: {
-    padding: 13,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 6,
-  },
+      <div className="settings-save-row">
+        <button
+          type="button"
+          className="settings-save-button"
+          onClick={saveSettings}
+        >
+          Save Settings
+        </button>
+      </div>
+    </div>
+  );
+}
 
-  empty: {
-    border: '1px dashed #303030',
-    borderRadius: 10,
-    padding: 35,
-    textAlign: 'center',
-    color: '#555',
-    marginTop: 15,
-  },
-};
+export default function AdminPage() {
+  const [section, setSection] = useState<Section>('dashboard');
+  const [loading, setLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState('');
+
+  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [media, setMedia] = useState<MediaItem[]>(initialMedia);
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(initialHero);
+  const [brands, setBrands] = useState<Brand[]>(initialBrands);
+  const [services, setServices] = useState<Service[]>(initialServices);
+
+  const [projectSearch, setProjectSearch] = useState('');
+  const [mediaSearch, setMediaSearch] = useState('');
+
+  const [editingProject, setEditingProject] = useState<string | null>(null);
+  const [editingBrand, setEditingBrand] = useState<string | null>(null);
+  const [editingService, setEditingService] = useState<string | null>(null);
+
+  const [siteTitle, setSiteTitle] = useState('NURANICO');
+  const [siteDescription, setSiteDescription] = useState(
+    'Creative studio for film, photography and visual content.'
+  );
+  const [contactEmail, setContactEmail] = useState('');
+  const [instagram, setInstagram] = useState('');
+
+  useEffect(() => {
+    setUserEmail('Admin');
+    setLoading(false);
+  }, []);
+
+  async function logout() {
+    window.location.href = '/api/auth/signout?callbackUrl=/admin/login';
+  }
+
+  function addProject() {
+    const id = Date.now().toString();
+
+    setProjects((current) => [
+      ...current,
+      {
+        id,
+        title: 'New Project',
+        category: 'Advertising',
+        status: 'Draft',
+        image: '',
+        description: '',
+      },
+    ]);
+
+    setEditingProject(id);
+  }
+
+  function updateProject(
+    id: string,
+    field: keyof Project,
+    value: string
+  ) {
+    setProjects((current) =>
+      current.map((project) =>
+        project.id === id
+          ? {
+              ...project,
+              [field]: value,
+            }
+          : project
+      )
+    );
+  }
+
+  function deleteProject(id: string) {
+    setProjects((current) =>
+      current.filter((project) => project.id !== id)
+    );
+
+    if (editingProject === id) {
+      setEditingProject(null);
+    }
+  }
+
+  function addMedia() {
+    setMedia((current) => [
+      ...current,
+      {
+        id: Date.now().toString(),
+        name: 'New Media',
+        type: 'Image',
+        url: '',
+      },
+    ]);
+  }
+
+  function deleteMedia(id: string) {
+    setMedia((current) =>
+      current.filter((item) => item.id !== id)
+    );
+  }
+
+  function updateMedia(
+    id: string,
+    field: keyof MediaItem,
+    value: string
+  ) {
+    setMedia((current) =>
+      current.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              [field]: value,
+            }
+          : item
+      )
+    );
+  }
+
+  function updateHero(
+    id: string,
+    field: keyof HeroSlide,
+    value: string | boolean
+  ) {
+    setHeroSlides((current) =>
+      current.map((slide) =>
+        slide.id === id
+          ? {
+              ...slide,
+              [field]: value,
+            }
+          : slide
+      )
+    );
+  }
+
+  function addHeroSlide() {
+    setHeroSlides((current) => [
+      ...current,
+      {
+        id: Date.now().toString(),
+        title: 'NEW SLIDE',
+        subtitle: 'New hero slide.',
+        media: '',
+        active: true,
+      },
+    ]);
+  }
+
+  function deleteHeroSlide(id: string) {
+    setHeroSlides((current) =>
+      current.filter((slide) => slide.id !== id)
+    );
+  }
+
+  function addBrand() {
+    const id = Date.now().toString();
+
+    setBrands((current) => [
+      ...current,
+      {
+        id,
+        name: 'New Brand',
+        logo: '',
+      },
+    ]);
+
+    setEditingBrand(id);
+  }
+
+  function updateBrand(
+    id: string,
+    field: keyof Brand,
+    value: string
+  ) {
+    setBrands((current) =>
+      current.map((brand) =>
+        brand.id === id
+          ? {
+              ...brand,
+              [field]: value,
+            }
+          : brand
+      )
+    );
+  }
+
+  function deleteBrand(id: string) {
+    setBrands((current) =>
+      current.filter((brand) => brand.id !== id)
+    );
+
+    if (editingBrand === id) {
+      setEditingBrand(null);
+    }
+  }
+
+  function addService() {
+    const id = Date.now().toString();
+
+    setServices((current) => [
+      ...current,
+      {
+        id,
+        title: 'New Service',
+        description: 'Service description.',
+        active: true,
+      },
+    ]);
+
+    setEditingService(id);
+  }
+
+  function updateService(
+    id: string,
+    field: keyof Service,
+    value: string | boolean
+  ) {
+    setServices((current) =>
+      current.map((service) =>
+        service.id === id
+          ? {
+              ...service,
+              [field]: value,
+            }
+          : service
+      )
+    );
+  }
+
+  function deleteService(id: string) {
+    setServices((current) =>
+      current.filter((service) => service.id !== id)
+    );
+
+    if (editingService === id) {
+      setEditingService(null);
+    }
+  }
+
+  const filteredProjects = useMemo(() => {
+    const query = projectSearch.toLowerCase().trim();
+
+    if (!query) return projects;
+
+    return projects.filter((project) =>
+      `${project.title} ${project.category} ${project.status}`
+        .toLowerCase()
+        .includes(query)
+    );
+  }, [projects, projectSearch]);
+
+  const filteredMedia = useMemo(() => {
+    const query = mediaSearch.toLowerCase().trim();
+
+    if (!query) return media;
+
+    return media.filter((item) =>
+      `${item.name} ${item.type}`
+        .toLowerCase()
+        .includes(query)
+    );
+  }, [media, mediaSearch]);
+
+  const publishedProjects = projects.filter(
+    (project) => project.status === 'Published'
+  ).length;
+
+  const activeBrands = brands.length;
+
+  const activeServices = services.filter(
+    (service) => service.active
+  ).length;
+
+  if (loading) {
+    return (
+      <>
+        <div className="loading-screen">
+          <div className="loading-mark">N</div>
+          <p>Loading admin...</p>
+        </div>
+
+        <style jsx global>{`
+          * {
+            box-sizing: border-box;
+          }
+
+          html,
+          body {
+            margin: 0;
+            padding: 0;
+            background: #0b0b0b;
+            color: #f5f5f5;
+            font-family:
+              Arial,
+              Helvetica,
+              sans-serif;
+          }
+
+          .loading-screen {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            background: #0b0b0b;
+            color: #999;
+          }
+
+          .loading-mark {
+            width: 56px;
+            height: 56px;
+            border: 1px solid #444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #fff;
+          }
+        `}</style>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="admin-shell">
+        <aside className="sidebar">
+          <div className="brand">
+            <div className="brand-symbol">N</div>
+
+            <div>
+              <div className="brand-name">NURANICO</div>
+              <div className="brand-label">ADMIN PANEL</div>
+            </div>
+          </div>
+
+          <nav className="navigation">
+            <NavButton
+              active={section === 'dashboard'}
+              onClick={() => setSection('dashboard')}
+              icon="⌂"
+              label="Dashboard"
+            />
+
+            <NavButton
+              active={section === 'projects'}
+              onClick={() => setSection('projects')}
+              icon="□"
+              label="Projects"
+            />
+
+            <NavButton
+              active={section === 'media'}
+              onClick={() => setSection('media')}
+              icon="▧"
+              label="Media"
+            />
+
+            <NavButton
+              active={section === 'hero'}
+              onClick={() => setSection('hero')}
+              icon="✦"
+              label="Hero"
+            />
+
+            <NavButton
+              active={section === 'brands'}
+              onClick={() => setSection('brands')}
+              icon="◇"
+              label="Brands"
+            />
+
+            <NavButton
+              active={section === 'services'}
+              onClick={() => setSection('services')}
+              icon="＋"
+              label="Services"
+            />
+
+            <NavButton
+              active={section === 'content'}
+              onClick={() => setSection('content')}
+              icon="≡"
+              label="Content"
+            />
+
+            <NavButton
+              active={section === 'contact'}
+              onClick={() => setSection('contact')}
+              icon="✉"
+              label="Contact"
+            />
+
+            <NavButton
+              active={section === 'settings'}
+              onClick={() => setSection('settings')}
+              icon="⚙"
+              label="Settings"
+            />
+          </nav>
+
+          <div className="sidebar-bottom">
+            <div className="user-card">
+              <div className="user-avatar">
+                {(userEmail[0] ?? 'A').toUpperCase()}
+              </div>
+
+              <div className="user-info">
+                <strong>Administrator</strong>
+                <span>{userEmail || 'Admin account'}</span>
+              </div>
+            </div>
+
+            <button className="logout-button" onClick={logout}>
+              <span>↪</span>
+              Logout
+            </button>
+          </div>
+        </aside>
+
+        <main className="main">
+          <header className="topbar">
+            <div>
+              <div className="eyebrow">NURANICO / ADMIN</div>
+              <h1>{sectionTitle(section)}</h1>
+            </div>
+
+            <a
+              className="view-site"
+              href="/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              View website ↗
+            </a>
+          </header>
+
+          <div className="content">
+            {section === 'dashboard' && (
+              <Dashboard
+                projects={projects}
+                media={media}
+                brands={brands}
+                services={services}
+                publishedProjects={publishedProjects}
+                activeBrands={activeBrands}
+                activeServices={activeServices}
+                onSectionChange={setSection}
+              />
+            )}
+
+            {section === 'projects' && (
+              <ProjectsSection
+                projects={filteredProjects}
+                search={projectSearch}
+                setSearch={setProjectSearch}
+                editingProject={editingProject}
+                setEditingProject={setEditingProject}
+                onAdd={addProject}
+                onUpdate={updateProject}
+                onDelete={deleteProject}
+              />
+            )}
+
+            {section === 'media' && (
+              <MediaSection
+                media={filteredMedia}
+                search={mediaSearch}
+                setSearch={setMediaSearch}
+                onAdd={addMedia}
+                onUpdate={updateMedia}
+                onDelete={deleteMedia}
+              />
+            )}
+
+            {section === 'hero' && (
+              <HeroSection
+                slides={heroSlides}
+                onAdd={addHeroSlide}
+                onUpdate={updateHero}
+                onDelete={deleteHeroSlide}
+              />
+            )}
+
+            {section === 'brands' && (
+              <BrandsSection
+                brands={brands}
+                editingBrand={editingBrand}
+                setEditingBrand={setEditingBrand}
+                onAdd={addBrand}
+                onUpdate={updateBrand}
+                onDelete={deleteBrand}
+              />
+            )}
+
+            {section === 'services' && (
+              <ServicesSection
+                services={services}
+                editingService={editingService}
+                setEditingService={setEditingService}
+                onAdd={addService}
+                onUpdate={updateService}
+                onDelete={deleteService}
+              />
+            )}
+
+            {section === 'content' && (
+              <ContentSection
+                siteTitle={siteTitle}
+                setSiteTitle={setSiteTitle}
+                siteDescription={siteDescription}
+                setSiteDescription={setSiteDescription}
+              />
+            )}
+
+            {section === 'contact' && (
+              <ContactSection
+                email={contactEmail}
+                setEmail={setContactEmail}
+                instagram={instagram}
+                setInstagram={setInstagram}
+              />
+            )}
+
+            {section === 'settings' && <SettingsSection />}
+          </div>
+        </main>
+      </div>
+
+      <style jsx global>{`
+        * {
+          box-sizing: border-box;
+        }
+
+        html,
+        body {
+          margin: 0;
+          padding: 0;
+          background: #090909;
+          color: #f4f4f4;
+          font-family:
+            Arial,
+            Helvetica,
+            sans-serif;
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+          font: inherit;
+        }
+
+        button {
+          cursor: pointer;
+        }
+
+        .admin-shell {
+          min-height: 100vh;
+          display: flex;
+          background: #090909;
+        }
+
+        .sidebar {
+          width: 250px;
+          min-height: 100vh;
+          position: fixed;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          display: flex;
+          flex-direction: column;
+          border-right: 1px solid #222;
+          background: #0d0d0d;
+          z-index: 20;
+        }
+
+        .brand {
+          min-height: 92px;
+          padding: 22px 24px;
+          display: flex;
+          align-items: center;
+          gap: 13px;
+          border-bottom: 1px solid #222;
+        }
+
+        .brand-symbol {
+          width: 42px;
+          height: 42px;
+          border: 1px solid #555;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 17px;
+          letter-spacing: 1px;
+        }
+
+        .brand-name {
+          font-size: 14px;
+          letter-spacing: 3px;
+          font-weight: 600;
+        }
+
+        .brand-label {
+          margin-top: 5px;
+          color: #666;
+          font-size: 8px;
+          letter-spacing: 2px;
+        }
+
+        .navigation {
+          padding: 18px 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .nav-button {
+          width: 100%;
+          border: 0;
+          background: transparent;
+          color: #777;
+          padding: 12px 13px;
+          border-radius: 7px;
+          display: flex;
+          align-items: center;
+          gap: 13px;
+          text-align: left;
+          transition:
+            background 0.2s ease,
+            color 0.2s ease;
+        }
+
+        .nav-button:hover {
+          background: #151515;
+          color: #ddd;
+        }
+
+        .nav-button.active {
+          background: #1b1b1b;
+          color: #fff;
+        }
+
+        .nav-icon {
+          width: 20px;
+          text-align: center;
+          font-size: 15px;
+          color: inherit;
+        }
+
+        .nav-label {
+          font-size: 12px;
+          letter-spacing: 0.2px;
+        }
+
+        .sidebar-bottom {
+          margin-top: auto;
+          border-top: 1px solid #222;
+          padding: 16px 13px;
+        }
+
+        .user-card {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          padding: 9px;
+        }
+
+        .user-avatar {
+          width: 34px;
+          height: 34px;
+          border: 1px solid #333;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 11px;
+        }
+
+        .user-info {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .user-info strong {
+          font-size: 11px;
+          font-weight: 500;
+        }
+
+        .user-info span {
+          color: #666;
+          font-size: 9px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          max-width: 165px;
+        }
+
+        .logout-button {
+          width: 100%;
+          margin-top: 7px;
+          padding: 10px;
+          border: 1px solid #222;
+          background: transparent;
+          color: #777;
+          border-radius: 6px;
+          font-size: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+        }
+
+        .logout-button:hover {
+          color: #fff;
+          border-color: #444;
+        }
+
+        .main {
+          width: calc(100% - 250px);
+          margin-left: 250px;
+          min-height: 100vh;
+        }
+
+        .topbar {
+          min-height: 92px;
+          padding: 20px 34px;
+          border-bottom: 1px solid #222;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          position: sticky;
+          top: 0;
+          z-index: 10;
+          background: rgba(9, 9, 9, 0.94);
+          backdrop-filter: blur(14px);
+        }
+
+        .eyebrow {
+          color: #555;
+          font-size: 8px;
+          letter-spacing: 2.5px;
+          margin-bottom: 8px;
+        }
+
+        .topbar h1 {
+          margin: 0;
+          font-size: 25px;
+          font-weight: 400;
+          letter-spacing: -0.5px;
+        }
+
+        .view-site {
+          color: #aaa;
+          text-decoration: none;
+          border: 1px solid #292929;
+          padding: 10px 13px;
+          border-radius: 5px;
+          font-size: 10px;
+          transition:
+            color 0.2s ease,
+            border-color 0.2s ease;
+        }
+
+        .view-site:hover {
+          color: #fff;
+          border-color: #555;
+        }
+
+        .content {
+          padding: 34px;
+          max-width: 1500px;
+        }
+
+        .page-intro {
+          margin-bottom: 25px;
+        }
+
+        .page-intro h2 {
+          margin: 0 0 7px;
+          font-size: 20px;
+          font-weight: 400;
+        }
+
+        .page-intro p {
+          margin: 0;
+          color: #666;
+          font-size: 11px;
+          line-height: 1.7;
+        }
+
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+          margin-bottom: 25px;
+        }
+
+        .stat-card {
+          min-height: 135px;
+          padding: 20px;
+          border: 1px solid #202020;
+          background: #0d0d0d;
+          border-radius: 8px;
+        }
+
+        .stat-label {
+          color: #666;
+          font-size: 9px;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+        }
+
+        .stat-value {
+          margin-top: 24px;
+          font-size: 31px;
+          font-weight: 300;
+        }
+
+        .stat-note {
+          margin-top: 6px;
+          color: #555;
+          font-size: 9px;
+        }
+
+        .panel {
+          border: 1px solid #202020;
+          background: #0d0d0d;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .panel + .panel {
+          margin-top: 15px;
+        }
+
+        .panel-header {
+          min-height: 62px;
+          padding: 15px 18px;
+          border-bottom: 1px solid #202020;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 15px;
+        }
+
+        .panel-title {
+          font-size: 12px;
+          font-weight: 500;
+        }
+
+        .panel-subtitle {
+          margin-top: 4px;
+          color: #555;
+          font-size: 9px;
+        }
+
+        .panel-body {
+          padding: 18px;
+        }
+
+        .toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 15px;
+        }
+
+        .toolbar-left,
+        .toolbar-right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .search {
+          width: 250px;
+          height: 36px;
+          border: 1px solid #262626;
+          border-radius: 5px;
+          outline: none;
+          background: #111;
+          color: #fff;
+          padding: 0 12px;
+          font-size: 10px;
+        }
+
+        .search:focus {
+          border-color: #444;
+        }
+
+        .button {
+          min-height: 36px;
+          border: 1px solid #303030;
+          border-radius: 5px;
+          padding: 0 13px;
+          background: #151515;
+          color: #ddd;
+          font-size: 10px;
+          transition:
+            background 0.2s ease,
+            border-color 0.2s ease,
+            color 0.2s ease;
+        }
+
+        .button:hover {
+          background: #1d1d1d;
+          border-color: #4a4a4a;
+          color: #fff;
+        }
+
+        .button.primary {
+          background: #eee;
+          color: #0a0a0a;
+          border-color: #eee;
+        }
+
+        .button.primary:hover {
+          background: #fff;
+        }
+
+        .button.danger {
+          color: #b5b5b5;
+        }
+
+        .button.danger:hover {
+          border-color: #633;
+          color: #fff;
+        }
+
+        .table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        .table th {
+          text-align: left;
+          color: #555;
+          font-size: 8px;
+          font-weight: 500;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          padding: 11px 10px;
+          border-bottom: 1px solid #202020;
+        }
+
+        .table td {
+          padding: 13px 10px;
+          border-bottom: 1px solid #181818;
+          font-size: 10px;
+          color: #aaa;
+          vertical-align: middle;
+        }
+
+        .table tr:last-child td {
+          border-bottom: 0;
+        }
+
+        .table-title {
+          color: #eee;
+          font-size: 11px;
+        }
+
+        .muted {
+          color: #555;
+        }
+
+        .badge {
+          display: inline-flex;
+          align-items: center;
+          min-height: 22px;
+          padding: 0 8px;
+          border-radius: 99px;
+          border: 1px solid #2c2c2c;
+          color: #888;
+          font-size: 8px;
+          letter-spacing: 0.6px;
+        }
+
+        .badge.active {
+          color: #ddd;
+          border-color: #454545;
+        }
+
+        .badge.draft {
+          color: #666;
+        }
+
+        .actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 6px;
+        }
+
+        .icon-button {
+          width: 29px;
+          height: 29px;
+          border: 1px solid #292929;
+          border-radius: 5px;
+          background: #111;
+          color: #777;
+          font-size: 10px;
+        }
+
+        .icon-button:hover {
+          color: #fff;
+          border-color: #444;
+        }
+
+        .editor {
+          margin-top: 15px;
+          padding: 18px;
+          border: 1px solid #292929;
+          background: #101010;
+          border-radius: 7px;
+        }
+
+        .editor-title {
+          margin-bottom: 16px;
+          font-size: 11px;
+          color: #ddd;
+        }
+
+        .form-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 14px;
+        }
+
+        .form-grid.single {
+          grid-template-columns: 1fr;
+        }
+
+        .field {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+
+        .field label {
+          color: #666;
+          font-size: 8px;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+        }
+
+        .field input,
+        .field textarea,
+        .field select {
+          width: 100%;
+          border: 1px solid #282828;
+          background: #0b0b0b;
+          color: #eee;
+          border-radius: 5px;
+          outline: none;
+          padding: 10px 11px;
+          font-size: 10px;
+        }
+
+        .field textarea {
+          min-height: 95px;
+          resize: vertical;
+          line-height: 1.6;
+        }
+
+        .field input:focus,
+        .field textarea:focus,
+        .field select:focus {
+          border-color: #4a4a4a;
+        }
+
+        .editor-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 7px;
+          margin-top: 15px;
+        }
+
+        .hero-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 14px;
+        }
+
+        .hero-card {
+          border: 1px solid #222;
+          background: #101010;
+          border-radius: 7px;
+          overflow: hidden;
+        }
+
+        .hero-preview {
+          height: 180px;
+          border-bottom: 1px solid #222;
+          background:
+            radial-gradient(circle at center, #252525 0, #101010 55%, #080808 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+        }
+
+        .hero-preview span {
+          color: #444;
+          font-size: 9px;
+          letter-spacing: 2px;
+        }
+
+        .hero-active {
+          position: absolute;
+          right: 10px;
+          top: 10px;
+        }
+
+        .hero-info {
+          padding: 15px;
+        }
+
+        .hero-info h3 {
+          margin: 0;
+          font-size: 17px;
+          font-weight: 400;
+        }
+
+        .hero-info p {
+          min-height: 34px;
+          color: #666;
+          font-size: 9px;
+          line-height: 1.5;
+        }
+
+        .brand-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 12px;
+        }
+
+        .brand-card {
+          min-height: 180px;
+          border: 1px solid #222;
+          background: #101010;
+          border-radius: 7px;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
+        .brand-logo {
+          flex: 1;
+          min-height: 120px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #444;
+          border-bottom: 1px solid #202020;
+          letter-spacing: 2px;
+          font-size: 11px;
+        }
+
+        .brand-details {
+          padding: 12px;
+        }
+
+        .brand-details strong {
+          font-size: 10px;
+          font-weight: 400;
+        }
+
+        .brand-actions {
+          margin-top: 9px;
+          display: flex;
+          gap: 5px;
+        }
+
+        .service-list {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px;
+        }
+
+        .service-card {
+          border: 1px solid #222;
+          background: #101010;
+          border-radius: 7px;
+          padding: 17px;
+        }
+
+        .service-card h3 {
+          margin: 0;
+          font-size: 14px;
+          font-weight: 400;
+        }
+
+        .service-card p {
+          color: #666;
+          font-size: 10px;
+          line-height: 1.7;
+          min-height: 36px;
+        }
+
+        .service-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 8px;
+          margin-top: 12px;
+          padding-top: 12px;
+          border-top: 1px solid #202020;
+        }
+
+        .switch {
+          width: 34px;
+          height: 20px;
+          padding: 2px;
+          border: 1px solid #333;
+          border-radius: 99px;
+          background: #151515;
+        }
+
+        .switch-dot {
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: #555;
+          transition: transform 0.2s ease;
+        }
+
+        .switch.on {
+          background: #252525;
+        }
+
+        .switch.on .switch-dot {
+          transform: translateX(13px);
+          background: #eee;
+        }
+
+        .content-editor {
+          max-width: 900px;
+        }
+
+        .save-bar {
+          margin-top: 18px;
+          display: flex;
+          justify-content: flex-end;
+        }
+
+        .notice {
+          border: 1px solid #242424;
+          background: #101010;
+          border-radius: 6px;
+          padding: 13px 15px;
+          color: #777;
+          font-size: 9px;
+          line-height: 1.7;
+          margin-bottom: 15px;
+        }
+
+        .settings-section-card {
+          margin-bottom: 14px;
+          border: 1px solid #222;
+          background: #0f0f0f;
+          border-radius: 7px;
+          overflow: hidden;
+        }
+
+        .settings-section-head {
+          padding: 20px 18px;
+          border-bottom: 1px solid #202020;
+        }
+
+        .settings-section-title {
+          font-size: 12px;
+          font-weight: 500;
+          color: #eee;
+          margin-bottom: 5px;
+        }
+
+        .settings-section-copy {
+          color: #555;
+          font-size: 9px;
+          line-height: 1.6;
+        }
+
+        .settings-fields {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
+          padding: 18px;
+        }
+
+        .settings-field {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .settings-field > span {
+          color: #aaa;
+          font-size: 9px;
+        }
+
+        .settings-field select {
+          width: 100%;
+          height: 43px;
+          padding: 0 12px;
+          border: 1px solid #292929;
+          border-radius: 5px;
+          background: #151515;
+          color: #eee;
+          outline: none;
+          cursor: pointer;
+        }
+
+        .settings-field select:focus {
+          border-color: #555;
+        }
+
+        .settings-palettes {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 10px;
+          padding: 18px;
+          border-bottom: 1px solid #202020;
+        }
+
+        .palette-card {
+          appearance: none;
+          border: 1px solid #292929;
+          border-radius: 6px;
+          background: #141414;
+          padding: 9px;
+          text-align: left;
+          color: #aaa;
+          cursor: pointer;
+          transition:
+            border-color .2s ease,
+            transform .2s ease;
+        }
+
+        .palette-card:hover {
+          border-color: #555;
+          transform: translateY(-1px);
+        }
+
+        .palette-preview {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          height: 34px;
+          margin-bottom: 9px;
+          border-radius: 4px;
+          overflow: hidden;
+        }
+
+        .palette-preview i {
+          display: block;
+        }
+
+        .palette-card > span {
+          font-size: 8px;
+        }
+
+        .settings-color-list {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .settings-color-row {
+          min-height: 67px;
+          padding: 13px 18px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 20px;
+          border-bottom: 1px solid #202020;
+        }
+
+        .settings-color-row:last-child {
+          border-bottom: 0;
+        }
+
+        .settings-color-row > div:first-child {
+          min-width: 0;
+        }
+
+        .settings-color-row strong {
+          display: block;
+          color: #ddd;
+          font-size: 10px;
+          font-weight: 400;
+          margin-bottom: 4px;
+        }
+
+        .settings-color-row span {
+          display: block;
+          color: #555;
+          font-size: 8px;
+        }
+
+        .color-control {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          flex-shrink: 0;
+        }
+
+        .color-control input[type="color"] {
+          width: 38px;
+          height: 38px;
+          padding: 2px;
+          border: 1px solid #292929;
+          border-radius: 5px;
+          background: #151515;
+          cursor: pointer;
+        }
+
+        .color-control input[type="text"] {
+          width: 82px;
+          height: 38px;
+          padding: 0 9px;
+          border: 1px solid #292929;
+          border-radius: 5px;
+          background: #151515;
+          color: #ddd;
+          font-size: 9px;
+          text-transform: uppercase;
+          outline: none;
+        }
+
+        .color-control input[type="text"]:focus {
+          border-color: #555;
+        }
+
+        .settings-preview {
+          margin: 18px;
+          min-height: 230px;
+          padding: 30px;
+          border: 1px solid;
+          border-radius: 6px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          transition:
+            background .2s ease,
+            color .2s ease,
+            border-color .2s ease;
+        }
+
+        .settings-preview-small {
+          font-size: 8px;
+          letter-spacing: .14em;
+          margin-bottom: 18px;
+        }
+
+        .settings-preview-title {
+          font-family: Georgia, serif;
+          font-size: 30px;
+          line-height: 1.05;
+          letter-spacing: -.04em;
+        }
+
+        .settings-preview-line {
+          width: 100%;
+          height: 1px;
+          margin: 25px 0;
+        }
+
+        .settings-preview button {
+          align-self: flex-start;
+          border: 0;
+          border-radius: 999px;
+          padding: 11px 15px;
+          font-size: 8px;
+          font-weight: 600;
+          letter-spacing: .08em;
+          cursor: pointer;
+        }
+
+        .settings-save-row {
+          display: flex;
+          justify-content: flex-end;
+          margin-top: 16px;
+        }
+
+        .settings-save-button {
+          border: 1px solid #333;
+          border-radius: 999px;
+          background: #eee;
+          color: #111;
+          padding: 12px 18px;
+          font-size: 9px;
+          font-weight: 600;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+          cursor: pointer;
+          transition: opacity .2s ease;
+        }
+
+        .settings-range-row {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          width: 100%;
+        }
+
+        .settings-range-row input[type="range"] {
+          flex: 1;
+          width: 100%;
+          accent-color: #e9e6df;
+          cursor: pointer;
+        }
+
+        .settings-range-row strong {
+          min-width: 58px;
+          text-align: right;
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: .04em;
+          color: #99958d;
+        }
+
+        .settings-field select {
+          min-height: 42px;
+        }
+
+        .settings-save-button:hover {
+          opacity: .82;
+        }
+
+        .settings-list {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .setting-row {
+          min-height: 72px;
+          padding: 15px 18px;
+          border-bottom: 1px solid #202020;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 20px;
+        }
+
+        .setting-row:last-child {
+          border-bottom: 0;
+        }
+
+        .setting-copy strong {
+          display: block;
+          font-size: 11px;
+          font-weight: 400;
+          margin-bottom: 5px;
+        }
+
+        .setting-copy span {
+          color: #555;
+          font-size: 9px;
+        }
+
+        .empty {
+          padding: 50px 20px;
+          text-align: center;
+          color: #555;
+          font-size: 10px;
+        }
+
+        .quick-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 10px;
+        }
+
+        .quick-card {
+          min-height: 110px;
+          border: 1px solid #222;
+          background: #101010;
+          border-radius: 7px;
+          padding: 17px;
+          text-align: left;
+          color: #aaa;
+        }
+
+        .quick-card:hover {
+          border-color: #444;
+          color: #fff;
+        }
+
+        .quick-card-icon {
+          font-size: 18px;
+          margin-bottom: 17px;
+        }
+
+        .quick-card-title {
+          font-size: 10px;
+          margin-bottom: 4px;
+        }
+
+        .quick-card-copy {
+          color: #555;
+          font-size: 8px;
+        }
+
+        @media (max-width: 1100px) {
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+
+          .hero-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+
+          .brand-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+
+        @media (max-width: 800px) {
+          .sidebar {
+            width: 72px;
+          }
+
+          .brand {
+            justify-content: center;
+            padding: 15px;
+          }
+
+          .brand > div:last-child,
+          .nav-label,
+          .user-info,
+          .logout-button span:last-child {
+            display: none;
+          }
+
+          .navigation {
+            padding: 12px 8px;
+          }
+
+          .nav-button {
+            justify-content: center;
+            padding: 12px 8px;
+          }
+
+          .sidebar-bottom {
+            padding: 10px 8px;
+          }
+
+          .user-card {
+            justify-content: center;
+          }
+
+          .logout-button {
+            font-size: 14px;
+          }
+
+          .main {
+            width: calc(100% - 72px);
+            margin-left: 72px;
+          }
+
+          .content {
+            padding: 20px;
+          }
+
+          .topbar {
+            padding: 17px 20px;
+          }
+
+          .form-grid,
+          .service-list,
+          .quick-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .hero-grid,
+          .brand-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+
+          .toolbar {
+            align-items: stretch;
+            flex-direction: column;
+          }
+
+          .toolbar-left,
+          .toolbar-right {
+            width: 100%;
+          }
+
+          .search {
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 560px) {
+          .stats-grid,
+          .hero-grid,
+          .brand-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .content {
+            padding: 15px;
+          }
+
+          .topbar h1 {
+            font-size: 20px;
+          }
+
+          .view-site {
+            display: none;
+          }
+
+          .table {
+            min-width: 650px;
+          }
+
+          .panel-body {
+            overflow-x: auto;
+          }
+        }
+      `}</style>
+    </>
+  );
+}
+
+function sectionTitle(section: Section) {
+  const titles: Record<Section, string> = {
+    dashboard: 'Dashboard',
+    projects: 'Projects',
+    media: 'Media Library',
+    hero: 'Hero Slides',
+    brands: 'Brands',
+    services: 'Services',
+    content: 'Site Content',
+    contact: 'Contact',
+    settings: 'Settings',
+  };
+
+  return titles[section];
+}
+
+function NavButton({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: string;
+  label: string;
+}) {
+  return (
+    <button
+      className={`nav-button ${active ? 'active' : ''}`}
+      onClick={onClick}
+    >
+      <span className="nav-icon">{icon}</span>
+      <span className="nav-label">{label}</span>
+    </button>
+  );
+}
+
+function Dashboard({
+  projects,
+  media,
+  brands,
+  services,
+  publishedProjects,
+  activeBrands,
+  activeServices,
+  onSectionChange,
+}: {
+  projects: Project[];
+  media: MediaItem[];
+  brands: Brand[];
+  services: Service[];
+  publishedProjects: number;
+  activeBrands: number;
+  activeServices: number;
+  onSectionChange: Dispatch<SetStateAction<Section>>;
+}) {
+  return (
+    <div>
+      <div className="page-intro">
+        <h2>Welcome to NURANICO.</h2>
+        <p>
+          Manage your creative studio website from one place.
+        </p>
+      </div>
+
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-label">Projects</div>
+          <div className="stat-value">{projects.length}</div>
+          <div className="stat-note">
+            {publishedProjects} published
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-label">Media</div>
+          <div className="stat-value">{media.length}</div>
+          <div className="stat-note">Images & videos</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-label">Brands</div>
+          <div className="stat-value">{activeBrands}</div>
+          <div className="stat-note">Client showcase</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-label">Services</div>
+          <div className="stat-value">{activeServices}</div>
+          <div className="stat-note">
+            {services.length} configured
+          </div>
+        </div>
+      </div>
+
+      <div className="panel">
+        <div className="panel-header">
+          <div>
+            <div className="panel-title">Quick actions</div>
+            <div className="panel-subtitle">
+              Jump directly to a section.
+            </div>
+          </div>
+        </div>
+
+        <div className="panel-body">
+          <div className="quick-grid">
+            <button
+              className="quick-card"
+              onClick={() => onSectionChange('projects')}
+            >
+              <div className="quick-card-icon">□</div>
+              <div className="quick-card-title">
+                Manage Projects
+              </div>
+              <div className="quick-card-copy">
+                Add and edit portfolio work.
+              </div>
+            </button>
+
+            <button
+              className="quick-card"
+              onClick={() => onSectionChange('media')}
+            >
+              <div className="quick-card-icon">▧</div>
+              <div className="quick-card-title">
+                Media Library
+              </div>
+              <div className="quick-card-copy">
+                Manage images and videos.
+              </div>
+            </button>
+
+            <button
+              className="quick-card"
+              onClick={() => onSectionChange('hero')}
+            >
+              <div className="quick-card-icon">✦</div>
+              <div className="quick-card-title">
+                Hero Slides
+              </div>
+              <div className="quick-card-copy">
+                Control the homepage hero.
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProjectsSection({
+  projects,
+  search,
+  setSearch,
+  editingProject,
+  setEditingProject,
+  onAdd,
+  onUpdate,
+  onDelete,
+}: {
+  projects: Project[];
+  search: string;
+  setSearch: (value: string) => void;
+  editingProject: string | null;
+  setEditingProject: (id: string | null) => void;
+  onAdd: () => void;
+  onUpdate: (
+    id: string,
+    field: keyof Project,
+    value: string
+  ) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div>
+      <div className="panel">
+        <div className="panel-header">
+          <div>
+            <div className="panel-title">Portfolio Projects</div>
+            <div className="panel-subtitle">
+              Manage work displayed on the website.
+            </div>
+          </div>
+
+          <button className="button primary" onClick={onAdd}>
+            + New project
+          </button>
+        </div>
+
+        <div className="panel-body">
+          <div className="toolbar">
+            <div className="toolbar-left">
+              <input
+                className="search"
+                value={search}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
+                placeholder="Search projects..."
+              />
+            </div>
+
+            <div className="toolbar-right">
+              <span className="badge">
+                {projects.length} items
+              </span>
+            </div>
+          </div>
+
+          {projects.length === 0 ? (
+            <div className="empty">No projects found.</div>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Project</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th>Media</th>
+                  <th />
+                </tr>
+              </thead>
+
+              <tbody>
+                {projects.map((project) => (
+                  <tr key={project.id}>
+                    <td>
+                      <div className="table-title">
+                        {project.title}
+                      </div>
+                    </td>
+
+                    <td>{project.category}</td>
+
+                    <td>
+                      <span
+                        className={`badge ${
+                          project.status === 'Published'
+                            ? 'active'
+                            : 'draft'
+                        }`}
+                      >
+                        {project.status}
+                      </span>
+                    </td>
+
+                    <td>
+                      {project.image ? 'Added' : 'Not added'}
+                    </td>
+
+                    <td>
+                      <div className="actions">
+                        <button
+                          className="icon-button"
+                          onClick={() =>
+                            setEditingProject(project.id)
+                          }
+                          title="Edit"
+                        >
+                          ✎
+                        </button>
+
+                        <button
+                          className="icon-button"
+                          onClick={() =>
+                            onDelete(project.id)
+                          }
+                          title="Delete"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {editingProject && (
+            <div className="editor">
+              {projects
+                .filter(
+                  (project) => project.id === editingProject
+                )
+                .map((project) => (
+                  <div key={project.id}>
+                    <div className="editor-title">
+                      Edit project
+                    </div>
+
+                    <div className="form-grid">
+                      <Field
+                        label="Title"
+                        value={project.title}
+                        onChange={(value) =>
+                          onUpdate(
+                            project.id,
+                            'title',
+                            value
+                          )
+                        }
+                      />
+
+                      <Field
+                        label="Category"
+                        value={project.category}
+                        onChange={(value) =>
+                          onUpdate(
+                            project.id,
+                            'category',
+                            value
+                          )
+                        }
+                      />
+
+                      <div className="field">
+                        <label>Status</label>
+
+                        <select
+                          value={project.status}
+                          onChange={(event) =>
+                            onUpdate(
+                              project.id,
+                              'status',
+                              event.target.value
+                            )
+                          }
+                        >
+                          <option value="Published">
+                            Published
+                          </option>
+                          <option value="Draft">
+                            Draft
+                          </option>
+                        </select>
+                      </div>
+
+                      <Field
+                        label="Image URL"
+                        value={project.image}
+                        onChange={(value) =>
+                          onUpdate(
+                            project.id,
+                            'image',
+                            value
+                          )
+                        }
+                      />
+
+                      <div className="field">
+                        <label>Description</label>
+
+                        <textarea
+                          value={project.description}
+                          onChange={(event) =>
+                            onUpdate(
+                              project.id,
+                              'description',
+                              event.target.value
+                            )
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div className="editor-actions">
+                      <button
+                        className="button"
+                        onClick={() =>
+                          setEditingProject(null)
+                        }
+                      >
+                        Done
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MediaSection({
+  media,
+  search,
+  setSearch,
+  onAdd,
+  onUpdate,
+  onDelete,
+}: {
+  media: MediaItem[];
+  search: string;
+  setSearch: (value: string) => void;
+  onAdd: () => void;
+  onUpdate: (
+    id: string,
+    field: keyof MediaItem,
+    value: string
+  ) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div>
+      <div className="notice">
+        Media upload will be connected to ServerNet Object
+        Storage after the admin UI is confirmed.
+      </div>
+
+      <div className="panel">
+        <div className="panel-header">
+          <div>
+            <div className="panel-title">Media Library</div>
+            <div className="panel-subtitle">
+              Images and videos used by NURANICO.
+            </div>
+          </div>
+
+          <button className="button primary" onClick={onAdd}>
+            + Add media
+          </button>
+        </div>
+
+        <div className="panel-body">
+          <div className="toolbar">
+            <input
+              className="search"
+              value={search}
+              onChange={(event) =>
+                setSearch(event.target.value)
+              }
+              placeholder="Search media..."
+            />
+          </div>
+
+          {media.length === 0 ? (
+            <div className="empty">No media found.</div>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>URL</th>
+                  <th />
+                </tr>
+              </thead>
+
+              <tbody>
+                {media.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <div className="table-title">
+                        {item.name}
+                      </div>
+                    </td>
+
+                    <td>
+                      <span className="badge">
+                        {item.type}
+                      </span>
+                    </td>
+
+                    <td>
+                      {item.url ? (
+                        <span className="muted">
+                          URL added
+                        </span>
+                      ) : (
+                        <span className="muted">
+                          Not added
+                        </span>
+                      )}
+                    </td>
+
+                    <td>
+                      <div className="actions">
+                        <button
+                          className="icon-button"
+                          onClick={() =>
+                            onUpdate(
+                              item.id,
+                              'name',
+                              `${item.name}*`
+                            )
+                          }
+                        >
+                          ✎
+                        </button>
+
+                        <button
+                          className="icon-button"
+                          onClick={() =>
+                            onDelete(item.id)
+                          }
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeroSection({
+  slides,
+  onAdd,
+  onUpdate,
+  onDelete,
+}: {
+  slides: HeroSlide[];
+  onAdd: () => void;
+  onUpdate: (
+    id: string,
+    field: keyof HeroSlide,
+    value: string | boolean
+  ) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div>
+      <div className="notice">
+        Each hero slide can later use an image or video stored in
+        ServerNet Object Storage.
+      </div>
+
+      <div className="panel">
+        <div className="panel-header">
+          <div>
+            <div className="panel-title">Homepage Hero</div>
+            <div className="panel-subtitle">
+              Control the main visual presentation.
+            </div>
+          </div>
+
+          <button className="button primary" onClick={onAdd}>
+            + Add slide
+          </button>
+        </div>
+
+        <div className="panel-body">
+          <div className="hero-grid">
+            {slides.map((slide) => (
+              <div className="hero-card" key={slide.id}>
+                <div className="hero-preview">
+                  <span>
+                    {slide.media ? 'MEDIA' : 'NO MEDIA'}
+                  </span>
+
+                  <div className="hero-active">
+                    <button
+                      className={`switch ${
+                        slide.active ? 'on' : ''
+                      }`}
+                      onClick={() =>
+                        onUpdate(
+                          slide.id,
+                          'active',
+                          !slide.active
+                        )
+                      }
+                      aria-label="Toggle slide"
+                    >
+                      <div className="switch-dot" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="hero-info">
+                  <h3>{slide.title}</h3>
+                  <p>{slide.subtitle}</p>
+
+                  <div className="field">
+                    <label>Media URL</label>
+
+                    <input
+                      value={slide.media}
+                      onChange={(event) =>
+                        onUpdate(
+                          slide.id,
+                          'media',
+                          event.target.value
+                        )
+                      }
+                      placeholder="https://..."
+                    />
+                  </div>
+
+                  <div className="editor-actions">
+                    <button
+                      className="button danger"
+                      onClick={() => onDelete(slide.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BrandsSection({
+  brands,
+  editingBrand,
+  setEditingBrand,
+  onAdd,
+  onUpdate,
+  onDelete,
+}: {
+  brands: Brand[];
+  editingBrand: string | null;
+  setEditingBrand: (id: string | null) => void;
+  onAdd: () => void;
+  onUpdate: (
+    id: string,
+    field: keyof Brand,
+    value: string
+  ) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div>
+      <div className="panel">
+        <div className="panel-header">
+          <div>
+            <div className="panel-title">Client Brands</div>
+            <div className="panel-subtitle">
+              Logos of brands NURANICO has worked with.
+            </div>
+          </div>
+
+          <button
+            className="button primary"
+            onClick={onAdd}
+            type="button"
+          >
+            + Add Brand
+          </button>
+        </div>
+
+        <div className="brand-grid">
+          {brands.map((brand) => {
+            const isEditing = editingBrand === brand.id;
+
+            return (
+              <div className="brand-card" key={brand.id}>
+                {isEditing ? (
+                  <div className="form-grid">
+                    <label>
+                      <span>Name</span>
+                      <input
+                        value={brand.name || ""}
+                        onChange={(e) =>
+                          onUpdate(brand.id, "name", e.target.value)
+                        }
+                      />
+                    </label>
+
+                    <label>
+                      <span>Logo URL</span>
+                      <input
+                        value={brand.logo || ""}
+                        onChange={(e) =>
+                          onUpdate(brand.id, "logo", e.target.value)
+                        }
+                      />
+                    </label>
+
+                    <div className="admin-actions">
+                      <button
+                        className="button primary"
+                        type="button"
+                        onClick={() => setEditingBrand(null)}
+                      >
+                        Done
+                      </button>
+
+                      <button
+                        className="button"
+                        type="button"
+                        onClick={() => onDelete(brand.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="brand-preview">
+                      {brand.logo ? (
+                        <img
+                          src={brand.logo}
+                          alt={brand.name || "Brand"}
+                        />
+                      ) : (
+                        <div className="brand-placeholder">
+                          {brand.name || "Brand"}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="brand-info">
+                      <strong>{brand.name || "Unnamed Brand"}</strong>
+
+                      <div className="admin-actions">
+                        <button
+                          className="button"
+                          type="button"
+                          onClick={() => setEditingBrand(brand.id)}
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          className="button"
+                          type="button"
+                          onClick={() => onDelete(brand.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {!brands.length && (
+          <div className="empty-state">
+            No client brands added yet.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

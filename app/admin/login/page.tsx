@@ -1,67 +1,37 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabaseBrowser } from '@/lib/supabase-browser';
+import { signIn } from 'next-auth/react';
 
 export default function AdminLoginPage() {
-  const router = useRouter();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setLoading(true);
     setError('');
-    setMessage('');
 
-    const { error } = await supabaseBrowser.auth.signInWithPassword({
+    console.log('[NURANICO LOGIN START]');
+    const result = await signIn('credentials', {
       email: email.trim(),
       password,
+      redirect: false,
+      callbackUrl: '/admin',
     });
 
-    if (error) {
+    console.log('[NURANICO LOGIN RESULT]', result);
+
+    if (result?.error) {
       setError('ایمیل یا رمز عبور صحیح نیست.');
       setLoading(false);
       return;
     }
 
-    router.replace('/admin');
-    router.refresh();
-  }
-
-  async function handleResetPassword() {
-    setError('');
-    setMessage('');
-
-    const cleanEmail = email.trim();
-
-    if (!cleanEmail) {
-      setError('ابتدا ایمیل حساب مدیر را وارد کنید.');
-      return;
-    }
-
-    setResetLoading(true);
-
-    const { error } =
-      await supabaseBrowser.auth.resetPasswordForEmail(cleanEmail, {
-        redirectTo: `${window.location.origin}/admin/reset-password`,
-      });
-
-    if (error) {
-      setError(error.message);
-      setResetLoading(false);
-      return;
-    }
-
-    setMessage('لینک تغییر رمز ارسال شد. ایمیل خود را بررسی کنید.');
-    setResetLoading(false);
+    window.location.href = '/admin';
   }
 
   return (
@@ -137,10 +107,10 @@ export default function AdminLoginPage() {
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            autoComplete="email"
+            autoComplete="username"
             required
             dir="ltr"
-            placeholder="admin@example.com"
+            placeholder=""
             style={{
               width: '100%',
               boxSizing: 'border-box',
@@ -171,12 +141,12 @@ export default function AdminLoginPage() {
             autoComplete="current-password"
             required
             dir="ltr"
-            placeholder="••••••••"
+            placeholder=""
             style={{
               width: '100%',
               boxSizing: 'border-box',
               padding: '14px 15px',
-              marginBottom: '10px',
+              marginBottom: '20px',
               border: '1px solid rgba(255,255,255,0.14)',
               background: '#101010',
               color: '#ffffff',
@@ -184,28 +154,6 @@ export default function AdminLoginPage() {
               fontSize: '14px',
             }}
           />
-
-          <button
-            type="button"
-            onClick={handleResetPassword}
-            disabled={resetLoading}
-            style={{
-              display: 'block',
-              width: '100%',
-              padding: '8px 0',
-              marginBottom: '20px',
-              border: 0,
-              background: 'transparent',
-              color: 'rgba(255,255,255,0.55)',
-              cursor: resetLoading ? 'wait' : 'pointer',
-              fontSize: '13px',
-              textAlign: 'right',
-            }}
-          >
-            {resetLoading
-              ? 'در حال ارسال لینک...'
-              : 'رمز عبور را فراموش کرده‌اید؟'}
-          </button>
 
           {error && (
             <div
@@ -220,22 +168,6 @@ export default function AdminLoginPage() {
               }}
             >
               {error}
-            </div>
-          )}
-
-          {message && (
-            <div
-              style={{
-                marginBottom: '18px',
-                padding: '12px 14px',
-                border: '1px solid rgba(80,255,130,0.25)',
-                background: 'rgba(80,255,130,0.07)',
-                color: '#a8e6b7',
-                fontSize: '13px',
-                lineHeight: 1.7,
-              }}
-            >
-              {message}
             </div>
           )}
 
