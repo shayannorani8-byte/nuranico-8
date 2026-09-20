@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '../../../lib/supabase';
 import SiteHeader from '../../components/SiteHeader';
 
 type Item = {
@@ -30,9 +29,11 @@ export default function BehindTheScenesPage() {
   useEffect(() => {
     const saved = localStorage.getItem('nuranico-lang');
     if (saved === 'fa' || saved === 'en') setLang(saved);
-    supabase.from('portfolio').select('id,title_en,title_fa,category,cover_url,bts_media_url,bts_media_type,bts_gallery_urls')
-      .eq('published', true).order('sort_order', {ascending:true})
-      .then(({data}) => setItems((data || []).filter(x => x.bts_media_url || x.bts_gallery_urls?.length)));
+    import('../../../lib/supabase').then(({ supabase }) =>
+      supabase.from('portfolio').select('id,title_en,title_fa,category,cover_url,bts_media_url,bts_media_type,bts_gallery_urls')
+        .eq('published', true).order('sort_order', {ascending:true})
+        .then(({data}) => setItems((data || []).filter(x => x.bts_media_url || x.bts_gallery_urls?.length)))
+    );
   }, []);
 
   const sample = items.length ? items : demo.map((cover, i) => ({
