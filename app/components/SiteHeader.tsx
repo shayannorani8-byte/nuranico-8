@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '../../lib/supabase';
 
 type Props = { dark?: boolean };
 
@@ -15,13 +14,15 @@ export default function SiteHeader({ dark = true }: Props) {
   useEffect(() => {
     const saved = window.localStorage.getItem('nuranico-lang');
     if (saved === 'fa' || saved === 'en') setLang(saved);
-    Promise.all([
-      supabase.from('site_settings').select('logo_url').limit(1).maybeSingle(),
-      supabase.from('site_content').select('contact_email').limit(1).maybeSingle(),
-    ]).then(([settings, content]) => {
-      if (settings.data?.logo_url) setLogoUrl(settings.data.logo_url);
-      if (content.data?.contact_email) setEmail(content.data.contact_email);
-    });
+    import('../../lib/supabase').then(({ supabase }) =>
+      Promise.all([
+        supabase.from('site_settings').select('logo_url').limit(1).maybeSingle(),
+        supabase.from('site_content').select('contact_email').limit(1).maybeSingle(),
+      ]).then(([settings, content]) => {
+        if (settings.data?.logo_url) setLogoUrl(settings.data.logo_url);
+        if (content.data?.contact_email) setEmail(content.data.contact_email);
+      })
+    );
   }, []);
 
   useEffect(() => {

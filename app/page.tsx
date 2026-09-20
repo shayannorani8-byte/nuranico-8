@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '../lib/supabase';
 import './home.css';
 
 type Lang = 'en' | 'fa';
@@ -241,6 +240,8 @@ export default function HomePage() {
 
   async function loadSite() {
     setLoading(true);
+
+    const { supabase } = await import('../lib/supabase');
 
     const [
       settingsResult,
