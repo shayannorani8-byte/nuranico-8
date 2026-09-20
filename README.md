@@ -60,3 +60,4 @@ The migration adds `brand_id`, BTS fields, video quality sources and project gal
 - Domain: Nuranico.com
 
 Do not commit `.env.local`.
+
