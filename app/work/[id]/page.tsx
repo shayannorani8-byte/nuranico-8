@@ -6,6 +6,14 @@ import { useParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase';
 import SiteHeader from '../../components/SiteHeader';
 
+type AttachedMedia = {
+  id: number;
+  file_url: string;
+  file_type?: string | null;
+  mime_type?: string | null;
+  name?: string | null;
+};
+
 type Project = {
   id: number;
   title_fa: string;
@@ -25,13 +33,7 @@ type Project = {
   bts_gallery_urls?: string[] | null;
 };
 
-const demoImages = [
-  'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1800&q=88',
-  'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1800&q=88',
-  'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1800&q=88',
-  'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1800&q=88',
-];
-const demoVideo = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
+
 
 function isVideo(project: Project) {
   const type = (project.media_type || '').toLowerCase();
@@ -168,33 +170,66 @@ function VideoPlayer({
 function PhotoViewer({ images, alt }: { images: string[]; alt: string }) {
   const [index, setIndex] = useState(0);
   const [zoom, setZoom] = useState(false);
-  const image = images[index];
 
   useEffect(() => {
+    if (!images.length) return;
+
     function onKey(event: KeyboardEvent) {
       if (event.key === 'ArrowRight') setIndex((value) => (value + 1) % images.length);
       if (event.key === 'ArrowLeft') setIndex((value) => (value - 1 + images.length) % images.length);
       if (event.key === 'Escape') setZoom(false);
     }
+
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [images.length]);
+
+  useEffect(() => {
+    if (index >= images.length) setIndex(0);
+  }, [images.length, index]);
+
+  if (!images.length) {
+    return (
+      <div className="photo-viewer photo-viewer-empty">
+        <div className="photo-stage">
+          <p>No media has been added to this project yet.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const image = images[index];
 
   return (
     <div className={`photo-viewer ${zoom ? 'zoomed' : ''}`}>
       <div className="photo-stage">
         <img src={image} alt={`${alt} ${index + 1}`} onClick={() => setZoom((value) => !value)} />
-        <button type="button" className="photo-prev" onClick={() => setIndex((value) => (value - 1 + images.length) % images.length)}>←</button>
-        <button type="button" className="photo-next" onClick={() => setIndex((value) => (value + 1) % images.length)}>→</button>
-        <span className="photo-counter">{String(index + 1).padStart(2, '0')} / {String(images.length).padStart(2, '0')}</span>
+
+        {images.length > 1 && (
+          <>
+            <button type="button" className="photo-prev" onClick={() => setIndex((value) => (value - 1 + images.length) % images.length)}>←</button>
+            <button type="button" className="photo-next" onClick={() => setIndex((value) => (value + 1) % images.length)}>→</button>
+            <span className="photo-counter">
+              {String(index + 1).padStart(2, '0')} / {String(images.length).padStart(2, '0')}
+            </span>
+          </>
+        )}
       </div>
-      <div className="photo-thumbs">
-        {images.map((item, itemIndex) => (
-          <button type="button" key={item} className={itemIndex === index ? 'active' : ''} onClick={() => setIndex(itemIndex)}>
-            <img src={item} alt="" />
-          </button>
-        ))}
-      </div>
+
+      {images.length > 1 && (
+        <div className="photo-thumbs">
+          {images.map((item, itemIndex) => (
+            <button
+              type="button"
+              key={`${item}-${itemIndex}`}
+              className={itemIndex === index ? 'active' : ''}
+              onClick={() => setIndex(itemIndex)}
+            >
+              <img src={item} alt="" />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -204,6 +239,7 @@ export default function ProjectPage() {
   const id = params?.id || '';
   const [lang, setLang] = useState<'en' | 'fa'>('en');
   const [project, setProject] = useState<Project | null>(null);
+  const [attachedMedia, setAttachedMedia] = useState<AttachedMedia[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -218,29 +254,66 @@ export default function ProjectPage() {
 
   useEffect(() => {
     async function load() {
-      if (id.startsWith('demo-')) {
-        const number = Math.max(1, Number(id.replace('demo-', '')) || 1);
-        setProject({
-          id: -number,
-          title_en: ['Motion / Identity', 'Editorial Story', 'Campaign Film', 'Visual Direction', 'Brand Atmosphere', 'Social Film'][number - 1] || 'NURANICO Project',
-          title_fa: ['Motion / Identity', 'Editorial Story', 'Campaign Film', 'Visual Direction', 'Brand Atmosphere', 'Social Film'][number - 1] || 'NURANICO Project',
-          description_en: 'A temporary presentation project. Replace this media later from the CMS.',
-          description_fa: 'این پروژه فعلاً نمونه نمایشی است و بعداً از CMS قابل جایگزینی است.',
-          category: number % 3 === 0 ? 'content' : number % 2 === 0 ? 'photo' : 'video',
-          cover_url: demoImages[(number - 1) % demoImages.length],
-          media_url: number % 2 ? demoVideo : undefined,
-          media_type: number % 2 ? 'video' : 'image',
-          gallery_urls: demoImages,
-          bts_media_url: number % 2 ? demoVideo : demoImages[2],
-          bts_media_type: number % 2 ? 'video' : 'image',
-          bts_gallery_urls: demoImages.slice(0, 3),
-        });
-        setLoading(false);
-        return;
+
+
+      const projectId = Number(id);
+
+      const [projectResult, linksResult] = await Promise.all([
+        supabase
+          .from('portfolio')
+          .select('*')
+          .eq('id', projectId)
+          .eq('published', true)
+          .maybeSingle(),
+
+        supabase
+          .from('project_media')
+          .select('media_asset_id,sort_order')
+          .eq('project_id', projectId)
+          .order('sort_order', { ascending: true }),
+      ]);
+
+      if (projectResult.data) {
+        setProject(projectResult.data);
       }
 
-      const result = await supabase.from('portfolio').select('*').eq('id', Number(id)).eq('published', true).maybeSingle();
-      if (result.data) setProject(result.data);
+      const mediaIds = (linksResult.data || [])
+        .map((row) => row.media_asset_id)
+        .filter((value): value is number => value != null);
+
+      if (mediaIds.length) {
+        const mediaResult = await supabase
+          .from('media_assets')
+          .select('id,file_url,file_type,mime_type,name')
+          .in('id', mediaIds);
+
+        if (mediaResult.data) {
+          const byId = new Map(
+            mediaResult.data.map((item) => [item.id, item])
+          );
+
+          const orderedMedia: AttachedMedia[] = [];
+
+          for (const mediaId of mediaIds) {
+            const item = byId.get(mediaId);
+
+            if (item) {
+              orderedMedia.push({
+                id: item.id,
+                file_url: item.file_url,
+                file_type: item.file_type ?? null,
+                mime_type: item.mime_type ?? null,
+                name: item.name ?? null,
+              });
+            }
+          }
+
+          setAttachedMedia(orderedMedia);
+        }
+      } else {
+        setAttachedMedia([]);
+      }
+
       setLoading(false);
     }
     void load();
@@ -258,8 +331,29 @@ export default function ProjectPage() {
 
   const title = lang === 'fa' ? project.title_fa : project.title_en || project.title_fa;
   const description = lang === 'fa' ? project.description_fa : project.description_en || project.description_fa;
-  const gallery = project.gallery_urls?.length ? project.gallery_urls : [project.cover_url || demoImages[0], demoImages[1], demoImages[2]];
-  const video = isVideo(project);
+  const attachedImages = attachedMedia
+    .filter((item) => !(item.mime_type || '').toLowerCase().startsWith('video'))
+    .map((item) => item.file_url);
+
+  const attachedVideo = attachedMedia.find(
+    (item) =>
+      (item.mime_type || '').toLowerCase().startsWith('video') ||
+      (item.file_type || '').toLowerCase() === 'video'
+  );
+
+  const gallery = attachedImages.length
+    ? attachedImages
+    : project.gallery_urls?.length
+      ? project.gallery_urls
+      : project.cover_url
+        ? [project.cover_url]
+        : [];
+
+  const effectiveVideoUrl =
+    attachedVideo?.file_url ||
+    (isVideo(project) ? project.media_url : undefined);
+
+  const video = !!effectiveVideoUrl;
 
   return (
     <main className="project-page">
@@ -273,9 +367,13 @@ export default function ProjectPage() {
         </div>
       </section>
 
-      {video && project.media_url ? (
+      {video && effectiveVideoUrl ? (
         <section className="project-media-block">
-          <VideoPlayer src={project.media_url} sources={project.media_sources} poster={project.cover_url} />
+          <VideoPlayer
+            src={effectiveVideoUrl}
+            sources={project.media_sources}
+            poster={project.cover_url}
+          />
         </section>
       ) : (
         <section className="project-media-block">

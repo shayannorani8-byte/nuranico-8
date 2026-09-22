@@ -27,6 +27,23 @@ type Settings = {
   footer_text?: string;
   border_color?: string;
   logo_url?: string;
+  font_en?: string;
+  font_fa?: string;
+  heading_size?: number;
+  body_size?: number;
+  small_size?: number;
+  heading_weight?: number;
+  body_weight?: number;
+  letter_spacing?: number;
+};
+
+type FontAsset = {
+  id: number;
+  family_name: string;
+  file_url: string;
+  format: string;
+  font_weight?: number | null;
+  font_style?: string | null;
 };
 
 type Content = {
@@ -40,6 +57,7 @@ type Content = {
   about_title_en?: string;
   about_text_fa?: string;
   about_text_en?: string;
+  about_image_url?: string | null;
   contact_title_fa?: string;
   contact_title_en?: string;
   contact_email?: string;
@@ -57,6 +75,9 @@ type PortfolioItem = {
   cover_url?: string;
   media_url?: string;
   media_type?: string;
+  preview_url?: string | null;
+  preview_type?: string | null;
+  preview_enabled?: boolean | null;
   featured?: boolean;
   brand_id?: number | null;
   bts_media_url?: string | null;
@@ -71,30 +92,21 @@ type Brand = {
   website_url?: string;
 };
 
-const demoImages = [
-  'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1800&q=88',
-  'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1800&q=88',
-  'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1800&q=88',
-  'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1800&q=88',
-  'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1800&q=88',
-  'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1800&q=88',
-];
-
-const demoTitles = [
-  'Motion / Identity',
-  'Editorial Story',
-  'Campaign Film',
-  'Visual Direction',
-  'Brand Atmosphere',
-  'Social Film',
-];
-
-const demoVideo =
-  'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
-
 function isVideo(item: PortfolioItem) {
   const type = (item.media_type || '').toLowerCase();
   const url = `${item.media_url || ''} ${item.cover_url || ''}`.toLowerCase();
+
+  return (
+    type.includes('video') ||
+    /\.(mp4|webm|mov|m4v)(\?|$)/.test(url)
+  );
+}
+
+function hasVideoPreview(item: PortfolioItem) {
+  if (!item.preview_enabled || !item.preview_url) return false;
+
+  const type = (item.preview_type || '').toLowerCase();
+  const url = item.preview_url.toLowerCase();
 
   return (
     type.includes('video') ||
@@ -144,7 +156,9 @@ function PreviewVideo({
 
 export default function HomePage() {
   const [lang, setLang] = useState<Lang>('en');
+  const [langReady, setLangReady] = useState(false);
   const [settings, setSettings] = useState<Settings>({});
+  const [fonts, setFonts] = useState<FontAsset[]>([]);
   const [content, setContent] = useState<Content>({});
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -155,22 +169,69 @@ export default function HomePage() {
 
   useEffect(() => {
     const saved = window.localStorage.getItem('nuranico-lang');
+    const initialLang: Lang = saved === 'fa' ? 'fa' : 'en';
 
-    if (saved === 'fa' || saved === 'en') {
-      setLang(saved);
-    }
+    setLang(initialLang);
+    document.documentElement.lang = initialLang;
+    document.documentElement.dir = initialLang === 'fa' ? 'rtl' : 'ltr';
+    setLangReady(true);
   }, []);
 
   useEffect(() => {
+    if (!langReady) return;
+
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
-
     window.localStorage.setItem('nuranico-lang', lang);
-  }, [lang]);
+  }, [lang, langReady]);
 
   useEffect(() => {
     loadSite();
   }, []);
+
+  useEffect(() => {
+    const root = document.querySelector('.site');
+    if (!root) return;
+
+    const applyLanguageToLatinText = () => {
+      root.querySelectorAll<HTMLElement>('*').forEach((el) => {
+        if (
+          el.tagName === 'SCRIPT' ||
+          el.tagName === 'STYLE' ||
+          el.tagName === 'NOSCRIPT'
+        ) return;
+
+        const directText = Array.from(el.childNodes)
+          .filter((node) => node.nodeType === Node.TEXT_NODE)
+          .map((node) => node.textContent || '')
+          .join(' ')
+          .trim();
+
+        if (!directText) return;
+
+        const hasLatin = /[A-Za-z]/.test(directText);
+        const hasPersian = /[\u0600-\u06FF]/.test(directText);
+
+        if (hasLatin && !hasPersian) {
+          el.setAttribute('lang', 'en');
+        } else if (hasPersian) {
+          el.removeAttribute('lang');
+        }
+      });
+    };
+
+    applyLanguageToLatinText();
+
+    const observer = new MutationObserver(applyLanguageToLatinText);
+
+    observer.observe(root, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+
+    return () => observer.disconnect();
+  }, [lang, content, portfolio, brands]);
 
   useEffect(() => {
     const nodes = Array.from(
@@ -200,28 +261,9 @@ export default function HomePage() {
 
   const heroSlides = useMemo(() => {
     const featured = portfolio.filter((item) => item.featured);
-    const base = (featured.length ? featured : portfolio).slice(0, 3);
+    const source = featured.length ? featured : portfolio;
 
-    if (base.some(isVideo)) return base;
-
-    const video = portfolio.find(isVideo);
-
-    if (video) {
-      return [...base.slice(0, 2), video].slice(0, 3);
-    }
-
-    return [
-      ...base.slice(0, 2),
-      {
-        id: -999,
-        title_fa: 'NURANICO Demo Film',
-        title_en: 'NURANICO Demo Film',
-        category: 'video',
-        cover_url: demoImages[0],
-        media_url: demoVideo,
-        media_type: 'video',
-      } as PortfolioItem,
-    ].slice(0, 3);
+    return source.slice(0, 3);
   }, [portfolio]);
 
   useEffect(() => {
@@ -248,11 +290,12 @@ export default function HomePage() {
       contentResult,
       portfolioResult,
       brandsResult,
+      fontsResult,
     ] = await Promise.all([
       supabase
         .from('site_settings')
         .select('*')
-        .limit(1)
+        .eq('id', 1)
         .maybeSingle(),
 
       supabase
@@ -274,6 +317,11 @@ export default function HomePage() {
         .eq('published', true)
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: false }),
+
+      supabase
+        .from('font_assets')
+        .select('id,family_name,file_url,format,font_weight,font_style')
+        .order('created_at', { ascending: false }),
     ]);
 
     if (settingsResult.data) {
@@ -290,6 +338,10 @@ export default function HomePage() {
 
     if (brandsResult.data) {
       setBrands(brandsResult.data);
+    }
+
+    if (fontsResult.data) {
+      setFonts(fontsResult.data);
     }
 
     setLoading(false);
@@ -311,26 +363,12 @@ export default function HomePage() {
     );
   }, [portfolio, filter]);
 
-  const displayItems = shown.length
-    ? shown
-    : demoTitles.map(
-        (title, index) =>
-          ({
-            id: -(index + 1),
-            title_en: title,
-            title_fa: title,
-            category: ['video', 'photo', 'content'][index % 3],
-            cover_url: demoImages[index],
-            media_url: index % 3 === 0 ? demoVideo : undefined,
-            media_type: index % 3 === 0 ? 'video' : 'image',
-          }) as PortfolioItem
-      );
+  const displayItems = shown;
 
   const currentHero = heroSlides[heroIndex];
 
   const heroImage =
-    currentHero?.cover_url ||
-    demoImages[heroIndex % demoImages.length];
+    currentHero?.cover_url || '';
 
   const cssVars = {
     '--site-bg': settings.bg_color || '#171716',
@@ -343,6 +381,24 @@ export default function HomePage() {
       settings.border_color || 'rgba(255,255,255,.13)',
     '--site-accent':
       settings.button_color || '#e9e6df',
+
+    '--heading-size':
+      `${settings.heading_size || 48}px`,
+
+    '--body-size':
+      `${settings.body_size || 16}px`,
+
+    '--small-size':
+      `${settings.small_size || 11}px`,
+
+    '--heading-weight':
+      settings.heading_weight || 500,
+
+    '--body-weight':
+      settings.body_weight || 400,
+
+    '--site-letter-spacing':
+      `${settings.letter_spacing ?? 0}px`,
   } as React.CSSProperties;
 
   const t = {
@@ -419,7 +475,31 @@ export default function HomePage() {
   ];
 
   return (
-    <main className="site" style={cssVars}>
+    <>
+
+
+    <main
+      className="site"
+      lang={lang}
+      dir={lang === 'fa' ? 'rtl' : 'ltr'}
+      style={{
+        ...cssVars,
+
+        ['--heading-weight' as string]:
+          String(settings.heading_weight || 500),
+
+        ['--body-weight' as string]:
+          String(settings.body_weight || 400),
+
+        ['--body-size' as string]:
+          `${settings.body_size || 16}px`,
+
+        ['--small-size' as string]:
+          `${settings.small_size || 11}px`,
+
+        ['--letter-spacing' as string]:
+          `${settings.letter_spacing || 0}px`,
+      }}>
       <header
         className={`site-nav ${
           menuOpen ? 'is-open' : ''
@@ -437,8 +517,8 @@ export default function HomePage() {
             />
           ) : (
             <span>
-              NURANICO
-              <span className="brand-mark">®</span>
+              <span className="latin" lang="en">NURANICO</span>
+              <span className="brand-mark latin" lang="en">®</span>
             </span>
           )}
         </Link>
@@ -542,18 +622,15 @@ export default function HomePage() {
                     : ''
                 }`}
                 style={{
-                  backgroundImage: `url(${
-                    slide.cover_url ||
-                    demoImages[
-                      index % demoImages.length
-                    ]
-                  })`,
+                  backgroundImage: slide.cover_url
+                    ? `url(${slide.cover_url})`
+                    : 'none',
                 }}
               >
-                {isVideo(slide) &&
-                slide.media_url ? (
+                {hasVideoPreview(slide) &&
+                slide.preview_url ? (
                   <PreviewVideo
-                    src={slide.media_url}
+                    src={slide.preview_url}
                     className="hero-video"
                   />
                 ) : null}
@@ -563,13 +640,11 @@ export default function HomePage() {
             <div
               className="hero-slide active"
               style={{
-                backgroundImage: `url(${heroImage})`,
+                backgroundImage: heroImage
+                  ? `url(${heroImage})`
+                  : 'none',
               }}
             >
-              <PreviewVideo
-                src={demoVideo}
-                className="hero-video"
-              />
             </div>
           )}
 
@@ -614,7 +689,7 @@ export default function HomePage() {
         </div>
 
         <div className="hero-meta">
-          <span>SCROLL TO EXPLORE</span>
+          <span className="latin" lang="en">SCROLL TO EXPLORE</span>
 
           <div className="hero-dots">
             {(heroSlides.length
@@ -786,12 +861,7 @@ export default function HomePage() {
           <div className="portfolio-grid">
             {displayItems.map(
               (item, index) => {
-                const href =
-                  item.id > 0
-                    ? `/work/${item.id}`
-                    : `/work/demo-${Math.abs(
-                        item.id
-                      )}`;
+                const href = `/work/${item.id}`;
 
                 const title =
                   lang === 'fa'
@@ -814,22 +884,23 @@ export default function HomePage() {
                     key={item.id}
                   >
                     <div className="project-media">
-                      <img
-                        src={
-                          item.cover_url ||
-                          demoImages[
-                            index %
-                              demoImages.length
-                          ]
-                        }
-                        alt={title}
-                        loading="lazy"
-                      />
+                      {item.cover_url ? (
+                        <img
+                          src={item.cover_url}
+                          alt={title}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div
+                          className="project-media-empty"
+                          aria-label={title}
+                        />
+                      )}
 
-                      {isVideo(item) &&
-                      item.media_url ? (
+                      {hasVideoPreview(item) &&
+                      item.preview_url ? (
                         <PreviewVideo
-                          src={item.media_url}
+                          src={item.preview_url}
                           className="project-preview"
                         />
                       ) : null}
@@ -891,11 +962,15 @@ export default function HomePage() {
         className="section about reveal"
       >
         <div className="about-image">
-          <img
-            src={demoImages[2]}
-            alt="NURANICO creative direction"
-            loading="lazy"
-          />
+          {content.about_image_url ? (
+            <img
+              src={content.about_image_url}
+              alt="NURANICO creative direction"
+              loading="lazy"
+            />
+          ) : (
+            <div className="about-image-empty" />
+          )}
 
           <span>N / 2026</span>
         </div>
@@ -1026,14 +1101,16 @@ export default function HomePage() {
       </section>
 
       <section className="landscape reveal">
-        <img
-          src={demoImages[4]}
-          alt="NURANICO cinematic landscape"
-          loading="lazy"
-        />
+        {content.about_image_url ? (
+          <img
+            src={content.about_image_url}
+            alt="NURANICO cinematic landscape"
+            loading="lazy"
+          />
+        ) : null}
 
         <div className="landscape-copy">
-          <span>NURANICO / 05</span>
+          <span className="latin" lang="en">NURANICO / 05</span>
 
           <strong>
             KEEP
@@ -1085,8 +1162,8 @@ export default function HomePage() {
             className="brand"
             href="#top"
           >
-            NURANICO
-            <span className="brand-mark">
+            <span className="latin" lang="en">NURANICO</span>
+            <span className="brand-mark latin" lang="en">
               ®
             </span>
           </a>
@@ -1130,5 +1207,6 @@ export default function HomePage() {
         </div>
       </footer>
     </main>
+    </>
   );
 }

@@ -15,58 +15,152 @@ type Item = {
   bts_gallery_urls?: string[] | null;
 };
 
-const demo = [
-  'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1400&q=85',
-  'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1400&q=85',
-  'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1400&q=85',
-  'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1400&q=85',
-];
-
 export default function BehindTheScenesPage() {
-  const [lang, setLang] = useState<'en'|'fa'>('en');
+  const [lang, setLang] = useState<'en' | 'fa'>('en');
   const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const saved = localStorage.getItem('nuranico-lang');
-    if (saved === 'fa' || saved === 'en') setLang(saved);
-    import('../../../lib/supabase').then(({ supabase }) =>
-      supabase.from('portfolio').select('id,title_en,title_fa,category,cover_url,bts_media_url,bts_media_type,bts_gallery_urls')
-        .eq('published', true).order('sort_order', {ascending:true})
-        .then(({data}) => setItems((data || []).filter(x => x.bts_media_url || x.bts_gallery_urls?.length)))
-    );
+
+    if (saved === 'fa' || saved === 'en') {
+      setLang(saved);
+    }
+
+    import('../../../lib/supabase').then(async ({ supabase }) => {
+      const { data, error } = await supabase
+        .from('portfolio')
+        .select(
+          'id,title_en,title_fa,category,cover_url,bts_media_url,bts_media_type,bts_gallery_urls'
+        )
+        .eq('published', true)
+        .order('sort_order', { ascending: true });
+
+      if (!error) {
+        setItems(
+          (data || []).filter(
+            item =>
+              !!item.bts_media_url ||
+              !!item.bts_gallery_urls?.length
+          )
+        );
+      }
+
+      setLoading(false);
+    });
   }, []);
 
-  const sample = items.length ? items : demo.map((cover, i) => ({
-    id: -(i+1), title_en: ['Motion / Identity','Editorial Story','Campaign Film','Visual Direction'][i],
-    title_fa: ['Motion / Identity','Editorial Story','Campaign Film','Visual Direction'][i],
-    category: i % 2 ? 'photo' : 'video', cover_url: cover,
-    bts_media_url: i % 2 ? cover : 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    bts_media_type: i % 2 ? 'image' : 'video',
-    bts_gallery_urls: [cover, demo[(i+1)%demo.length]]
-  } as Item));
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir =
+      lang === 'fa' ? 'rtl' : 'ltr';
+
+    localStorage.setItem('nuranico-lang', lang);
+  }, [lang]);
 
   return (
     <main className="content-page bts-page">
       <SiteHeader />
+
       <section className="inner-hero">
         <p>05 / BEHIND THE SCENES</p>
-        <h1>{lang === 'fa' ? 'پشت صحنه‌ی پروژه‌ها.' : 'Behind the scenes.'}</h1>
+
+        <h1>
+          {lang === 'fa'
+            ? 'پشت صحنه‌ی پروژه‌ها.'
+            : 'Behind the scenes.'}
+        </h1>
       </section>
+
       <section className="bts-list">
-        {sample.map((item, index) => (
-          <Link className="bts-card" href={item.id > 0 ? `/work/${item.id}` : `/work/demo-${Math.abs(item.id)}`} key={item.id}>
-            <div className="bts-card-media">
-              <img src={item.bts_media_type === 'video' ? (item.cover_url || demo[index % demo.length]) : (item.bts_media_url || item.cover_url || demo[index % demo.length])} alt="" />
-              {item.bts_media_type === 'video' ? <span className="bts-play">▶</span> : null}
-            </div>
-            <div className="bts-card-meta">
-              <div><p>BEHIND THE SCENES / {String(index+1).padStart(2,'0')}</p><h2>{lang === 'fa' ? item.title_fa : item.title_en || item.title_fa}</h2></div>
-              <span>VIEW PROJECT ↗</span>
-            </div>
-          </Link>
-        ))}
+        {loading ? (
+          <div className="bts-empty">
+            <p>Loading…</p>
+          </div>
+        ) : items.length ? (
+          items.map((item, index) => {
+            const galleryImage =
+              item.bts_gallery_urls?.find(Boolean) || null;
+
+            const isVideo =
+              item.bts_media_type === 'video';
+
+            const previewImage =
+              isVideo
+                ? item.cover_url || galleryImage
+                : item.bts_media_url ||
+                  galleryImage ||
+                  item.cover_url;
+
+            return (
+              <Link
+                className="bts-card"
+                href={`/work/${item.id}`}
+                key={item.id}
+              >
+                <div className="bts-card-media">
+                  {previewImage ? (
+                    <img
+                      src={previewImage}
+                      alt={
+                        lang === 'fa'
+                          ? item.title_fa
+                          : item.title_en || item.title_fa
+                      }
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="bts-media-empty" />
+                  )}
+
+                  {isVideo ? (
+                    <span className="bts-play">▶</span>
+                  ) : null}
+                </div>
+
+                <div className="bts-card-meta">
+                  <div>
+                    <p>
+                      BEHIND THE SCENES /{' '}
+                      {String(index + 1).padStart(2, '0')}
+                    </p>
+
+                    <h2>
+                      {lang === 'fa'
+                        ? item.title_fa
+                        : item.title_en || item.title_fa}
+                    </h2>
+                  </div>
+
+                  <span>
+                    {lang === 'fa'
+                      ? 'مشاهده پروژه ↗'
+                      : 'VIEW PROJECT ↗'}
+                  </span>
+                </div>
+              </Link>
+            );
+          })
+        ) : (
+          <div className="bts-empty">
+            <p>
+              {lang === 'fa'
+                ? 'هنوز پشت صحنه‌ای منتشر نشده است.'
+                : 'No behind-the-scenes projects published yet.'}
+            </p>
+          </div>
+        )}
       </section>
-      <footer className="inner-footer"><span>NURANICO®</span><Link href="/work">Back to work ↗</Link></footer>
+
+      <footer className="inner-footer">
+        <span>NURANICO®</span>
+
+        <Link href="/work">
+          {lang === 'fa'
+            ? 'بازگشت به پروژه‌ها ↗'
+            : 'Back to work ↗'}
+        </Link>
+      </footer>
     </main>
   );
 }

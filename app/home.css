@@ -9,7 +9,9 @@
   overflow: clip;
   background: var(--site-bg);
   color: var(--site-text);
-  font-family: 'DM Sans', Arial, sans-serif;
+  font-family: var(--font-body, 'DM Sans'), Arial, sans-serif;
+  font-size: var(--body-size, 16px);
+  font-weight: var(--body-weight, 400);
   transition: background-color .8s ease, color .5s ease;
 }
 
@@ -33,7 +35,7 @@
 .brand {
   justify-self: start;
   direction: ltr;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family:var(--font-heading),sans-serif;
   font-size: 17px;
   font-weight: 600;
   letter-spacing: -.04em;
@@ -141,8 +143,8 @@
   text-transform: uppercase;
 }
 .hero h1, .section h2, .statement h2, .contact h2 {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 500;
+  font-family: var(--font-heading, 'Space Grotesk'), sans-serif;
+  font-weight: var(--heading-weight, 500);
   letter-spacing: -.065em;
 }
 .hero h1 {
@@ -310,7 +312,7 @@
   border-top: 1px solid rgba(255,255,255,.13);
 }
 .about-stats div { display: flex; flex-direction: column; gap: 8px; }
-.about-stats strong { font-family: 'Space Grotesk'; font-size: 30px; font-weight: 500; }
+.about-stats strong { font-family:var(--font-heading); font-size: 30px; font-weight: 500; }
 .about-stats span { color: #8e8b85; font-size: 9px; }
 
 .brands { background: #e2dfd8; color: #171716; }
@@ -329,7 +331,7 @@
   padding: 25px;
   border-right: 1px solid rgba(0,0,0,.18);
   border-bottom: 1px solid rgba(0,0,0,.18);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family:var(--font-heading),sans-serif;
   font-size: 16px;
   letter-spacing: -.02em;
   text-align: center;
@@ -365,7 +367,7 @@
   padding: 30px 5vw;
 }
 .landscape-copy span { font-size: 9px; letter-spacing: .16em; }
-.landscape-copy strong { font-family: 'Space Grotesk'; font-size: clamp(55px, 9vw, 130px); line-height: .78; letter-spacing: -.06em; }
+.landscape-copy strong { font-family:var(--font-heading); font-size: clamp(55px, 9vw, 130px); line-height: .78; letter-spacing: -.06em; }
 
 .contact {
   display: flex;
@@ -380,7 +382,7 @@
 .contact > div:first-child > p:not(.eyebrow) { color: #66635e; margin: 0 0 30px; }
 .contact .primary-button { background: #151514; color: #eeeae2; }
 .contact-mark {
-  font-family: 'Space Grotesk';
+  font-family:var(--font-heading);
   font-size: clamp(170px, 26vw, 390px);
   line-height: .55;
   color: #d4d0c8;
@@ -490,3 +492,89 @@
   .footer { grid-template-columns: 1fr; gap: 35px; padding: 60px 5vw; }
   .footer > div:first-child { grid-column: auto; }
 }
+
+
+
+/* =========================================================
+   NURANICO — UI GEOMETRY PROTECTION
+   Typography may change text, never component geometry.
+   ========================================================= */
+
+/* ---------- BUTTONS ---------- */
+
+.nav-cta,
+.primary-button,
+.lang-switch,
+.menu-button,
+.filter-row button {
+  line-height: 1 !important;
+}
+
+/* Main CTA */
+.nav-cta {
+  padding: 12px 17px !important;
+  min-height: 0 !important;
+}
+
+/* Hero / section CTA */
+.primary-button {
+  padding: 15px 20px !important;
+  min-height: 0 !important;
+}
+
+/* Language circle */
+.lang-switch {
+  width: 39px !important;
+  height: 39px !important;
+  min-width: 39px !important;
+  min-height: 39px !important;
+  padding: 0 !important;
+}
+
+/* ---------- WORK FILTERS ---------- */
+
+.filter-row {
+  line-height: 1 !important;
+}
+
+.filter-row button {
+  padding: 9px 17px !important;
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+/* ---------- SERVICES ---------- */
+
+/*
+ Typography can change text inside the cards,
+ but must not change card geometry.
+*/
+.service-card {
+  min-height: 330px;
+  padding: 30px;
+}
+
+.service-card h3 {
+  line-height: 1.15;
+}
+
+.service-card p {
+  line-height: 1.8;
+}
+
+/* ---------- MOBILE ---------- */
+
+@media (max-width: 900px) {
+  .menu-button {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    padding: 11px !important;
+  }
+
+  .service-card {
+    min-height: 240px;
+  }
+}
+
