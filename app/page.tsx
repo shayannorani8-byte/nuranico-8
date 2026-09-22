@@ -92,6 +92,16 @@ type Brand = {
   website_url?: string;
 };
 
+type Service = {
+  id: number;
+  title_en: string;
+  title_fa?: string | null;
+  description_en?: string | null;
+  description_fa?: string | null;
+  published?: boolean;
+  sort_order?: number;
+};
+
 function isVideo(item: PortfolioItem) {
   const type = (item.media_type || '').toLowerCase();
   const url = `${item.media_url || ''} ${item.cover_url || ''}`.toLowerCase();
@@ -162,6 +172,7 @@ export default function HomePage() {
   const [content, setContent] = useState<Content>({});
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [filter, setFilter] = useState('all');
   const [heroIndex, setHeroIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -290,6 +301,7 @@ export default function HomePage() {
       contentResult,
       portfolioResult,
       brandsResult,
+      servicesResult,
       fontsResult,
     ] = await Promise.all([
       supabase
@@ -319,6 +331,13 @@ export default function HomePage() {
         .order('created_at', { ascending: false }),
 
       supabase
+        .from('services')
+        .select('*')
+        .eq('published', true)
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false }),
+
+      supabase
         .from('font_assets')
         .select('id,family_name,file_url,format,font_weight,font_style')
         .order('created_at', { ascending: false }),
@@ -338,6 +357,10 @@ export default function HomePage() {
 
     if (brandsResult.data) {
       setBrands(brandsResult.data);
+    }
+
+    if (servicesResult.data) {
+      setServices(servicesResult.data);
     }
 
     if (fontsResult.data) {
@@ -735,71 +758,83 @@ export default function HomePage() {
         </div>
 
         <div className="service-grid">
-          {[
-            [
-              '01',
-              lang === 'fa'
-                ? 'ساخت تیزر'
-                : 'Film & Teasers',
-              lang === 'fa'
-                ? 'روایت‌های سینمایی برای معرفی محصول، برند و کمپین.'
-                : 'Cinematic stories for products, brands and campaigns.',
-            ],
-            [
-              '02',
-              lang === 'fa'
-                ? 'عکاسی'
-                : 'Photography',
-              lang === 'fa'
-                ? 'تصاویر دقیق و ماندگار برای هویت بصری و تبلیغات.'
-                : 'Precise imagery for campaigns, products and visual identity.',
-            ],
-            [
-              '03',
-              lang === 'fa'
-                ? 'تولید محتوا'
-                : 'Content',
-              lang === 'fa'
-                ? 'محتوای متحرک و اجتماعی با زبان بصری یکپارچه.'
-                : 'Social-first content with a consistent visual language.',
-            ],
-          ].map(
-            ([
-              number,
-              title,
-              description,
-            ]) => {
-              const href =
-                number === '01'
-                  ? '/services/film-teasers'
-                  : number === '02'
-                    ? '/services/photography'
-                    : '/services/content';
+          {(services.length
+            ? services.slice(0, 3)
+            : [
+                {
+                  id: 1,
+                  title_en: 'Film & Teasers',
+                  title_fa: 'ساخت تیزر',
+                  description_en:
+                    'Cinematic stories for products, brands and campaigns.',
+                  description_fa:
+                    'روایت‌های سینمایی برای معرفی محصول، برند و کمپین.',
+                  sort_order: 0,
+                },
+                {
+                  id: 2,
+                  title_en: 'Photography',
+                  title_fa: 'عکاسی',
+                  description_en:
+                    'Precise imagery for campaigns, products and visual identity.',
+                  description_fa:
+                    'تصاویر دقیق و ماندگار برای هویت بصری و تبلیغات.',
+                  sort_order: 1,
+                },
+                {
+                  id: 3,
+                  title_en: 'Content',
+                  title_fa: 'تولید محتوا',
+                  description_en:
+                    'Social-first content with a consistent visual language.',
+                  description_fa:
+                    'محتوای متحرک و اجتماعی با زبان بصری یکپارچه.',
+                  sort_order: 2,
+                },
+              ]
+          ).map((service, index) => {
+            const number = String(index + 1).padStart(2, '0');
 
-              return (
-                <a
-                  href={href}
-                  className="service-card"
-                  key={number}
-                  style={{
-                    display: 'grid',
-                    color: 'inherit',
-                    textDecoration: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <span>{number}</span>
+            const href =
+              index === 0
+                ? '/services/film-teasers'
+                : index === 1
+                  ? '/services/photography'
+                  : '/services/content';
 
-                  <div>
-                    <h3>{title}</h3>
-                    <p>{description}</p>
-                  </div>
+            const title =
+              lang === 'fa'
+                ? service.title_fa || service.title_en
+                : service.title_en || service.title_fa || '';
 
-                  <b>↗</b>
-                </a>
-              );
-            }
-          )}
+            const description =
+              lang === 'fa'
+                ? service.description_fa || service.description_en
+                : service.description_en || service.description_fa || '';
+
+            return (
+              <a
+                href={href}
+                className="service-card"
+                key={service.id}
+                style={{
+                  display: 'grid',
+                  color: 'inherit',
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <span>{number}</span>
+
+                <div>
+                  <h3>{title}</h3>
+                  <p>{description}</p>
+                </div>
+
+                <b>↗</b>
+              </a>
+            );
+          })}
         </div>
       </section>
 

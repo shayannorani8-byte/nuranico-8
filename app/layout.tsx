@@ -4,6 +4,7 @@ import './work/project.css';
 import './content-page.css';
 import type { Metadata } from 'next';
 import GlobalTypography from '../components/GlobalTypography';
+import CMSRealtime from '../components/CMSRealtime';
 
 export const metadata: Metadata = {
   title: 'NURANICO — Creative Studio',
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" dir="ltr">
-      <body><GlobalTypography />{children}</body>
+      <body><GlobalTypography /><CMSRealtime />{children}</body>
     </html>
   );
 }
