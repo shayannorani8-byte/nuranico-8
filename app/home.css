@@ -315,8 +315,8 @@
 .about-stats strong { font-family:var(--font-heading); font-size: 30px; font-weight: 500; }
 .about-stats span { color: #8e8b85; font-size: 9px; }
 
-.brands { background: #e2dfd8; color: #171716; }
-.brands .eyebrow, .brands .section-index { color: #68655f; }
+.brands { background: var(--brands-bg); color: var(--brands-text); }
+.brands .eyebrow, .brands .section-index { color: var(--brands-muted); }
 .brand-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -337,9 +337,9 @@
   text-align: center;
   transition: background .35s ease;
 }
-.brand-card:hover { background: #d6d2c9; }
+.brand-card:hover { background: var(--brands-hover); }
 .brand-card img { max-width: 150px; max-height: 50px; object-fit: contain; }
-.brand-card.placeholder { color: #76736d; font-size: 10px; letter-spacing: .14em; }
+.brand-card.placeholder { color: var(--brands-muted); font-size: 10px; letter-spacing: .14em; }
 
 .statement {
   padding: 180px 8vw;
@@ -374,13 +374,13 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 60px;
-  background: #e7e4dd;
-  color: #151514;
+  background: var(--contact-bg);
+  color: var(--contact-text);
 }
-.contact .eyebrow { color: #74716b; }
+.contact .eyebrow { color: var(--contact-muted); }
 .contact h2 { max-width: 800px; }
-.contact > div:first-child > p:not(.eyebrow) { color: #66635e; margin: 0 0 30px; }
-.contact .primary-button { background: #151514; color: #eeeae2; }
+.contact > div:first-child > p:not(.eyebrow) { color: var(--contact-muted); margin: 0 0 30px; }
+.contact .primary-button { background: var(--contact-button); color: var(--contact-button-text); }
 .contact-mark {
   font-family:var(--font-heading);
   font-size: clamp(170px, 26vw, 390px);
@@ -578,3 +578,2135 @@
   }
 }
 
+/* NURANICO ADMIN COLOR SYSTEM */
+
+/*
+   Color-only layer.
+   Does NOT modify typography, spacing, desktop sizing,
+   responsive sizing or mobile editorial layout.
+*/
+
+.site {
+  background: var(--site-bg);
+  color: var(--site-text);
+}
+
+/* ---------- NAVIGATION ---------- */
+
+.site-nav {
+  color: var(--nav-text);
+}
+
+.brand {
+  color: var(--site-logo);
+}
+
+.desktop-nav a,
+.mobile-menu a {
+  color: var(--nav-text);
+}
+
+.desktop-nav a:hover,
+.mobile-menu a:hover {
+  color: var(--nav-active);
+}
+
+.lang-switch {
+  color: var(--nav-text);
+  border-color: var(--site-line);
+}
+
+.menu-button {
+  border-color: var(--site-line) !important;
+}
+
+.menu-button span {
+  background: var(--nav-text) !important;
+}
+
+.mobile-menu {
+  background: color-mix(
+    in srgb,
+    var(--nav-bg) 96%,
+    transparent
+  ) !important;
+
+  border-color: var(--site-line) !important;
+}
+
+/* ---------- TYPOGRAPHIC COLORS ---------- */
+
+.section-head h2,
+.service-card h3,
+.project-meta h3,
+.about-copy h2,
+.statement h2,
+.contact h2 {
+  color: var(--site-heading);
+}
+
+.eyebrow,
+.section-index {
+  color: var(--tag-color);
+}
+
+/* ---------- BUTTONS ---------- */
+
+.nav-cta,
+.primary-button {
+  background: var(--site-accent);
+  color: var(--button-text);
+}
+
+.nav-cta:hover,
+.primary-button:hover {
+  background: var(--button-hover);
+}
+
+.filter-row button {
+  border-color: var(--site-line);
+  color: var(--site-muted);
+  background: transparent;
+}
+
+.filter-row button.active {
+  background: var(--site-accent);
+  color: var(--button-text);
+  border-color: var(--site-accent);
+}
+
+/* ---------- SERVICES ---------- */
+
+.services {
+  background: var(--card-bg);
+  color: var(--card-text);
+}
+
+.service-grid,
+.service-card {
+  border-color: var(--site-line);
+}
+
+.service-card {
+  color: var(--card-text);
+}
+
+.service-card > span,
+.service-card p {
+  color: var(--site-muted);
+}
+
+.service-card:hover {
+  background: color-mix(
+    in srgb,
+    var(--card-bg) 88%,
+    var(--card-text)
+  );
+}
+
+/* ---------- WORK ---------- */
+
+.work {
+  background: var(--site-bg);
+}
+
+.project-media {
+  background: var(--site-surface);
+}
+
+.project-meta p,
+.project-meta span,
+.project-meta strong {
+  color: var(--site-muted);
+}
+
+.loading-line {
+  color: var(--site-muted);
+}
+
+/* ---------- ABOUT ---------- */
+
+.about {
+  background: var(--site-surface);
+}
+
+.about-copy > p {
+  color: var(--site-muted);
+}
+
+.about-stats {
+  border-color: var(--site-line);
+}
+
+.about-stats span {
+  color: var(--site-muted);
+}
+
+/* ---------- STATEMENT ---------- */
+
+.statement {
+  background: var(--site-bg);
+}
+
+.statement h2 em {
+  color: var(--site-muted);
+}
+
+.statement > p:last-child {
+  color: var(--site-muted);
+}
+
+/* ---------- GENERIC LINKS ---------- */
+
+.site a {
+  text-decoration-color: var(--site-link);
+}
+
+/* ---------- FOOTER ---------- */
+
+.footer {
+  background: var(--footer-bg);
+  color: var(--footer-text);
+}
+
+.footer p,
+.footer > div > span,
+.footer a:not(.brand) {
+  color: color-mix(
+    in srgb,
+    var(--footer-text) 65%,
+    transparent
+  );
+}
+
+.footer .brand {
+  color: var(--footer-text);
+}
+
+.footer a:hover {
+  color: var(--footer-text);
+}
+
+
+/* =========================================================
+   NURANICO — COMPLETE ADMIN COLOR SYSTEM
+   Colors only — typography / sizing / layout untouched
+   ========================================================= */
+
+/* ---------- GLOBAL ---------- */
+
+.site {
+  background: var(--site-bg) !important;
+  color: var(--site-text) !important;
+}
+
+.site h1,
+.site h2,
+.site h3 {
+  color: var(--site-heading);
+}
+
+.site a {
+  color: var(--site-link);
+}
+
+
+/* ---------- NAVIGATION ---------- */
+
+.site-nav {
+  color: var(--nav-text);
+}
+
+.brand {
+  color: var(--site-logo) !important;
+}
+
+.desktop-nav a,
+.mobile-menu a {
+  color: var(--nav-text) !important;
+}
+
+.desktop-nav a:hover,
+.mobile-menu a:hover {
+  color: var(--nav-active) !important;
+}
+
+.lang-switch {
+  color: var(--nav-text) !important;
+}
+
+.menu-button span {
+  background: var(--nav-text) !important;
+}
+
+.mobile-menu {
+  background: var(--nav-bg) !important;
+  border-color: var(--site-line) !important;
+}
+
+
+/* ---------- LABELS / EYEBROWS ---------- */
+
+.eyebrow,
+.section-index,
+.project-meta p,
+.project-meta strong,
+.service-card > span {
+  color: var(--tag-color) !important;
+}
+
+
+/* ---------- BUTTONS ---------- */
+
+.primary-button,
+.nav-cta {
+  background: var(--site-accent) !important;
+  color: var(--button-text) !important;
+}
+
+.primary-button:hover,
+.nav-cta:hover {
+  background: var(--button-hover) !important;
+}
+
+.filter-row button {
+  color: var(--site-muted) !important;
+  border-color: var(--site-line) !important;
+  background: transparent !important;
+}
+
+.filter-row button.active {
+  background: var(--site-accent) !important;
+  color: var(--button-text) !important;
+  border-color: var(--site-accent) !important;
+}
+
+
+/* ---------- SERVICES ---------- */
+
+.services {
+  background: var(--card-bg) !important;
+  color: var(--card-text) !important;
+}
+
+.service-grid,
+.service-card {
+  border-color: var(--site-line) !important;
+}
+
+.service-card {
+  color: var(--card-text) !important;
+}
+
+.service-card h3 {
+  color: var(--card-text) !important;
+}
+
+.service-card p {
+  color: var(--site-muted) !important;
+}
+
+.service-card:hover {
+  background: var(--site-surface) !important;
+}
+
+
+/* ---------- SELECTED WORK ---------- */
+
+.work {
+  background: var(--site-bg) !important;
+}
+
+.project-media {
+  background: var(--site-surface) !important;
+}
+
+.project-meta h3 {
+  color: var(--site-heading) !important;
+}
+
+.project-meta span {
+  color: var(--site-muted) !important;
+}
+
+.loading-line {
+  color: var(--site-muted) !important;
+}
+
+
+/* ---------- ABOUT ---------- */
+
+.about {
+  background: var(--site-surface) !important;
+}
+
+.about-copy h2 {
+  color: var(--site-heading) !important;
+}
+
+.about-copy > p,
+.about-stats span {
+  color: var(--site-muted) !important;
+}
+
+.about-stats {
+  border-color: var(--site-line) !important;
+}
+
+.about-stats div + div {
+  border-color: var(--site-line) !important;
+}
+
+
+/* ---------- BRANDS ---------- */
+
+.brands {
+  background: var(--card-bg) !important;
+  color: var(--card-text) !important;
+}
+
+.brands h2 {
+  color: var(--card-text) !important;
+}
+
+.brands .eyebrow,
+.brands .section-index {
+  color: var(--tag-color) !important;
+}
+
+.brand-grid,
+.brand-card {
+  border-color: var(--site-line) !important;
+}
+
+.brand-card {
+  color: var(--card-text) !important;
+}
+
+.brand-card.placeholder {
+  color: var(--tag-color) !important;
+}
+
+.brand-card:hover {
+  background: var(--site-surface) !important;
+}
+
+
+/* ---------- STATEMENT / LESS NOISE ---------- */
+
+.statement {
+  background: var(--site-bg) !important;
+  color: var(--site-text) !important;
+}
+
+.statement h2 {
+  color: var(--site-heading) !important;
+}
+
+.statement h2 em {
+  color: var(--site-muted) !important;
+}
+
+.statement > p:last-child {
+  color: var(--site-muted) !important;
+}
+
+
+/* ---------- LANDSCAPE ---------- */
+
+.landscape {
+  background: var(--site-surface) !important;
+}
+
+.landscape-copy {
+  color: var(--site-text) !important;
+}
+
+
+/* ---------- CONTACT ---------- */
+
+.contact {
+  background: var(--card-bg) !important;
+  color: var(--card-text) !important;
+}
+
+.contact h2 {
+  color: var(--card-text) !important;
+}
+
+.contact .eyebrow {
+  color: var(--tag-color) !important;
+}
+
+.contact > div:first-child > p:not(.eyebrow) {
+  color: var(--site-muted) !important;
+}
+
+.contact .primary-button {
+  background: var(--site-accent) !important;
+  color: var(--button-text) !important;
+}
+
+.contact .primary-button:hover {
+  background: var(--button-hover) !important;
+}
+
+
+/* ---------- FOOTER ---------- */
+
+.footer {
+  background: var(--footer-bg) !important;
+  color: var(--footer-text) !important;
+}
+
+.footer .brand {
+  color: var(--footer-text) !important;
+}
+
+.footer p,
+.footer > div > span {
+  color: var(--footer-text) !important;
+  opacity: .62;
+}
+
+.footer a:not(.brand) {
+  color: var(--footer-text) !important;
+  opacity: .72;
+}
+
+.footer a:hover {
+  color: var(--footer-text) !important;
+  opacity: 1;
+}
+
+
+/* HOME CTA SIZE CONSISTENCY */
+.site a:not(.brand):not(.project-card):not(.service-card),
+.site button {
+  font-size: clamp(7px, .7vw, 9px);
+  letter-spacing: .14em;
+}
+
+@media (max-width: 700px) {
+  .site a:not(.brand):not(.project-card):not(.service-card),
+  .site button {
+    font-size: 6px;
+    letter-spacing: .12em;
+  }
+}
+
+/* =========================================================
+   NURANICO — PREMIUM SERVICE PANELS V2
+   ========================================================= */
+
+.services {
+  background: #111110 !important;
+}
+
+/* tighten section composition */
+.services .section-head {
+  margin-bottom: 34px !important;
+}
+
+.services .service-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  border: 0 !important;
+}
+
+/* PANEL */
+.services .service-card {
+  position: relative;
+  isolation: isolate;
+
+  min-height: 225px !important;
+  padding: 18px 20px 20px !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+
+  overflow: hidden;
+
+  border: 0 !important;
+  border-radius: 7px !important;
+
+  background:
+    radial-gradient(
+      circle at 78% 42%,
+      rgba(255,255,255,.045),
+      transparent 38%
+    ),
+    linear-gradient(
+      145deg,
+      #191918 0%,
+      #151514 100%
+    ) !important;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.045);
+
+  transition:
+    transform .45s cubic-bezier(.2,.7,.2,1),
+    background .4s ease,
+    box-shadow .4s ease !important;
+}
+
+.services .service-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 48%;
+  z-index: -1;
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      to top,
+      rgba(0,0,0,.28),
+      transparent
+    );
+}
+
+.services .service-card:hover {
+  transform: translateY(-3px) !important;
+
+  background:
+    radial-gradient(
+      circle at 78% 42%,
+      rgba(255,255,255,.075),
+      transparent 40%
+    ),
+    linear-gradient(
+      145deg,
+      #1d1d1b 0%,
+      #171716 100%
+    ) !important;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.09),
+    0 18px 45px rgba(0,0,0,.16);
+}
+
+
+/* TOP META */
+
+.service-card-top {
+  position: relative;
+  z-index: 3;
+
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.service-card-top > span {
+  color: rgba(245,243,238,.48) !important;
+
+  font-size: 7px !important;
+  line-height: 1 !important;
+  letter-spacing: .18em !important;
+}
+
+.service-card-top b {
+  color: rgba(245,243,238,.48) !important;
+
+  font-size: 13px !important;
+  line-height: 1 !important;
+  font-weight: 400 !important;
+
+  opacity: .72;
+
+  transition:
+    opacity .35s ease,
+    transform .35s ease;
+}
+
+.service-card:hover .service-card-top b {
+  opacity: 1;
+  transform: translate(2px,-2px);
+}
+
+
+/* VECTOR AS VISUAL OBJECT */
+
+.service-vector {
+  position: absolute;
+
+  top: 39px;
+  right: -5px;
+
+  width: 58% !important;
+  height: 112px !important;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #f0eee8 !important;
+
+  opacity: .16 !important;
+
+  pointer-events: none;
+
+  transform: translateX(0);
+
+  transition:
+    opacity .45s ease,
+    transform .55s cubic-bezier(.2,.7,.2,1);
+}
+
+.service-vector svg {
+  width: 100% !important;
+  height: 100% !important;
+
+  overflow: visible;
+
+  stroke: currentColor !important;
+  stroke-width: .85 !important;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.service-card:hover .service-vector {
+  opacity: .27 !important;
+  transform: translateX(-5px);
+}
+
+
+/* COPY */
+
+.service-card-copy {
+  position: relative;
+  z-index: 3;
+
+  width: 72%;
+  margin-top: auto;
+}
+
+.services .service-card-copy h3 {
+  margin: 0 0 6px !important;
+
+  color: #f4f1ea !important;
+
+  font-size: clamp(17px, 1.45vw, 21px) !important;
+  line-height: 1.02 !important;
+  font-weight: 500 !important;
+
+  letter-spacing: -.025em !important;
+}
+
+.services .service-card-copy p {
+  max-width: 265px !important;
+  margin: 0 !important;
+
+  color: rgba(244,241,234,.52) !important;
+
+  font-size: 9px !important;
+  line-height: 1.5 !important;
+
+  letter-spacing: .005em !important;
+}
+
+
+/* TABLET */
+
+@media (max-width: 900px) and (min-width: 561px) {
+
+  .services .section-head {
+    margin-bottom: 27px !important;
+  }
+
+  .services .service-grid {
+    gap: 6px !important;
+  }
+
+  .services .service-card {
+    min-height: 205px !important;
+    padding: 16px !important;
+  }
+
+  .service-vector {
+    top: 40px;
+    width: 61% !important;
+    height: 94px !important;
+  }
+
+  .service-card-copy {
+    width: 80%;
+  }
+
+  .services .service-card-copy h3 {
+    font-size: 16px !important;
+  }
+
+  .services .service-card-copy p {
+    font-size: 8px !important;
+  }
+}
+
+
+/* =========================================================
+   NURANICO — CINEMATIC SERVICES V3
+   Final desktop/tablet override
+   ========================================================= */
+
+.services {
+  background:
+    radial-gradient(
+      circle at 50% 35%,
+      rgba(255,255,255,.018),
+      transparent 45%
+    ),
+    #0e0e0d !important;
+}
+
+
+/* ---------- SECTION ---------- */
+
+.services .section-head {
+  margin-bottom: 42px !important;
+}
+
+
+/* ---------- GRID ---------- */
+
+.services .service-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  gap: 10px !important;
+
+  border: 0 !important;
+}
+
+
+/* ---------- CARD ---------- */
+
+.services .service-card {
+  position: relative !important;
+  isolation: isolate !important;
+
+  min-height: 285px !important;
+
+  padding: 18px 20px 22px !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+
+  overflow: hidden !important;
+
+  border: 1px solid rgba(255,255,255,.075) !important;
+  border-radius: 10px !important;
+
+  background:
+    radial-gradient(
+      circle at 50% 40%,
+      rgba(255,255,255,.04),
+      transparent 42%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.018),
+      rgba(255,255,255,.006)
+    ) !important;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.018),
+    0 12px 45px rgba(0,0,0,.12) !important;
+
+  transform: none !important;
+
+  transition:
+    border-color .4s ease,
+    background .4s ease,
+    transform .45s cubic-bezier(.2,.7,.2,1),
+    box-shadow .45s ease !important;
+}
+
+
+/* subtle bottom fade */
+
+.services .service-card::after {
+  content: "" !important;
+
+  position: absolute !important;
+  z-index: 0 !important;
+
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+
+  height: 45% !important;
+
+  pointer-events: none !important;
+
+  background:
+    linear-gradient(
+      to top,
+      rgba(0,0,0,.35),
+      rgba(0,0,0,0)
+    ) !important;
+}
+
+
+/* ---------- HOVER ---------- */
+
+.services .service-card:hover {
+  transform: translateY(-4px) !important;
+
+  border-color: rgba(255,255,255,.15) !important;
+
+  background:
+    radial-gradient(
+      circle at 50% 38%,
+      rgba(255,255,255,.065),
+      transparent 44%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.026),
+      rgba(255,255,255,.008)
+    ) !important;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.03),
+    0 22px 60px rgba(0,0,0,.22) !important;
+}
+
+
+/* =========================================================
+   TOP NUMBER + ARROW
+   ========================================================= */
+
+.service-card-top {
+  position: relative !important;
+  z-index: 4 !important;
+
+  width: 100% !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+
+.service-card-top > span {
+  color: rgba(245,243,238,.55) !important;
+
+  font-size: 7px !important;
+  line-height: 1 !important;
+
+  letter-spacing: .18em !important;
+}
+
+
+.service-card-top b {
+  color: rgba(245,243,238,.68) !important;
+
+  font-size: 15px !important;
+  line-height: 1 !important;
+
+  font-weight: 300 !important;
+
+  opacity: .75 !important;
+
+  transition:
+    transform .35s ease,
+    opacity .35s ease !important;
+}
+
+
+.services .service-card:hover .service-card-top b {
+  transform: translate(3px,-3px) !important;
+  opacity: 1 !important;
+}
+
+
+/* =========================================================
+   VECTOR
+   ========================================================= */
+
+.service-vector {
+  position: relative !important;
+
+  top: auto !important;
+  right: auto !important;
+  left: auto !important;
+
+  width: 72% !important;
+  height: 125px !important;
+
+  margin:
+    18px auto
+    10px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  color: #eeeae2 !important;
+
+  opacity: .32 !important;
+
+  pointer-events: none !important;
+
+  transform: none !important;
+
+  transition:
+    opacity .45s ease,
+    transform .55s cubic-bezier(.2,.7,.2,1) !important;
+}
+
+
+.service-vector svg {
+  width: 100% !important;
+  height: 100% !important;
+
+  overflow: visible !important;
+
+  stroke: currentColor !important;
+
+  stroke-width: .72 !important;
+
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+
+  fill: none !important;
+}
+
+
+.services .service-card:hover .service-vector {
+  opacity: .52 !important;
+
+  transform:
+    translateY(-2px)
+    scale(1.025) !important;
+}
+
+
+/* individual visual scale */
+
+.service-vector-1 {
+  width: 76% !important;
+}
+
+.service-vector-2 {
+  width: 66% !important;
+}
+
+.service-vector-3 {
+  width: 72% !important;
+}
+
+
+/* =========================================================
+   CENTERED COPY
+   ========================================================= */
+
+.service-card-copy {
+  position: relative !important;
+  z-index: 4 !important;
+
+  width: 100% !important;
+
+  margin: auto 0 0 !important;
+
+  text-align: center !important;
+}
+
+
+.services .service-card-copy h3 {
+  margin: 0 0 8px !important;
+
+  color: #f4f1ea !important;
+
+  font-size: clamp(18px,1.45vw,22px) !important;
+
+  line-height: 1.04 !important;
+
+  font-weight: 500 !important;
+
+  letter-spacing: -.025em !important;
+
+  text-align: center !important;
+}
+
+
+.services .service-card-copy p {
+  max-width: 290px !important;
+
+  margin:
+    0 auto !important;
+
+  color: rgba(244,241,234,.52) !important;
+
+  font-size: 9px !important;
+
+  line-height: 1.5 !important;
+
+  letter-spacing: .01em !important;
+
+  text-align: center !important;
+}
+
+
+/* =========================================================
+   ADD DEPTH TO EACH VECTOR
+   ========================================================= */
+
+.service-vector::before {
+  content: "" !important;
+
+  position: absolute !important;
+
+  width: 80% !important;
+  height: 70% !important;
+
+  left: 10% !important;
+  top: 15% !important;
+
+  border-radius: 50% !important;
+
+  background:
+    radial-gradient(
+      ellipse,
+      rgba(255,255,255,.055),
+      transparent 68%
+    ) !important;
+
+  filter: blur(15px) !important;
+
+  opacity: .75 !important;
+
+  pointer-events: none !important;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) and (min-width: 561px) {
+
+  .services .service-grid {
+    gap: 7px !important;
+  }
+
+  .services .service-card {
+    min-height: 245px !important;
+
+    padding:
+      16px
+      15px
+      18px !important;
+  }
+
+  .service-vector {
+    width: 75% !important;
+    height: 100px !important;
+
+    margin:
+      16px auto
+      8px !important;
+  }
+
+  .services .service-card-copy h3 {
+    font-size: 16px !important;
+  }
+
+  .services .service-card-copy p {
+    max-width: 220px !important;
+
+    font-size: 8px !important;
+  }
+}
+
+
+
+/* =========================================================
+   NURANICO — ABSTRACT SERVICE ART V4
+   ========================================================= */
+
+.services .service-vector {
+  width: 78% !important;
+  height: 118px !important;
+  margin: 15px auto 11px !important;
+
+  color: rgba(244,241,234,.82) !important;
+  opacity: 1 !important;
+}
+
+.services .service-vector::before {
+  width: 62% !important;
+  height: 58% !important;
+
+  left: 19% !important;
+  top: 21% !important;
+
+  background:
+    radial-gradient(
+      ellipse,
+      rgba(255,255,255,.045),
+      transparent 70%
+    ) !important;
+
+  filter: blur(20px) !important;
+  opacity: .7 !important;
+}
+
+.services .service-vector svg {
+  width: 100% !important;
+  height: 100% !important;
+
+  stroke: currentColor !important;
+  stroke-width: .8 !important;
+
+  vector-effect: non-scaling-stroke;
+}
+
+.services .service-vector .art-main {
+  opacity: .68;
+}
+
+.services .service-vector .art-detail {
+  opacity: .28;
+}
+
+.services .service-card:hover .service-vector {
+  opacity: 1 !important;
+  transform: translateY(-3px) !important;
+}
+
+.services .service-card:hover .art-main {
+  opacity: .92;
+}
+
+.services .service-card:hover .art-detail {
+  opacity: .55;
+}
+
+
+/* FILM — offset sequence */
+
+.services .service-vector-1 {
+  width: 80% !important;
+}
+
+.service-art-film .art-main rect {
+  transition: transform .55s cubic-bezier(.2,.7,.2,1);
+}
+
+.services .service-card:hover .service-art-film .art-main rect:nth-child(1) {
+  transform: translate(-3px, 2px);
+}
+
+.services .service-card:hover .service-art-film .art-main rect:nth-child(3) {
+  transform: translate(3px, -2px);
+}
+
+
+/* PHOTOGRAPHY — optical geometry */
+
+.services .service-vector-2 {
+  width: 68% !important;
+}
+
+.service-art-photo .art-main {
+  transform-origin: center;
+  transition: transform .7s cubic-bezier(.2,.7,.2,1);
+}
+
+.services .service-card:hover .service-art-photo .art-main {
+  transform: rotate(5deg);
+}
+
+
+/* CONTENT — modular system */
+
+.services .service-vector-3 {
+  width: 76% !important;
+}
+
+.service-art-content .art-main rect {
+  transition: transform .55s cubic-bezier(.2,.7,.2,1);
+}
+
+.services .service-card:hover .service-art-content .art-main rect:nth-child(1) {
+  transform: translate(-2px,-2px);
+}
+
+.services .service-card:hover .service-art-content .art-main rect:nth-child(2) {
+  transform: translate(2px,-2px);
+}
+
+.services .service-card:hover .service-art-content .art-main rect:nth-child(3) {
+  transform: translate(-2px,2px);
+}
+
+.services .service-card:hover .service-art-content .art-main rect:nth-child(4) {
+  transform: translate(2px,2px);
+}
+
+
+
+/* =========================================================
+   NURANICO — WORK CAROUSEL / VIEW ALL
+   ========================================================= */
+
+.work-browser-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: -10px 0 20px;
+}
+
+.work-browser-count {
+  color: var(--site-muted);
+  font-size: 8px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.work-browser-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.work-arrows {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.work-arrows button {
+  width: 34px;
+  height: 34px;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--site-line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--site-text);
+  cursor: pointer;
+  font-size: 13px !important;
+  line-height: 1;
+  transition:
+    background .25s ease,
+    color .25s ease,
+    border-color .25s ease,
+    transform .25s ease;
+}
+
+.work-arrows button:hover {
+  background: var(--site-accent);
+  color: var(--button-text);
+  border-color: var(--site-accent);
+  transform: translateY(-1px);
+}
+
+.work-view-all {
+  height: 34px;
+  padding: 0 15px !important;
+  border: 1px solid var(--site-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--site-text);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background .25s ease,
+    color .25s ease,
+    border-color .25s ease;
+}
+
+.work-view-all:hover {
+  background: var(--site-accent);
+  color: var(--button-text);
+  border-color: var(--site-accent);
+}
+
+/* Horizontal Netflix-style browser */
+.portfolio-grid.portfolio-carousel {
+  width: calc(100% + 5vw);
+  display: flex;
+  grid-template-columns: none;
+  gap: 18px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding-right: 5vw;
+  padding-bottom: 10px;
+
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.portfolio-grid.portfolio-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.portfolio-grid.portfolio-carousel .project-card {
+  flex: 0 0 calc((100% - 36px) / 3.22);
+  width: calc((100% - 36px) / 3.22);
+  scroll-snap-align: start;
+}
+
+/* Let trackpad / horizontal scrolling feel natural */
+.portfolio-grid.portfolio-carousel .project-media {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (max-width: 1100px) and (min-width: 701px) {
+  .portfolio-grid.portfolio-carousel .project-card {
+    flex-basis: calc((100% - 18px) / 2.35);
+    width: calc((100% - 18px) / 2.35);
+  }
+}
+
+
+
+/* =========================================================
+   NURANICO — NETFLIX STYLE WORK EDGE EXPERIENCE
+   ALL + EVERY CATEGORY
+   ========================================================= */
+
+.work-carousel-shell {
+  position: relative;
+  width: 100%;
+}
+
+/* Fade edges only while carousel is active */
+.work-carousel-shell.is-carousel::before,
+.work-carousel-shell.is-carousel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 70px;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.work-carousel-shell.is-carousel::before {
+  left: 0;
+  background:
+    linear-gradient(
+      90deg,
+      var(--site-bg) 0%,
+      color-mix(in srgb, var(--site-bg) 72%, transparent) 35%,
+      transparent 100%
+    );
+}
+
+.work-carousel-shell.is-carousel::after {
+  right: 0;
+  background:
+    linear-gradient(
+      270deg,
+      var(--site-bg) 0%,
+      color-mix(in srgb, var(--site-bg) 72%, transparent) 35%,
+      transparent 100%
+    );
+}
+
+/*
+  Slightly expose next project.
+  This is the visual cue that the row continues.
+*/
+.portfolio-grid.portfolio-carousel {
+  width: calc(100% + 5vw) !important;
+  padding-right: 5vw !important;
+}
+
+.portfolio-grid.portfolio-carousel .project-card {
+  flex:
+    0 0
+    calc((100% - 36px) / 3.28) !important;
+
+  width:
+    calc((100% - 36px) / 3.28) !important;
+}
+
+/* subtle card transition like streaming platforms */
+.portfolio-grid.portfolio-carousel .project-card {
+  transition:
+    transform .35s cubic-bezier(.2,.7,.2,1),
+    opacity .35s ease;
+}
+
+.portfolio-grid.portfolio-carousel .project-card:hover {
+  transform: translateY(-3px);
+}
+
+/* make controls visually lighter */
+.work-browser-head {
+  position: relative;
+  z-index: 12;
+}
+
+.work-arrows button {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+
+
+/* =========================================================
+   NURANICO — WORK RAIL FINAL OVERRIDE
+   Desktop: 6 visible
+   Tablet: 6 visible
+   Covers: 4:5
+   Soft edge fade using the live site background variable
+   ========================================================= */
+
+.work-carousel-shell {
+  position: relative !important;
+  width: 100% !important;
+  overflow: visible !important;
+  isolation: isolate;
+}
+
+
+/* TRACK */
+
+.portfolio-grid.portfolio-carousel {
+  --work-gap: 10px;
+
+  display: flex !important;
+  grid-template-columns: none !important;
+
+  width: calc(100% + 5vw) !important;
+
+  gap: var(--work-gap) !important;
+
+  margin: 0 !important;
+
+  padding:
+    0
+    5vw
+    8px
+    0 !important;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+
+  scroll-snap-type: x proximity !important;
+  scroll-behavior: smooth;
+
+  scrollbar-width: none !important;
+  -ms-overflow-style: none;
+
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+
+  position: relative;
+  z-index: 1;
+}
+
+.portfolio-grid.portfolio-carousel::-webkit-scrollbar {
+  display: none !important;
+}
+
+
+/* 6 FULL CARDS + SMALL PART OF NEXT CARD */
+
+.portfolio-grid.portfolio-carousel .project-card {
+  flex:
+    0 0
+    calc(
+      (100% - (var(--work-gap) * 5))
+      / 6.16
+    ) !important;
+
+  width:
+    calc(
+      (100% - (var(--work-gap) * 5))
+      / 6.16
+    ) !important;
+
+  min-width:
+    calc(
+      (100% - (var(--work-gap) * 5))
+      / 6.16
+    ) !important;
+
+  scroll-snap-align: start !important;
+
+  transition:
+    transform .35s cubic-bezier(.2,.7,.2,1),
+    opacity .35s ease !important;
+}
+
+
+/* ALL WORK COVERS = PORTRAIT 4:5 */
+
+.portfolio-grid.portfolio-carousel .project-media {
+  width: 100% !important;
+  height: auto !important;
+
+  aspect-ratio: 4 / 5 !important;
+
+  overflow: hidden !important;
+}
+
+.portfolio-grid.portfolio-carousel .project-media img,
+.portfolio-grid.portfolio-carousel .project-media video,
+.portfolio-grid.portfolio-carousel .project-preview,
+.portfolio-grid.portfolio-carousel .project-media-empty {
+  width: 100% !important;
+  height: 100% !important;
+
+  object-fit: cover !important;
+}
+
+
+/* Make metadata fit the denser six-card layout */
+
+.portfolio-grid.portfolio-carousel .project-meta {
+  gap: 7px !important;
+}
+
+.portfolio-grid.portfolio-carousel .project-meta h3 {
+  font-size: clamp(11px, .95vw, 16px) !important;
+}
+
+.portfolio-grid.portfolio-carousel .project-meta p,
+.portfolio-grid.portfolio-carousel .project-meta span,
+.portfolio-grid.portfolio-carousel .project-meta strong {
+  font-size: 7px !important;
+}
+
+
+/* ---------------------------------------------------------
+   EDGE FADES
+
+   They use --site-bg, so when background is changed from
+   Admin the fade changes with it automatically.
+   --------------------------------------------------------- */
+
+.work-carousel-shell.is-carousel::before,
+.work-carousel-shell.is-carousel::after {
+  content: "" !important;
+
+  display: block !important;
+
+  position: absolute !important;
+
+  top: -2px !important;
+  bottom: 0 !important;
+
+  width: clamp(32px, 4vw, 72px) !important;
+
+  z-index: 6 !important;
+
+  pointer-events: none !important;
+}
+
+.work-carousel-shell.is-carousel::before {
+  left: 0 !important;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--site-bg) 0%,
+      color-mix(
+        in srgb,
+        var(--site-bg) 92%,
+        transparent
+      ) 18%,
+      color-mix(
+        in srgb,
+        var(--site-bg) 64%,
+        transparent
+      ) 48%,
+      color-mix(
+        in srgb,
+        var(--site-bg) 24%,
+        transparent
+      ) 76%,
+      transparent 100%
+    ) !important;
+}
+
+.work-carousel-shell.is-carousel::after {
+  right: 0 !important;
+
+  background:
+    linear-gradient(
+      270deg,
+      var(--site-bg) 0%,
+      color-mix(
+        in srgb,
+        var(--site-bg) 92%,
+        transparent
+      ) 18%,
+      color-mix(
+        in srgb,
+        var(--site-bg) 64%,
+        transparent
+      ) 48%,
+      color-mix(
+        in srgb,
+        var(--site-bg) 24%,
+        transparent
+      ) 76%,
+      transparent 100%
+    ) !important;
+}
+
+
+/* VIEW ALL is now a Link */
+
+.work-view-all {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  text-decoration: none !important;
+
+  font-size: 8px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+
+/* TABLET — still keep six visible */
+
+@media (max-width: 1100px) and (min-width: 701px) {
+
+  .portfolio-grid.portfolio-carousel {
+    --work-gap: 8px;
+
+    width: calc(100% + 4vw) !important;
+    padding-right: 4vw !important;
+  }
+
+  .portfolio-grid.portfolio-carousel .project-card {
+    flex:
+      0 0
+      calc(
+        (100% - (var(--work-gap) * 5))
+        / 6.12
+      ) !important;
+
+    width:
+      calc(
+        (100% - (var(--work-gap) * 5))
+        / 6.12
+      ) !important;
+
+    min-width:
+      calc(
+        (100% - (var(--work-gap) * 5))
+        / 6.12
+      ) !important;
+  }
+
+  .work-carousel-shell.is-carousel::before,
+  .work-carousel-shell.is-carousel::after {
+    width: clamp(25px, 4vw, 48px) !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   NURANICO — WORK CONTROLS FINAL
+   arrows removed
+   VIEW ALL centered below rail
+   ========================================================= */
+
+.work-browser-head {
+  margin-bottom: 20px !important;
+}
+
+/* old controls must never appear */
+.work-browser-actions,
+.work-arrows {
+  display: none !important;
+}
+
+
+/* VIEW ALL BELOW CAROUSEL */
+
+.work-view-all-bottom {
+  width: 100% !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  margin-top: 34px !important;
+
+  position: relative;
+  z-index: 12;
+}
+
+.work-view-all-bottom .work-view-all {
+  min-width: 112px !important;
+  height: 36px !important;
+
+  padding: 0 20px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border: 1px solid var(--site-line) !important;
+  border-radius: 999px !important;
+
+  background: transparent !important;
+
+  color: var(--site-text) !important;
+
+  text-decoration: none !important;
+
+  font-size: 8px !important;
+  font-weight: 500 !important;
+  letter-spacing: .14em !important;
+
+  transition:
+    background .25s ease,
+    color .25s ease,
+    border-color .25s ease,
+    transform .25s ease !important;
+}
+
+.work-view-all-bottom .work-view-all:hover {
+  background: var(--site-accent) !important;
+  color: var(--button-text) !important;
+  border-color: var(--site-accent) !important;
+
+  transform: translateY(-2px);
+}
+
+
+/* Desktop remains six visible cards */
+
+@media (min-width: 701px) {
+
+  .portfolio-grid.portfolio-carousel {
+    --work-gap: 10px !important;
+  }
+
+  .portfolio-grid.portfolio-carousel .project-card {
+    flex:
+      0 0
+      calc(
+        (100% - (var(--work-gap) * 5))
+        / 6.12
+      ) !important;
+
+    width:
+      calc(
+        (100% - (var(--work-gap) * 5))
+        / 6.12
+      ) !important;
+
+    min-width:
+      calc(
+        (100% - (var(--work-gap) * 5))
+        / 6.12
+      ) !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   NURANICO — WORK RAIL FINAL EDGE NAV V2
+   ========================================================= */
+
+.work-carousel-shell {
+  position: relative !important;
+  width: 100% !important;
+  overflow: visible !important;
+}
+
+
+/* ---------------------------------------------------------
+   Fade
+   Same exact color as Work background.
+   Fade is attached to viewport edges of the rail.
+   --------------------------------------------------------- */
+
+.work-carousel-shell.is-carousel::before,
+.work-carousel-shell.is-carousel::after {
+  content: "" !important;
+
+  position: absolute !important;
+  top: 0 !important;
+  bottom: 0 !important;
+
+  width: clamp(54px, 5.5vw, 105px) !important;
+
+  z-index: 15 !important;
+  pointer-events: none !important;
+}
+
+.work-carousel-shell.is-carousel::before {
+  left: 0 !important;
+
+  background: linear-gradient(
+    90deg,
+    var(--site-bg) 0%,
+    var(--site-bg) 7%,
+    color-mix(in srgb, var(--site-bg) 94%, transparent) 20%,
+    color-mix(in srgb, var(--site-bg) 76%, transparent) 42%,
+    color-mix(in srgb, var(--site-bg) 38%, transparent) 68%,
+    transparent 100%
+  ) !important;
+}
+
+.work-carousel-shell.is-carousel::after {
+  right: 0 !important;
+
+  background: linear-gradient(
+    270deg,
+    var(--site-bg) 0%,
+    var(--site-bg) 7%,
+    color-mix(in srgb, var(--site-bg) 94%, transparent) 20%,
+    color-mix(in srgb, var(--site-bg) 76%, transparent) 42%,
+    color-mix(in srgb, var(--site-bg) 38%, transparent) 68%,
+    transparent 100%
+  ) !important;
+}
+
+
+/* ---------------------------------------------------------
+   Track
+   IMPORTANT: no more fake +5vw overflow.
+   Fade and right edge now align correctly.
+   --------------------------------------------------------- */
+
+.portfolio-grid.portfolio-carousel {
+  width: 100% !important;
+  max-width: 100% !important;
+
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+
+  scroll-behavior: smooth !important;
+  scrollbar-width: none !important;
+
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.portfolio-grid.portfolio-carousel::-webkit-scrollbar {
+  display: none !important;
+}
+
+
+/* ---------------------------------------------------------
+   4:5 covers
+   --------------------------------------------------------- */
+
+.portfolio-grid.portfolio-carousel .project-media {
+  aspect-ratio: 4 / 5 !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+.portfolio-grid.portfolio-carousel .project-media img,
+.portfolio-grid.portfolio-carousel .project-media video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+
+/* ---------------------------------------------------------
+   Desktop: approx 6 cards visible
+   --------------------------------------------------------- */
+
+@media (min-width: 1101px) {
+  .portfolio-grid.portfolio-carousel {
+    gap: 12px !important;
+  }
+
+  .portfolio-grid.portfolio-carousel .project-card {
+    flex: 0 0 calc((100% - 60px) / 6.18) !important;
+    width: calc((100% - 60px) / 6.18) !important;
+    min-width: calc((100% - 60px) / 6.18) !important;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   Tablet: 4 cards-ish
+   --------------------------------------------------------- */
+
+@media (min-width: 701px) and (max-width: 1100px) {
+  .portfolio-grid.portfolio-carousel {
+    gap: 10px !important;
+  }
+
+  .portfolio-grid.portfolio-carousel .project-card {
+    flex: 0 0 calc((100% - 30px) / 4.15) !important;
+    width: calc((100% - 30px) / 4.15) !important;
+    min-width: calc((100% - 30px) / 4.15) !important;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   EDGE ARROWS
+   --------------------------------------------------------- */
+
+.work-edge-arrow {
+  position: absolute !important;
+
+  top: min(37%, 245px) !important;
+  transform: translateY(-50%) !important;
+
+  width: 46px !important;
+  height: 64px !important;
+
+  z-index: 30 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+
+  border: 1px solid
+    color-mix(in srgb, var(--site-text) 35%, transparent) !important;
+
+  background:
+    color-mix(in srgb, var(--site-bg) 72%, transparent) !important;
+
+  color: var(--site-text) !important;
+
+  cursor: pointer !important;
+
+  opacity: .82 !important;
+
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+
+  transition:
+    opacity .25s ease,
+    background .25s ease,
+    transform .25s ease,
+    border-color .25s ease !important;
+}
+
+.work-edge-arrow-left {
+  left: 0 !important;
+
+  border-left: 0 !important;
+  border-radius: 0 999px 999px 0 !important;
+}
+
+.work-edge-arrow-right {
+  right: 0 !important;
+
+  border-right: 0 !important;
+  border-radius: 999px 0 0 999px !important;
+}
+
+.work-edge-arrow span {
+  display: block !important;
+
+  font-size: 20px !important;
+  line-height: 1 !important;
+
+  transform: translateY(-1px);
+}
+
+.work-edge-arrow:hover {
+  opacity: 1 !important;
+
+  background:
+    color-mix(in srgb, var(--site-bg) 90%, transparent) !important;
+
+  border-color:
+    color-mix(in srgb, var(--site-text) 65%, transparent) !important;
+}
+
+.work-edge-arrow-left:hover {
+  transform: translateY(-50%) translateX(2px) !important;
+}
+
+.work-edge-arrow-right:hover {
+  transform: translateY(-50%) translateX(-2px) !important;
+}
+
+
+/* ---------------------------------------------------------
+   VIEW ALL — bottom center
+   --------------------------------------------------------- */
+
+.work-view-all-wrap {
+  width: 100% !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  margin-top: 32px !important;
+}
+
+.work-view-all {
+  position: relative !important;
+  z-index: 5 !important;
+
+  min-width: 112px !important;
+  height: 36px !important;
+
+  padding: 0 19px !important;
+}
+
+
+/* Empty old actions area */
+.work-browser-actions:empty {
+  display: none !important;
+}
+
+
+/* =========================================================
+   NURANICO — ADMIN SITE LOGO
+   ========================================================= */
+
+.site-nav .brand .site-logo-image {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 180px;
+  max-height: 35px;
+  object-fit: contain;
+}
+
+@media (max-width: 700px) {
+  .site-nav .brand .site-logo-image {
+    max-width: 130px;
+    max-height: 27px;
+  }
+}

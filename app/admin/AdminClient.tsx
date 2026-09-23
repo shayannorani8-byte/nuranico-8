@@ -6,6 +6,7 @@ type Section =
   | 'dashboard'
   | 'projects'
   | 'media'
+  | 'bts'
   | 'hero'
   | 'brands'
   | 'services'
@@ -93,6 +94,32 @@ type Service = {
 
 type Settings = {
   id?: number;
+  heading_color: string;
+  logo_color: string;
+  link_color: string;
+  nav_bg: string;
+  nav_text: string;
+  nav_active: string;
+  button_text: string;
+  button_hover: string;
+  card_bg: string;
+  card_text: string;
+  tag_color: string;
+  footer_bg: string;
+  footer_text: string;
+  border_color: string;
+
+  brands_bg: string;
+  brands_text: string;
+  brands_muted: string;
+  brands_hover: string;
+
+  contact_bg: string;
+  contact_text: string;
+  contact_muted: string;
+  contact_button: string;
+  contact_button_text: string;
+
   bg_color: string;
   text_color: string;
   button_color: string;
@@ -120,6 +147,16 @@ type Settings = {
   letter_spacing_fa: number;
 };
 
+type PageText = {
+  id: number;
+  page: string;
+  text_key: string;
+  label: string | null;
+  value_en: string;
+  value_fa: string;
+  sort_order: number;
+};
+
 type Content = {
   id?: number;
   hero_title_fa: string;
@@ -138,6 +175,8 @@ type Content = {
   contact_email: string;
   contact_phone: string;
   contact_instagram: string;
+  personal_instagram: string;
+  start_project_url: string;
   seo_title_fa: string;
   seo_title_en: string;
   seo_description_fa: string;
@@ -155,6 +194,32 @@ const destinations = [
 ] as const;
 
 const emptySettings: Settings = {
+  heading_color: '#f1efe9',
+  logo_color: '#f1efe9',
+  link_color: '#f1efe9',
+  nav_bg: '#171716',
+  nav_text: '#f1efe9',
+  nav_active: '#ffffff',
+  button_text: '#151514',
+  button_hover: '#ffffff',
+  card_bg: '#1d1d1b',
+  card_text: '#f1efe9',
+  tag_color: '#99958d',
+  footer_bg: '#111110',
+  footer_text: '#e8e5de',
+  border_color: '#3a3936',
+
+  brands_bg: '#e2dfd8',
+  brands_text: '#171716',
+  brands_muted: '#68655f',
+  brands_hover: '#d6d2c9',
+
+  contact_bg: '#e7e4dd',
+  contact_text: '#151514',
+  contact_muted: '#66635e',
+  contact_button: '#151514',
+  contact_button_text: '#eeeae2',
+
   bg_color: '#171716',
   text_color: '#f1efe9',
   button_color: '#e9e6df',
@@ -199,6 +264,8 @@ const emptyContent: Content = {
   contact_email: '',
   contact_phone: '',
   contact_instagram: '',
+  personal_instagram: '',
+  start_project_url: '/contact',
   seo_title_fa: '',
   seo_title_en: '',
   seo_description_fa: '',
@@ -310,7 +377,9 @@ export default function AdminPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [destMap, setDestMap] = useState<Record<number, string[]>>({});
   const [projectMediaMap, setProjectMediaMap] = useState<Record<number, number[]>>({});
+  const [btsMediaIds, setBtsMediaIds] = useState<number[]>([]);
   const [content, setContent] = useState<Content>(emptyContent);
+  const [pageTexts, setPageTexts] = useState<PageText[]>([]);
   const [settings, setSettings] = useState<Settings>(emptySettings);
 
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -340,7 +409,13 @@ export default function AdminPage() {
         services: Service[];
         destinations: Record<number, string[]>;
         projectMedia: Record<number, number[]>;
+        btsMedia: {
+          id: number;
+          media_asset_id: number;
+          sort_order: number;
+        }[];
         content: Content | null;
+        pageTexts: PageText[];
         settings: Settings | null;
       }>('all');
 
@@ -352,7 +427,23 @@ export default function AdminPage() {
       setServices(data.services || []);
       setDestMap(data.destinations || {});
       setProjectMediaMap(data.projectMedia || {});
+      setBtsMediaIds(
+        (data.btsMedia || [])
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map(item => item.media_asset_id)
+      );
       setContent({ ...emptyContent, ...(data.content || {}) });
+      setPageTexts(
+        (data.pageTexts || []).slice().sort((a, b) => {
+          const pageCompare = a.page.localeCompare(b.page);
+          if (pageCompare !== 0) return pageCompare;
+
+          const orderCompare = (a.sort_order || 0) - (b.sort_order || 0);
+          if (orderCompare !== 0) return orderCompare;
+
+          return a.id - b.id;
+        })
+      );
       setSettings({ ...emptySettings, ...(data.settings || {}) });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load admin data.');
@@ -364,6 +455,39 @@ export default function AdminPage() {
   useEffect(() => {
     loadAll();
   }, []);
+
+  async function saveBts() {
+    setSaving(true);
+    setError('');
+
+    try {
+      const result = await api<{
+        rows: {
+          id: number;
+          media_asset_id: number;
+          sort_order: number;
+        }[];
+      }>('bts', 'POST', {
+        mediaIds: btsMediaIds,
+      });
+
+      setBtsMediaIds(
+        (result.rows || [])
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map(item => item.media_asset_id)
+      );
+
+      flash('Behind the Scenes saved.');
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : 'Could not save Behind the Scenes.'
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function saveProject() {
     if (!editingProject) return;
@@ -498,6 +622,41 @@ export default function AdminPage() {
     }
   }
 
+  async function savePageTexts() {
+    setSaving(true);
+    setError('');
+
+    try {
+      const result = await api<{ rows: PageText[] }>(
+        'page-texts',
+        'POST',
+        { rows: pageTexts }
+      );
+
+      setPageTexts(
+        (result.rows || []).slice().sort((a, b) => {
+          const pageCompare = a.page.localeCompare(b.page);
+          if (pageCompare !== 0) return pageCompare;
+
+          const orderCompare = (a.sort_order || 0) - (b.sort_order || 0);
+          if (orderCompare !== 0) return orderCompare;
+
+          return a.id - b.id;
+        })
+      );
+
+      flash('Page texts saved.');
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : 'Page texts could not be saved.'
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function saveSettings() {
     setSaving(true);
     try {
@@ -607,6 +766,7 @@ export default function AdminPage() {
             ['dashboard', 'Dashboard'],
             ['projects', 'Projects'],
             ['media', 'Media'],
+            ['bts', 'Behind the Scenes'],
             ['hero', 'Hero'],
             ['brands', 'Brands'],
             ['services', 'Services'],
@@ -648,6 +808,119 @@ export default function AdminPage() {
                 {destinations.map(([, label]) => <span key={label}>{label}</span>)}
               </div>
             </div>
+          </>
+        )}
+
+        {section === 'bts' && (
+          <>
+            <SectionHeader
+              title="Behind the Scenes"
+              description="Choose images and videos from the Media Library. These files appear in Film & Teasers and the full BTS gallery."
+              action={
+                <button
+                  className="primary"
+                  disabled={saving}
+                  onClick={saveBts}
+                >
+                  {saving ? 'Saving…' : 'Save BTS'}
+                </button>
+              }
+            />
+
+            <div className="panel">
+              <h2>Selected BTS Media</h2>
+
+              <p style={{ opacity: .65, marginBottom: 20 }}>
+                Selected: {btsMediaIds.length} file{btsMediaIds.length === 1 ? '' : 's'}
+              </p>
+
+              <div className="media-picker">
+                {media.map(item => {
+                  const selected = btsMediaIds.includes(item.id);
+                  const isVideo =
+                    item.mime_type?.startsWith('video/') ||
+                    (item.file_type || '').toLowerCase() === 'video';
+
+                  return (
+                    <label
+                      key={`bts-${item.id}`}
+                      className={
+                        selected
+                          ? 'media-pick selected'
+                          : 'media-pick'
+                      }
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() =>
+                          setBtsMediaIds(current =>
+                            selected
+                              ? current.filter(id => id !== item.id)
+                              : [...current, item.id]
+                          )
+                        }
+                      />
+
+                      <span>
+                        {isVideo ? 'VIDEO' : 'PHOTO'} · {item.name}
+                      </span>
+                    </label>
+                  );
+                })}
+
+                {!media.length && (
+                  <EmptyState text="Upload media first." />
+                )}
+              </div>
+            </div>
+
+            {btsMediaIds.length > 0 && (
+              <div className="panel" style={{ marginTop: 24 }}>
+                <h2>Preview</h2>
+
+                <div className="media-grid">
+                  {btsMediaIds.map(id => {
+                    const item = media.find(mediaItem => mediaItem.id === id);
+
+                    if (!item) return null;
+
+                    const isVideo =
+                      item.mime_type?.startsWith('video/') ||
+                      (item.file_type || '').toLowerCase() === 'video';
+
+                    return (
+                      <article
+                        className="media-card"
+                        key={`bts-preview-${item.id}`}
+                      >
+                        <div className="preview">
+                          {isVideo ? (
+                            <video
+                              src={item.file_url}
+                              controls
+                              preload="metadata"
+                            />
+                          ) : (
+                            <img
+                              src={item.file_url}
+                              alt={item.alt_text_en || item.name}
+                            />
+                          )}
+                        </div>
+
+                        <div className="media-meta">
+                          <b>{item.name}</b>
+                          <span>
+                            {isVideo ? 'VIDEO' : 'PHOTO'}
+                          </span>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -1055,7 +1328,24 @@ export default function AdminPage() {
 
         {section === 'brands' && (
           <>
-            <SectionHeader title="Brands" description="Client logos and links." action={<button className="primary" onClick={() => setEditingBrand({id:0,name:'',logo_url:'',website_url:'',published:true,sort_order:brands.length})}>+ New brand</button>} />
+            <SectionHeader title="Brands" description="Client logos and links." action={<button className="primary" onClick={() => {
+              const usedSlots = new Set(
+                brands
+                  .map(item => item.sort_order)
+                  .filter((value): value is number => typeof value === 'number')
+              );
+              let firstFreeSlot = 0;
+              while (usedSlots.has(firstFreeSlot)) firstFreeSlot++;
+
+              setEditingBrand({
+                id: 0,
+                name: '',
+                logo_url: '',
+                website_url: '',
+                published: true,
+                sort_order: firstFreeSlot
+              });
+            }}>+ New brand</button>} />
             {editingBrand && <div className="editor">
               <div className="editor-top"><h2>{editingBrand.id ? 'Edit brand' : 'New brand'}</h2><button className="ghost" onClick={() => setEditingBrand(null)}>Close</button></div>
               <div className="grid2"><Input label="Name" value={editingBrand.name} onChange={v => setEditingBrand({...editingBrand,name:v})}/><Input label="Logo URL" value={editingBrand.logo_url || ''} onChange={v => setEditingBrand({...editingBrand,logo_url:v})}/><Input label="Website URL" value={editingBrand.website_url || ''} onChange={v => setEditingBrand({...editingBrand,website_url:v})}/><Input label="Sort order" type="number" value={editingBrand.sort_order ?? 0} onChange={v => setEditingBrand({...editingBrand,sort_order:Number(v)||0})}/></div>
@@ -1163,8 +1453,120 @@ export default function AdminPage() {
                   </p>
                 )}
               </div>
-              <h2>Contact</h2><div className="grid2"><Input label="Contact title — English" value={content.contact_title_en} onChange={v => setContent({...content,contact_title_en:v})}/><Input label="Contact title — فارسی" value={content.contact_title_fa} onChange={v => setContent({...content,contact_title_fa:v})}/><Input label="Email" value={content.contact_email} onChange={v => setContent({...content,contact_email:v})}/><Input label="Phone" value={content.contact_phone} onChange={v => setContent({...content,contact_phone:v})}/><Input label="Instagram URL" value={content.contact_instagram} onChange={v => setContent({...content,contact_instagram:v})}/></div>
+              <h2>Contact</h2><div className="grid2"><Input label="Contact title — English" value={content.contact_title_en} onChange={v => setContent({...content,contact_title_en:v})}/><Input label="Contact title — فارسی" value={content.contact_title_fa} onChange={v => setContent({...content,contact_title_fa:v})}/><Input label="Email" value={content.contact_email} onChange={v => setContent({...content,contact_email:v})}/><Input label="Phone" value={content.contact_phone} onChange={v => setContent({...content,contact_phone:v})}/><Input label="NURANICO Instagram URL" value={content.contact_instagram} onChange={v => setContent({...content,contact_instagram:v})}/><Input label="Shayan Instagram URL" value={content.personal_instagram} onChange={v => setContent({...content,personal_instagram:v})}/><Input label="Start Project URL" value={content.start_project_url || ''} onChange={v => setContent({...content,start_project_url:v})} placeholder="/contact or https://..."/></div>
               <h2>SEO</h2><div className="grid2"><Input label="SEO title — English" value={content.seo_title_en} onChange={v => setContent({...content,seo_title_en:v})}/><Input label="SEO title — فارسی" value={content.seo_title_fa} onChange={v => setContent({...content,seo_title_fa:v})}/><Textarea label="SEO description — English" value={content.seo_description_en} onChange={v => setContent({...content,seo_description_en:v})}/><Textarea label="SEO description — فارسی" value={content.seo_description_fa} onChange={v => setContent({...content,seo_description_fa:v})}/></div>
+            </div>
+
+            <div className="editor">
+              <div className="editor-top">
+                <div>
+                  <h2>Page Texts</h2>
+                  <p className="hint">
+                    Edit reusable English and Persian text used across individual pages.
+                  </p>
+                </div>
+
+                <button
+                  className="primary"
+                  disabled={saving || pageTexts.length === 0}
+                  onClick={savePageTexts}
+                >
+                  {saving ? 'Saving…' : 'Save page texts'}
+                </button>
+              </div>
+
+              {pageTexts.length === 0 ? (
+                <EmptyState text="No page texts found in CMS." />
+              ) : (
+                Array.from(new Set(pageTexts.map(item => item.page))).map(page => {
+                  const rows = pageTexts
+                    .filter(item => item.page === page)
+                    .sort((a, b) => {
+                      const orderCompare =
+                        (a.sort_order || 0) - (b.sort_order || 0);
+
+                      return orderCompare !== 0
+                        ? orderCompare
+                        : a.id - b.id;
+                    });
+
+                  return (
+                    <div
+                      key={page}
+                      style={{
+                        marginTop: 28,
+                        paddingTop: 24,
+                        borderTop: '1px solid var(--border, #333)'
+                      }}
+                    >
+                      <h2
+                        style={{
+                          textTransform: 'capitalize',
+                          marginBottom: 18
+                        }}
+                      >
+                        {page.replace(/-/g, ' ')}
+                      </h2>
+
+                      <div style={{ display: 'grid', gap: 22 }}>
+                        {rows.map(row => (
+                          <div
+                            key={row.id}
+                            style={{
+                              padding: 18,
+                              border: '1px solid var(--border, #333)',
+                              borderRadius: 12
+                            }}
+                          >
+                            <div style={{ marginBottom: 14 }}>
+                              <strong>
+                                {row.label || row.text_key}
+                              </strong>
+
+                              <div
+                                className="hint"
+                                style={{ marginTop: 4 }}
+                              >
+                                {row.text_key}
+                              </div>
+                            </div>
+
+                            <div className="grid2">
+                              <Textarea
+                                label="English"
+                                value={row.value_en}
+                                onChange={value =>
+                                  setPageTexts(current =>
+                                    current.map(item =>
+                                      item.id === row.id
+                                        ? { ...item, value_en: value }
+                                        : item
+                                    )
+                                  )
+                                }
+                              />
+
+                              <Textarea
+                                label="فارسی"
+                                value={row.value_fa}
+                                onChange={value =>
+                                  setPageTexts(current =>
+                                    current.map(item =>
+                                      item.id === row.id
+                                        ? { ...item, value_fa: value }
+                                        : item
+                                    )
+                                  )
+                                }
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </>
         )}
@@ -1174,9 +1576,63 @@ export default function AdminPage() {
             <SectionHeader title="Settings" description="Global visual settings. These are stored in Supabase." action={<button className="primary" disabled={saving} onClick={saveSettings}>{saving ? 'Saving…' : 'Save settings'}</button>} />
             <div className="editor">
               <h2>Colors</h2>
+
+              <p className="hint">
+                Complete website color system. Changes affect colors only —
+                typography and layout remain untouched.
+              </p>
+
               <div className="color-grid">
-                {(['bg_color','text_color','button_color','surface_color','muted_color'] as const).map(key => (
-                  <label className="color-field" key={key}><span>{key.replace('_',' ')}</span><input type="color" value={settings[key]} onChange={e => setSettings({...settings,[key]:e.target.value})}/><code>{settings[key]}</code></label>
+                {([
+                  ['bg_color', 'Main background'],
+                  ['surface_color', 'Surface / About'],
+                  ['card_bg', 'Services / Cards'],
+                  ['text_color', 'Main text'],
+                  ['heading_color', 'Headings'],
+                  ['muted_color', 'Muted text'],
+                  ['tag_color', 'Labels / Tags'],
+                  ['border_color', 'Borders / Lines'],
+
+                  ['nav_bg', 'Navigation background'],
+                  ['nav_text', 'Navigation text'],
+                  ['nav_active', 'Navigation active'],
+                  ['logo_color', 'Logo'],
+                  ['link_color', 'Links'],
+
+                  ['button_color', 'Button background'],
+                  ['button_text', 'Button text'],
+                  ['button_hover', 'Button hover'],
+
+                  ['footer_bg', 'Footer background'],
+                  ['footer_text', 'Footer text'],
+
+                  ['brands_bg', 'Brands background'],
+                  ['brands_text', 'Brands text'],
+                  ['brands_muted', 'Brands muted text'],
+                  ['brands_hover', 'Brands card hover'],
+
+                  ['contact_bg', 'Contact background'],
+                  ['contact_text', 'Contact text'],
+                  ['contact_muted', 'Contact muted text'],
+                  ['contact_button', 'Contact button'],
+                  ['contact_button_text', 'Contact button text'],
+                ] as const).map(([key, label]) => (
+                  <label className="color-field" key={key}>
+                    <span>{label}</span>
+
+                    <input
+                      type="color"
+                      value={settings[key] || '#000000'}
+                      onChange={e =>
+                        setSettings({
+                          ...settings,
+                          [key]: e.target.value
+                        })
+                      }
+                    />
+
+                    <code>{settings[key]}</code>
+                  </label>
                 ))}
               </div>
               <div className="font-section-head">
@@ -1326,10 +1782,22 @@ export default function AdminPage() {
                   onChange={v => setSettings({...settings,body_weight:Number(v)||400})}
                 />
 
-                <Input label="Logo URL"
-                  value={settings.logo_url}
-                  onChange={v => setSettings({...settings,logo_url:v})}
-                />
+                <div className="settings-logo-field">
+                  <label className="settings-field-title">
+                    Site Logo
+                  </label>
+
+                  <LogoUploader
+                    value={settings.logo_url}
+                    onChange={url =>
+                      setSettings({
+                        ...settings,
+                        logo_url: url
+                      })
+                    }
+                    onError={setError}
+                  />
+                </div>
               </div>
 
               <h2>Font Library</h2>
@@ -1593,6 +2061,184 @@ function FontUploader({
   );
 }
 
+
+function LogoUploader({
+  value,
+  onChange,
+  onError,
+}: {
+  value: string;
+  onChange: (url: string) => void;
+  onError: (s: string) => void;
+}) {
+  const input = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function upload(file: File | undefined) {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      onError('Logo must be an image file.');
+      return;
+    }
+
+    setBusy(true);
+    onError('');
+
+    try {
+      const urlResponse = await fetch(
+        '/api/admin/media/upload-url',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: file.name,
+            type: file.type,
+            size: file.size,
+          }),
+        }
+      );
+
+      const urlData = await urlResponse.json();
+
+      if (!urlResponse.ok) {
+        throw new Error(
+          urlData.error || 'Could not create logo upload URL.'
+        );
+      }
+
+      const put = await fetch(urlData.uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type':
+            file.type || 'application/octet-stream',
+        },
+        body: file,
+      });
+
+      if (!put.ok) {
+        throw new Error('Logo storage upload failed.');
+      }
+
+      const complete = await fetch(
+        '/api/admin/media/complete',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: file.name,
+            key: urlData.key,
+            mimeType: file.type,
+            size: file.size,
+            fileUrl: urlData.fileUrl,
+          }),
+        }
+      );
+
+      const completeData = await complete.json();
+
+      if (!complete.ok) {
+        throw new Error(
+          completeData.error ||
+            'Logo database save failed.'
+        );
+      }
+
+      onChange(urlData.fileUrl);
+
+      if (input.current) {
+        input.current.value = '';
+      }
+    } catch (e) {
+      onError(
+        e instanceof Error
+          ? e.message
+          : 'Logo upload failed.'
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="logo-admin-control">
+
+      <input
+        ref={input}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+        hidden
+        onChange={e =>
+          upload(e.target.files?.[0])
+        }
+      />
+
+      <div className="logo-admin-preview">
+        {value ? (
+          <img
+            src={value}
+            alt="Site logo preview"
+          />
+        ) : (
+          <div className="logo-admin-placeholder">
+            <strong>NURANICO</strong>
+            <span>No custom logo</span>
+          </div>
+        )}
+      </div>
+
+      <div className="logo-admin-actions">
+        <button
+          type="button"
+          className="primary"
+          disabled={busy}
+          onClick={() => input.current?.click()}
+        >
+          {busy
+            ? 'Uploading…'
+            : value
+              ? 'Replace logo'
+              : '+ Upload logo'}
+        </button>
+
+        {value ? (
+          <button
+            type="button"
+            className="ghost"
+            disabled={busy}
+            onClick={() => onChange('')}
+          >
+            Remove
+          </button>
+        ) : null}
+      </div>
+
+      <div className="logo-admin-url">
+        <label>Logo URL</label>
+
+        <input
+          type="text"
+          value={value}
+          placeholder="Upload a logo or paste image URL"
+          onChange={e =>
+            onChange(e.target.value)
+          }
+        />
+      </div>
+
+      <small className="logo-admin-help">
+        PNG, JPG, WEBP or SVG. Transparent PNG/SVG is recommended.
+        Save Settings after uploading.
+      </small>
+    </div>
+  );
+}
+
+
 function MediaUploader({ onDone, onError }: { onDone: () => Promise<void>; onError: (s: string) => void }) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -1653,6 +2299,109 @@ function MediaUploader({ onDone, onError }: { onDone: () => Promise<void>; onErr
 }
 
 const styles = `
+
+.logo-admin-control {
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-top:8px;
+}
+
+.settings-logo-field {
+  grid-column:1 / -1;
+  width:100%;
+}
+
+.settings-field-title {
+  display:block;
+  margin-bottom:10px;
+  color:#aaa;
+  font-size:11px;
+}
+
+.logo-admin-preview {
+  width:100%;
+  min-height:130px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  overflow:hidden;
+  border:1px solid #30302d;
+  border-radius:10px;
+  background:#0d0d0c;
+}
+
+.logo-admin-preview img {
+  display:block;
+  width:auto;
+  height:auto;
+  max-width:min(320px, 80%);
+  max-height:90px;
+  object-fit:contain;
+}
+
+.logo-admin-placeholder {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  color:#666;
+}
+
+.logo-admin-placeholder strong {
+  color:#aaa;
+  font-size:20px;
+  letter-spacing:.18em;
+}
+
+.logo-admin-placeholder span {
+  font-size:10px;
+}
+
+.logo-admin-actions {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.logo-admin-url {
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+.logo-admin-url label {
+  color:#777;
+  font-size:10px;
+}
+
+.logo-admin-url input {
+  width:100%;
+  min-height:40px;
+  padding:9px 11px;
+  border:1px solid #30302d;
+  border-radius:7px;
+  outline:none;
+  background:#10100f;
+  color:#ddd;
+  font:inherit;
+  font-size:11px;
+}
+
+.logo-admin-url input:focus {
+  border-color:#666;
+}
+
+.logo-admin-help {
+  color:#666;
+  font-size:9px;
+  line-height:1.6;
+}
+
+
 :root { color-scheme: dark; }
 * { box-sizing:border-box; }
 .admin { min-height:100vh; display:flex; background:#141413; color:#eee; font-family:Arial,Helvetica,sans-serif; }

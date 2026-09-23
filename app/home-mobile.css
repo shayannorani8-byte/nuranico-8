@@ -1,0 +1,2825 @@
+/* =========================================================
+   NURANICO — MOBILE COMPACT FINAL
+   Dense / Editorial / Gallery First
+   Desktop untouched
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  /* ==================== GLOBAL ==================== */
+
+  .site {
+    overflow-x: hidden;
+  }
+
+  .section {
+    padding: 48px 20px;
+  }
+
+  .eyebrow {
+    margin: 0 0 9px !important;
+    font-size: 6px !important;
+    line-height: 1 !important;
+    letter-spacing: .16em !important;
+  }
+
+  .section-head {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+    gap: 15px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .section-head > div {
+    min-width: 0;
+  }
+
+  .section-head h2 {
+    max-width: 270px !important;
+    margin: 0 !important;
+    font-size: 28px !important;
+    line-height: .96 !important;
+    letter-spacing: -.045em !important;
+  }
+
+  .section-index {
+    flex: 0 0 auto;
+    padding-bottom: 2px;
+    font-size: 6px;
+    letter-spacing: .1em;
+  }
+
+
+  /* ==================== NAV ==================== */
+
+  .site-nav {
+    min-height: 64px;
+    padding: 0 20px;
+  }
+
+  .brand {
+    font-size: 14px;
+  }
+
+  .brand img {
+    max-height: 27px;
+  }
+
+  .nav-actions {
+    gap: 7px;
+  }
+
+  .lang-switch {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    font-size: 7px !important;
+  }
+
+  .menu-button {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    padding: 9px !important;
+  }
+
+  .menu-button span {
+    width: 15px;
+  }
+
+  .mobile-menu {
+    top: 58px;
+    left: 20px;
+    right: 20px;
+    padding: 12px 16px;
+    background: rgba(18,18,17,.97);
+    backdrop-filter: blur(20px);
+  }
+
+  .mobile-menu a {
+    padding: 12px 2px;
+    font-size: 9px;
+  }
+
+
+  /* ==================== HERO ==================== */
+
+  .hero {
+    height: 100svh;
+    min-height: 620px;
+    padding: 0 20px max(72px, 10vh);
+  }
+
+  .hero-content {
+    max-width: 315px;
+  }
+
+  .hero .eyebrow {
+    margin-bottom: 10px !important;
+  }
+
+  .hero h1 {
+    max-width: 305px !important;
+    margin: 0 !important;
+    font-size: clamp(34px, 9.8vw, 43px) !important;
+    line-height: .91 !important;
+    letter-spacing: -.05em !important;
+  }
+
+  .hero-copy {
+    max-width: 265px;
+    margin: 14px 0 17px;
+    font-size: 9px !important;
+    line-height: 1.5;
+  }
+
+  .primary-button {
+    padding: 11px 14px !important;
+    gap: 10px;
+    font-size: 7px !important;
+  }
+
+  .primary-button b {
+    font-size: 11px;
+  }
+
+  .hero-meta {
+    right: 20px;
+    bottom: 24px;
+  }
+
+  .hero-dots button {
+    width: 18px;
+  }
+
+  .hero-dots button.active {
+    width: 29px;
+  }
+
+
+  /* ==================== SERVICES ==================== */
+
+  .services {
+    padding: 44px 20px 42px !important;
+    background: #1d1d1b;
+  }
+
+  .services .section-head {
+    margin-bottom: 17px !important;
+  }
+
+  .services .section-head h2 {
+    max-width: 250px !important;
+    font-size: 27px !important;
+    line-height: .96 !important;
+  }
+
+  .service-grid {
+    display: block !important;
+    border-top: 1px solid var(--site-line);
+  }
+
+  .service-card {
+    min-height: 0 !important;
+    display: grid !important;
+    grid-template-columns: 25px minmax(0,1fr) 16px !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 15px 0 !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--site-line) !important;
+    transform: none !important;
+  }
+
+  .service-card:hover {
+    background: transparent !important;
+  }
+
+  .service-card > span {
+    align-self: start;
+    padding-top: 3px;
+    font-size: 6px !important;
+    letter-spacing: .1em;
+  }
+
+  .service-card h3 {
+    margin: 0 0 3px !important;
+    font-size: 14px !important;
+    line-height: 1.1 !important;
+    letter-spacing: -.02em !important;
+  }
+
+  .service-card p {
+    max-width: 230px !important;
+    margin: 0 !important;
+    font-size: 8px !important;
+    line-height: 1.4 !important;
+  }
+
+  .service-card b {
+    justify-self: end;
+    font-size: 14px !important;
+    font-weight: 400;
+  }
+
+
+  /* ==================== SELECTED WORK ==================== */
+
+  .work {
+    padding: 48px 20px 54px !important;
+  }
+
+  .work .section-head {
+    margin-bottom: 17px !important;
+  }
+
+  .work .section-head h2 {
+    max-width: 245px !important;
+    font-size: 28px !important;
+    line-height: .94 !important;
+  }
+
+  .filter-row {
+    width: calc(100% + 40px) !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 5px !important;
+    margin: 0 -20px 17px !important;
+    padding: 0 20px 2px !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .filter-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-row button {
+    flex: 0 0 auto;
+    height: 25px !important;
+    min-height: 25px !important;
+    padding: 0 10px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    white-space: nowrap;
+    font-size: 6px !important;
+    line-height: 1 !important;
+    letter-spacing: .06em !important;
+  }
+
+  .portfolio-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    column-gap: 7px !important;
+    row-gap: 17px !important;
+    align-items: start;
+  }
+
+  .project-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .project-media {
+    width: 100%;
+    aspect-ratio: 4 / 3 !important;
+    background: #252523;
+  }
+
+  .project-media img,
+  .project-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .project-overlay {
+    display: none !important;
+  }
+
+  .project-meta {
+    position: relative;
+    display: block !important;
+    padding: 6px 16px 0 0 !important;
+  }
+
+  .project-meta p {
+    margin: 0 0 3px !important;
+    font-size: 5px !important;
+    line-height: 1 !important;
+    letter-spacing: .12em !important;
+  }
+
+  .project-meta h3 {
+    margin: 0 !important;
+    font-size: 11px !important;
+    line-height: 1.1 !important;
+    letter-spacing: -.02em !important;
+  }
+
+  .project-meta span {
+    display: none !important;
+  }
+
+  .project-meta strong {
+    position: absolute;
+    top: 7px;
+    right: 0;
+    padding: 0;
+    font-size: 5px !important;
+    line-height: 1;
+  }
+
+
+  /* ==================== ABOUT ==================== */
+
+  .about {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    background: #20201e;
+  }
+
+  .about-image {
+    width: calc(100% - 40px) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: 16 / 9 !important;
+    margin: 20px 20px 0 !important;
+    overflow: hidden;
+  }
+
+  .about-image img {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+  }
+
+  .about-image span {
+    left: 11px;
+    bottom: 9px;
+    font-size: 5px !important;
+  }
+
+  .about-copy {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 30px 20px 40px !important;
+  }
+
+  .about-copy .eyebrow {
+    margin-bottom: 9px !important;
+  }
+
+  .about-copy h2 {
+    max-width: 275px !important;
+    margin: 0 0 13px !important;
+    font-size: 28px !important;
+    line-height: .95 !important;
+    letter-spacing: -.045em !important;
+  }
+
+  .about-copy > p {
+    max-width: 275px !important;
+    margin: 0 !important;
+    font-size: 9px !important;
+    line-height: 1.5 !important;
+  }
+
+  .about-stats {
+    display: grid !important;
+    grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+    gap: 0 !important;
+    margin-top: 21px !important;
+    padding-top: 12px !important;
+  }
+
+  .about-stats div {
+    gap: 4px;
+  }
+
+  .about-stats strong {
+    font-size: 15px !important;
+  }
+
+  .about-stats span {
+    font-size: 5.5px !important;
+    line-height: 1.25 !important;
+  }
+
+
+  /* ==================== BRANDS ==================== */
+
+  .brands {
+    padding: 43px 20px 47px !important;
+  }
+
+  .brands .section-head {
+    margin-bottom: 18px !important;
+  }
+
+  .brands .section-head h2 {
+    max-width: 260px !important;
+    font-size: 27px !important;
+    line-height: .95 !important;
+  }
+
+  .brand-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+  }
+
+  .brand-card {
+    min-height: 68px !important;
+    padding: 9px 7px !important;
+    font-size: 8px !important;
+  }
+
+  .brand-card img {
+    width: auto !important;
+    max-width: 70px !important;
+    max-height: 25px !important;
+  }
+
+  .brand-card.placeholder {
+    font-size: 5px !important;
+    letter-spacing: .08em !important;
+  }
+
+
+  /* ==================== LESS NOISE ==================== */
+
+  .statement {
+    padding: 48px 20px 46px !important;
+  }
+
+  .statement h2 {
+    max-width: 280px !important;
+    margin: 0 !important;
+    font-size: 31px !important;
+    line-height: .91 !important;
+    letter-spacing: -.045em !important;
+  }
+
+  .statement > p:last-child {
+    max-width: 255px !important;
+    margin-top: 16px !important;
+    font-size: 8.5px !important;
+    line-height: 1.5 !important;
+  }
+
+
+  /* ==================== LANDSCAPE ==================== */
+
+  .landscape {
+    height: 56vw !important;
+    min-height: 220px !important;
+    max-height: 280px !important;
+  }
+
+  .landscape-copy {
+    padding: 15px 20px !important;
+  }
+
+  .landscape-copy span {
+    font-size: 6px !important;
+  }
+
+  .landscape-copy strong {
+    font-size: 35px !important;
+    line-height: .86 !important;
+  }
+
+
+  /* ==================== CONTACT ==================== */
+
+  .contact {
+    padding: 48px 20px 50px !important;
+    gap: 0 !important;
+  }
+
+  .contact h2 {
+    max-width: 280px !important;
+    margin: 0 0 14px !important;
+    font-size: 30px !important;
+    line-height: .94 !important;
+    letter-spacing: -.045em !important;
+  }
+
+  .contact > div:first-child > p:not(.eyebrow) {
+    margin-bottom: 18px !important;
+    font-size: 9px !important;
+  }
+
+
+  /* ==================== FOOTER ==================== */
+
+  .footer {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 26px 18px !important;
+    padding: 34px 20px !important;
+  }
+
+  .footer > div:first-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  .footer p {
+    max-width: 235px !important;
+    font-size: 8px !important;
+    line-height: 1.5 !important;
+  }
+
+  .footer a:not(.brand) {
+    font-size: 8px !important;
+  }
+
+  .footer > div > span {
+    font-size: 6px !important;
+  }
+}
+
+
+/* ==================== SMALL PHONES ==================== */
+
+@media (max-width: 370px) {
+
+  .hero h1 {
+    font-size: 32px !important;
+  }
+
+  .section-head h2,
+  .services .section-head h2,
+  .work .section-head h2,
+  .about-copy h2,
+  .brands .section-head h2 {
+    font-size: 25px !important;
+  }
+
+  .statement h2 {
+    font-size: 28px !important;
+  }
+
+  .contact h2 {
+    font-size: 27px !important;
+  }
+
+  .project-meta h3 {
+    font-size: 10px !important;
+  }
+}
+
+/* =========================================================
+   FINAL MOBILE TYPE FIX V5
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  /* ABOUT */
+  .about-copy h2 {
+    max-width: 310px !important;
+    font-size: 30px !important;
+    line-height: .98 !important;
+    letter-spacing: -.035em !important;
+    margin-bottom: 18px !important;
+  }
+
+  /* BRANDS */
+  .brands .section-head h2 {
+    max-width: 315px !important;
+    font-size: 28px !important;
+    line-height: .98 !important;
+    letter-spacing: -.035em !important;
+  }
+
+  .brands .section-head {
+    margin-bottom: 22px !important;
+  }
+
+  /* LESS NOISE */
+  .statement {
+    padding: 54px 20px 52px !important;
+  }
+
+  .statement h2 {
+    max-width: 300px !important;
+    font-size: 34px !important;
+    line-height: .92 !important;
+    letter-spacing: -.04em !important;
+  }
+
+  .statement > p:last-child {
+    max-width: 275px !important;
+    margin-top: 20px !important;
+    font-size: 9px !important;
+    line-height: 1.5 !important;
+  }
+
+  /* LET'S CREATE */
+  .contact {
+    padding-top: 52px !important;
+    padding-bottom: 54px !important;
+  }
+
+  .contact h2 {
+    max-width: 305px !important;
+    margin-bottom: 18px !important;
+    font-size: 34px !important;
+    line-height: .94 !important;
+    letter-spacing: -.04em !important;
+  }
+}
+
+@media (max-width: 370px) {
+  .about-copy h2 {
+    font-size: 28px !important;
+  }
+
+  .brands .section-head h2 {
+    font-size: 26px !important;
+  }
+
+  .statement h2,
+  .contact h2 {
+    font-size: 32px !important;
+  }
+}
+
+
+/* =========================================================
+   MOBILE ENGLISH ONLY — FINAL TYPE SCALE
+   Desktop untouched / Persian untouched
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  /* ABOUT */
+  .site[lang="en"] .about-copy h2 {
+    max-width: 290px !important;
+    font-size: 27px !important;
+    line-height: 1.02 !important;
+    letter-spacing: -.025em !important;
+  }
+
+  /* CLIENTS */
+  .site[lang="en"] .brands .section-head h2 {
+    max-width: 285px !important;
+    font-size: 26px !important;
+    line-height: 1.02 !important;
+    letter-spacing: -.025em !important;
+  }
+
+  /* LESS NOISE */
+  .site[lang="en"] .statement h2 {
+    max-width: 300px !important;
+    font-size: 31px !important;
+    line-height: .96 !important;
+    letter-spacing: -.03em !important;
+  }
+
+  /* LET'S CREATE */
+  .site[lang="en"] .contact h2 {
+    max-width: 290px !important;
+    font-size: 29px !important;
+    line-height: .98 !important;
+    letter-spacing: -.03em !important;
+  }
+}
+
+
+/* =========================================================
+   MOBILE ENGLISH HERO — FINAL FIX
+   Desktop + Persian untouched
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  html[lang="en"] .hero h1,
+  body[lang="en"] .hero h1,
+  .site[lang="en"] .hero h1 {
+    max-width: 330px !important;
+    font-size: 39px !important;
+    line-height: .94 !important;
+    letter-spacing: -.04em !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   NURANICO — PREMIUM MOBILE NAV V2
+   Mobile only / Desktop untouched
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  /* HEADER */
+  .site-nav {
+    min-height: 64px !important;
+    height: 64px !important;
+    padding: 0 20px !important;
+
+    grid-template-columns: 1fr auto !important;
+
+    background:
+      linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--site-bg) 86%, transparent) 0%,
+        color-mix(in srgb, var(--site-bg) 52%, transparent) 62%,
+        transparent 100%
+      ) !important;
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    transition:
+      background .4s ease,
+      backdrop-filter .4s ease;
+  }
+
+  .site-nav.is-open {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+
+  /* LOGO */
+  .site-nav .brand {
+    position: relative;
+    z-index: 53;
+
+    justify-self: start;
+
+    color: var(--site-logo) !important;
+
+    font-size: 14px !important;
+    line-height: 1 !important;
+  }
+
+  .site-nav .brand img {
+    max-width: 130px;
+    max-height: 27px;
+  }
+
+
+  /* ACTIONS */
+  .site-nav .nav-actions {
+    position: relative;
+    z-index: 53;
+
+    justify-self: end;
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px !important;
+  }
+
+  .site-nav .nav-cta {
+    display: none !important;
+  }
+
+
+  /* LANGUAGE */
+  .site-nav .lang-switch {
+    width: 34px !important;
+    height: 34px !important;
+
+    min-width: 34px !important;
+    min-height: 34px !important;
+
+    padding: 0 !important;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--nav-text) 18%,
+        transparent
+      ) !important;
+
+    border-radius: 50% !important;
+
+    background:
+      color-mix(
+        in srgb,
+        var(--site-bg) 45%,
+        transparent
+      ) !important;
+
+    color: var(--nav-text) !important;
+
+    font-size: 7px !important;
+    line-height: 1 !important;
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+
+  /* HAMBURGER */
+  .site-nav .menu-button {
+    position: relative;
+
+    display: flex !important;
+
+    width: 36px !important;
+    height: 36px !important;
+
+    min-width: 36px !important;
+    min-height: 36px !important;
+
+    padding: 0 !important;
+
+    align-items: center;
+    justify-content: center;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--nav-text) 18%,
+        transparent
+      ) !important;
+
+    border-radius: 50% !important;
+
+    background:
+      color-mix(
+        in srgb,
+        var(--site-bg) 45%,
+        transparent
+      ) !important;
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    overflow: hidden;
+
+    transition:
+      background .3s ease,
+      border-color .3s ease,
+      transform .3s ease;
+  }
+
+  .site-nav .menu-button span {
+    position: absolute;
+
+    left: 50%;
+
+    width: 13px !important;
+    height: 1px !important;
+
+    margin: 0 !important;
+
+    border-radius: 999px;
+
+    background: var(--nav-text) !important;
+
+    transform: translateX(-50%);
+
+    transform-origin: center;
+
+    transition:
+      top .32s cubic-bezier(.22,.61,.36,1),
+      transform .32s cubic-bezier(.22,.61,.36,1);
+  }
+
+  .site-nav .menu-button span:first-child {
+    top: 14px;
+  }
+
+  .site-nav .menu-button span:last-child {
+    top: 20px;
+  }
+
+  .site-nav.is-open .menu-button {
+    background:
+      color-mix(
+        in srgb,
+        var(--nav-text) 9%,
+        transparent
+      ) !important;
+
+    border-color:
+      color-mix(
+        in srgb,
+        var(--nav-text) 26%,
+        transparent
+      ) !important;
+  }
+
+  .site-nav.is-open .menu-button span:first-child {
+    top: 17px;
+
+    transform:
+      translateX(-50%)
+      rotate(45deg) !important;
+  }
+
+  .site-nav.is-open .menu-button span:last-child {
+    top: 17px;
+
+    transform:
+      translateX(-50%)
+      rotate(-45deg) !important;
+  }
+
+
+  /* FULLSCREEN MENU */
+  .site-nav .mobile-menu {
+    position: fixed !important;
+
+    inset: 0 !important;
+
+    z-index: 51 !important;
+
+    width: 100vw !important;
+    height: 100svh !important;
+
+    display: flex !important;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: stretch;
+
+    gap: 0 !important;
+
+    padding:
+      94px
+      20px
+      34px !important;
+
+    /*
+      Uses the SAME dynamic site background.
+      Changing background in admin changes menu too.
+    */
+    background:
+      radial-gradient(
+        circle at 82% 12%,
+        color-mix(
+          in srgb,
+          var(--site-text) 5%,
+          transparent
+        ),
+        transparent 31%
+      ),
+      var(--site-bg) !important;
+
+    border: 0 !important;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transform: translateY(-8px) scale(1.008);
+
+    transition:
+      opacity .28s ease,
+      transform .42s cubic-bezier(.22,.61,.36,1),
+      visibility .28s ease;
+  }
+
+  .site-nav.is-open .mobile-menu {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+
+    transform: translateY(0) scale(1);
+  }
+
+
+  /* MENU LINKS */
+  .site-nav .mobile-menu a {
+    position: relative;
+
+    display: grid !important;
+
+    grid-template-columns:
+      30px
+      minmax(0, 1fr)
+      30px;
+
+    align-items: center;
+
+    width: 100%;
+
+    min-height: 62px;
+
+    padding: 15px 0 !important;
+
+    border: 0 !important;
+
+    border-bottom:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--site-text) 10%,
+        transparent
+      ) !important;
+
+    color: var(--site-text) !important;
+
+    font-family:
+      var(--font-heading),
+      sans-serif;
+
+    font-size: clamp(24px, 7.2vw, 29px) !important;
+
+    font-weight: 500;
+
+    line-height: 1 !important;
+    letter-spacing: -.045em;
+
+    text-transform: none;
+
+    opacity: 0;
+
+    transform: translateY(12px);
+
+    transition:
+      opacity .38s ease,
+      transform .42s cubic-bezier(.22,.61,.36,1);
+  }
+
+
+  /* NUMBER */
+  .site-nav .mobile-menu a::before {
+    display: block;
+
+    color:
+      color-mix(
+        in srgb,
+        var(--site-text) 38%,
+        transparent
+      );
+
+    font-family:
+      var(--font-body),
+      Arial,
+      sans-serif;
+
+    font-size: 6px;
+    font-weight: 400;
+
+    line-height: 1;
+
+    letter-spacing: .12em;
+  }
+
+  .site-nav .mobile-menu a:nth-child(1)::before {
+    content: '01';
+  }
+
+  .site-nav .mobile-menu a:nth-child(2)::before {
+    content: '02';
+  }
+
+  .site-nav .mobile-menu a:nth-child(3)::before {
+    content: '03';
+  }
+
+  .site-nav .mobile-menu a:nth-child(4)::before {
+    content: '04';
+  }
+
+  .site-nav .mobile-menu a:nth-child(5)::before {
+    content: '05';
+  }
+
+
+  /* ARROW */
+  .site-nav .mobile-menu a::after {
+    content: '↗';
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    justify-self: end;
+
+    width: 27px;
+    height: 27px;
+
+    margin: 0 !important;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--site-text) 15%,
+        transparent
+      );
+
+    border-radius: 50%;
+
+    color:
+      color-mix(
+        in srgb,
+        var(--site-text) 62%,
+        transparent
+      );
+
+    font-family: Arial, sans-serif;
+
+    font-size: 10px;
+    font-weight: 400;
+
+    opacity: 1;
+
+    transition:
+      background .25s ease,
+      color .25s ease,
+      transform .25s ease;
+  }
+
+
+  /* OPEN ANIMATION */
+  .site-nav.is-open .mobile-menu a {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .site-nav.is-open .mobile-menu a:nth-child(1) {
+    transition-delay: .05s;
+  }
+
+  .site-nav.is-open .mobile-menu a:nth-child(2) {
+    transition-delay: .09s;
+  }
+
+  .site-nav.is-open .mobile-menu a:nth-child(3) {
+    transition-delay: .13s;
+  }
+
+  .site-nav.is-open .mobile-menu a:nth-child(4) {
+    transition-delay: .17s;
+  }
+
+  .site-nav.is-open .mobile-menu a:nth-child(5) {
+    transition-delay: .21s;
+  }
+
+
+  /* TOUCH */
+  .site-nav .mobile-menu a:active {
+    opacity: .55;
+  }
+
+  .site-nav .mobile-menu a:active::after {
+    transform: scale(.88);
+  }
+
+
+  /* RTL */
+  .site[dir='rtl'] .mobile-menu a {
+    grid-template-columns:
+      30px
+      minmax(0, 1fr)
+      30px;
+  }
+
+  .site[dir='rtl'] .mobile-menu a::after {
+    transform: scaleX(-1);
+  }
+
+}
+
+
+/* SMALL MOBILE */
+@media (max-width: 370px) {
+
+  .site-nav .mobile-menu {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+
+  .site-nav .mobile-menu a {
+    min-height: 56px;
+
+    padding: 13px 0 !important;
+
+    font-size: 22px !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   NURANICO — MOBILE MOTION POLISH
+   Desktop untouched
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  /* Section reveal — softer on mobile */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity .7s ease,
+      transform .8s cubic-bezier(.22,.61,.36,1);
+    will-change: opacity, transform;
+  }
+
+  .reveal.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Hero must always be visible immediately */
+  .hero .reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Project images */
+  .project-media img {
+    transition:
+      transform .8s cubic-bezier(.22,.61,.36,1),
+      filter .5s ease;
+  }
+
+  /* Remove desktop hover movement on touch devices */
+  .project-card:hover .project-media img {
+    transform: none;
+    filter: none;
+  }
+
+  .project-card:hover .project-overlay {
+    opacity: 0;
+  }
+
+  /* Service cards shouldn't jump on touch */
+  .service-card:hover {
+    transform: none;
+  }
+
+  /* Buttons — subtle press feedback */
+  .primary-button,
+  .nav-cta,
+  .filter-row button,
+  .lang-switch,
+  .menu-button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .primary-button:active,
+  .filter-row button:active,
+  .lang-switch:active,
+  .menu-button:active {
+    transform: scale(.97);
+  }
+
+  /* Brand cards — no fake hover on touch */
+  .brand-card:hover {
+    background: transparent;
+  }
+
+  /* Landscape should remain stable while scrolling */
+  .landscape:hover img {
+    transform: none;
+  }
+
+  /* Cleaner image rendering */
+  .project-media,
+  .about-image,
+  .landscape {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+}
+
+
+/* Accessibility */
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
+
+  .reveal,
+  .reveal.in-view {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .project-media img,
+  .primary-button,
+  .filter-row button,
+  .lang-switch,
+  .menu-button {
+    transition: none !important;
+  }
+}
+
+
+
+/* =========================================================
+   NURANICO — MOBILE SERVICE VECTOR CARDS
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  .services .service-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+
+    border: 0 !important;
+  }
+
+  .services .service-card {
+    min-height: 142px !important;
+    padding: 13px 14px !important;
+
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 105px !important;
+    grid-template-rows: auto 1fr !important;
+
+    column-gap: 10px !important;
+    row-gap: 4px !important;
+
+    border: 1px solid var(--site-line) !important;
+    border-radius: 8px !important;
+
+    background:
+      linear-gradient(
+        120deg,
+        rgba(255,255,255,.025),
+        rgba(255,255,255,0)
+      ) !important;
+  }
+
+  .services .service-card:hover {
+    transform: none !important;
+  }
+
+  .service-card-top {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .service-card-top > span {
+    font-size: 6px !important;
+  }
+
+  .service-card-top b {
+    font-size: 11px !important;
+  }
+
+  .service-vector {
+    grid-column: 2;
+    grid-row: 2;
+
+    width: 105px !important;
+    height: 72px !important;
+
+    align-self: center;
+    justify-self: end;
+
+    opacity: .72;
+  }
+
+  .service-vector svg {
+    width: 105px !important;
+    height: 72px !important;
+  }
+
+  .service-card-copy {
+    grid-column: 1;
+    grid-row: 2;
+
+    align-self: center;
+  }
+
+  .services .service-card-copy h3 {
+    margin: 0 0 5px !important;
+
+    font-size: 15px !important;
+    line-height: 1.05 !important;
+  }
+
+  .services .service-card-copy p {
+    max-width: 190px !important;
+
+    font-size: 7.5px !important;
+    line-height: 1.45 !important;
+  }
+}
+
+
+/* =========================================================
+   NURANICO — PREMIUM SERVICES MOBILE V2
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  .services {
+    padding-top: 46px !important;
+    padding-bottom: 48px !important;
+    background: #111110 !important;
+  }
+
+  .services .section-head {
+    margin-bottom: 21px !important;
+  }
+
+  .services .service-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+
+    border: 0 !important;
+  }
+
+  .services .service-card {
+    position: relative !important;
+
+    min-height: 132px !important;
+
+    display: block !important;
+
+    padding: 14px 15px 15px !important;
+
+    overflow: hidden !important;
+
+    border: 0 !important;
+    border-radius: 6px !important;
+
+    background:
+      radial-gradient(
+        circle at 82% 46%,
+        rgba(255,255,255,.045),
+        transparent 37%
+      ),
+      linear-gradient(
+        135deg,
+        #191918,
+        #151514
+      ) !important;
+
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,.045) !important;
+
+    transform: none !important;
+  }
+
+  .services .service-card::after {
+    content: "" !important;
+
+    position: absolute !important;
+    inset: auto 0 0 0 !important;
+
+    height: 60% !important;
+
+    background:
+      linear-gradient(
+        to top,
+        rgba(0,0,0,.22),
+        transparent
+      ) !important;
+
+    pointer-events: none !important;
+  }
+
+
+  /* META */
+
+  .service-card-top {
+    position: relative !important;
+    z-index: 4 !important;
+
+    width: 100% !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  .service-card-top > span {
+    font-size: 5.5px !important;
+    letter-spacing: .16em !important;
+
+    color: rgba(245,243,238,.46) !important;
+  }
+
+  .service-card-top b {
+    font-size: 10px !important;
+
+    color: rgba(245,243,238,.52) !important;
+
+    opacity: .8 !important;
+  }
+
+
+  /* VECTOR */
+
+  .service-vector {
+    position: absolute !important;
+
+    top: 24px !important;
+    right: -13px !important;
+
+    width: 48% !important;
+    height: 84px !important;
+
+    display: flex !important;
+
+    opacity: .17 !important;
+
+    color: #f0eee8 !important;
+
+    pointer-events: none !important;
+
+    transform: none !important;
+  }
+
+  .service-vector svg {
+    width: 100% !important;
+    height: 100% !important;
+
+    stroke: currentColor !important;
+    stroke-width: .85 !important;
+  }
+
+
+  /* COPY */
+
+  .service-card-copy {
+    position: absolute !important;
+
+    z-index: 4 !important;
+
+    left: 15px !important;
+    right: auto !important;
+    bottom: 15px !important;
+
+    width: 62% !important;
+
+    margin: 0 !important;
+  }
+
+  .services .service-card-copy h3 {
+    margin: 0 0 4px !important;
+
+    color: #f4f1ea !important;
+
+    font-size: 14px !important;
+    line-height: 1 !important;
+    font-weight: 500 !important;
+
+    letter-spacing: -.025em !important;
+  }
+
+  .services .service-card-copy p {
+    max-width: 180px !important;
+
+    margin: 0 !important;
+
+    color: rgba(244,241,234,.5) !important;
+
+    font-size: 7px !important;
+    line-height: 1.4 !important;
+  }
+}
+
+/* =========================================================
+   NURANICO — CINEMATIC SERVICES MOBILE V3
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  .services {
+    padding:
+      45px
+      20px
+      48px !important;
+
+    background: #0e0e0d !important;
+  }
+
+
+  .services .section-head {
+    margin-bottom: 22px !important;
+  }
+
+
+  /* one premium card per row */
+
+  .services .service-grid {
+    display: grid !important;
+
+    grid-template-columns: 1fr !important;
+
+    gap: 7px !important;
+
+    border: 0 !important;
+  }
+
+
+  .services .service-card {
+    position: relative !important;
+
+    min-height: 176px !important;
+
+    padding:
+      13px
+      14px
+      17px !important;
+
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    align-items: center !important;
+
+    justify-content: flex-start !important;
+
+    border:
+      1px solid
+      rgba(255,255,255,.07) !important;
+
+    border-radius: 8px !important;
+
+    overflow: hidden !important;
+
+    background:
+      radial-gradient(
+        circle at 50% 38%,
+        rgba(255,255,255,.045),
+        transparent 42%
+      ),
+      #141413 !important;
+
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.015) !important;
+
+    transform: none !important;
+  }
+
+
+  .services .service-card::after {
+    content: "" !important;
+
+    position: absolute !important;
+
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+
+    height: 55% !important;
+
+    background:
+      linear-gradient(
+        to top,
+        rgba(0,0,0,.3),
+        transparent
+      ) !important;
+
+    pointer-events: none !important;
+  }
+
+
+  /* TOP */
+
+  .service-card-top {
+    position: relative !important;
+
+    z-index: 5 !important;
+
+    width: 100% !important;
+
+    display: flex !important;
+
+    align-items: center !important;
+
+    justify-content: space-between !important;
+  }
+
+
+  .service-card-top > span {
+    font-size: 5.5px !important;
+
+    letter-spacing: .16em !important;
+
+    color:
+      rgba(245,243,238,.52) !important;
+  }
+
+
+  .service-card-top b {
+    font-size: 10px !important;
+
+    color:
+      rgba(245,243,238,.65) !important;
+
+    opacity: .8 !important;
+  }
+
+
+  /* VECTOR */
+
+  .service-vector,
+  .service-vector-1,
+  .service-vector-2,
+  .service-vector-3 {
+
+    position: relative !important;
+
+    top: auto !important;
+    right: auto !important;
+    left: auto !important;
+
+    grid-column: auto !important;
+    grid-row: auto !important;
+
+    width: 62% !important;
+    height: 75px !important;
+
+    margin:
+      9px auto
+      5px !important;
+
+    align-self: auto !important;
+    justify-self: auto !important;
+
+    opacity: .30 !important;
+
+    transform: none !important;
+  }
+
+
+  .service-vector svg {
+    width: 100% !important;
+
+    height: 100% !important;
+
+    stroke-width: .72 !important;
+  }
+
+
+  /* COPY */
+
+  .service-card-copy {
+    position: relative !important;
+
+    z-index: 5 !important;
+
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+
+    grid-column: auto !important;
+    grid-row: auto !important;
+
+    width: 100% !important;
+
+    margin:
+      auto
+      0
+      0 !important;
+
+    text-align: center !important;
+  }
+
+
+  .services .service-card-copy h3 {
+    margin:
+      0
+      0
+      5px !important;
+
+    font-size: 15px !important;
+
+    line-height: 1 !important;
+
+    font-weight: 500 !important;
+
+    text-align: center !important;
+  }
+
+
+  .services .service-card-copy p {
+    max-width: 240px !important;
+
+    margin:
+      0
+      auto !important;
+
+    font-size: 7px !important;
+
+    line-height: 1.4 !important;
+
+    text-align: center !important;
+
+    color:
+      rgba(244,241,234,.5) !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   ABSTRACT SERVICE ART V4 — MOBILE
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  .services .service-vector,
+  .services .service-vector-1,
+  .services .service-vector-2,
+  .services .service-vector-3 {
+    width: 72% !important;
+    height: 82px !important;
+
+    margin:
+      8px auto
+      6px !important;
+
+    opacity: 1 !important;
+  }
+
+  .services .service-vector-2 {
+    width: 62% !important;
+  }
+
+  .services .service-vector svg {
+    width: 100% !important;
+    height: 100% !important;
+
+    stroke-width: .82 !important;
+  }
+
+  .services .service-vector .art-main {
+    opacity: .66 !important;
+  }
+
+  .services .service-vector .art-detail {
+    opacity: .26 !important;
+  }
+
+  .services .service-vector::before {
+    width: 60% !important;
+    height: 55% !important;
+
+    left: 20% !important;
+    top: 22% !important;
+  }
+}
+
+
+
+/* =========================================================
+   NURANICO — MOBILE WORK CAROUSEL
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  .work-browser-head {
+    margin: -3px 0 12px !important;
+    gap: 10px !important;
+  }
+
+  .work-browser-count {
+    font-size: 5px !important;
+    letter-spacing: .12em !important;
+  }
+
+  .work-browser-actions {
+    gap: 7px !important;
+  }
+
+  .work-arrows {
+    display: none !important;
+  }
+
+  .work-view-all {
+    height: 25px !important;
+    padding: 0 10px !important;
+    font-size: 6px !important;
+    letter-spacing: .08em !important;
+  }
+
+  .portfolio-grid.portfolio-carousel {
+    width: calc(100% + 20px) !important;
+
+    display: flex !important;
+    grid-template-columns: none !important;
+
+    gap: 7px !important;
+
+    margin-right: -20px;
+    padding-right: 20px !important;
+    padding-bottom: 4px !important;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 0;
+
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .portfolio-grid.portfolio-carousel::-webkit-scrollbar {
+    display: none;
+  }
+
+  .portfolio-grid.portfolio-carousel .project-card {
+    flex: 0 0 74% !important;
+    width: 74% !important;
+    min-width: 74% !important;
+    scroll-snap-align: start;
+  }
+
+}
+
+
+
+/* =========================================================
+   MOBILE — STREAMING STYLE WORK RAIL
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  .work-carousel-shell.is-carousel::before {
+    display: none;
+  }
+
+  .work-carousel-shell.is-carousel::after {
+    width: 38px;
+
+    background:
+      linear-gradient(
+        270deg,
+        var(--site-bg) 0%,
+        transparent 100%
+      );
+  }
+
+  /*
+    ~1.3 cards visible.
+    User immediately understands it can be swiped.
+  */
+  .portfolio-grid.portfolio-carousel .project-card {
+    flex: 0 0 76% !important;
+    width: 76% !important;
+    min-width: 76% !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   NURANICO — WORK RAIL FINAL MOBILE OVERRIDE
+   Mobile: 4 visible + hint of next
+   Covers: 4:5
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  .work-carousel-shell {
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+
+  .portfolio-grid.portfolio-carousel {
+    --work-gap: 5px;
+
+    display: flex !important;
+    grid-template-columns: none !important;
+
+    width: calc(100% + 20px) !important;
+
+    gap: var(--work-gap) !important;
+
+    margin:
+      0
+      -20px
+      0
+      0 !important;
+
+    padding:
+      0
+      20px
+      5px
+      0 !important;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+
+    scroll-snap-type: x proximity !important;
+
+    scrollbar-width: none !important;
+
+    -webkit-overflow-scrolling: touch;
+  }
+
+
+  .portfolio-grid.portfolio-carousel::-webkit-scrollbar {
+    display: none !important;
+  }
+
+
+  /* 4 cards + subtle preview of card 5 */
+
+  .portfolio-grid.portfolio-carousel .project-card {
+    flex:
+      0 0
+      calc(
+        (100% - (var(--work-gap) * 3))
+        / 4.12
+      ) !important;
+
+    width:
+      calc(
+        (100% - (var(--work-gap) * 3))
+        / 4.12
+      ) !important;
+
+    min-width:
+      calc(
+        (100% - (var(--work-gap) * 3))
+        / 4.12
+      ) !important;
+
+    scroll-snap-align: start !important;
+  }
+
+
+  /* portrait 4:5 */
+
+  .portfolio-grid.portfolio-carousel .project-media {
+    width: 100% !important;
+    height: auto !important;
+
+    aspect-ratio: 4 / 5 !important;
+
+    overflow: hidden !important;
+  }
+
+  .portfolio-grid.portfolio-carousel .project-media img,
+  .portfolio-grid.portfolio-carousel .project-media video,
+  .portfolio-grid.portfolio-carousel .project-preview,
+  .portfolio-grid.portfolio-carousel .project-media-empty {
+    width: 100% !important;
+    height: 100% !important;
+
+    object-fit: cover !important;
+  }
+
+
+  /* Compact card information */
+
+  .portfolio-grid.portfolio-carousel .project-meta {
+    margin-top: 6px !important;
+    gap: 3px !important;
+  }
+
+  .portfolio-grid.portfolio-carousel .project-meta h3 {
+    font-size: 8px !important;
+    line-height: 1.15 !important;
+  }
+
+  .portfolio-grid.portfolio-carousel .project-meta p {
+    font-size: 4.5px !important;
+    letter-spacing: .08em !important;
+  }
+
+  .portfolio-grid.portfolio-carousel .project-meta span {
+    display: none !important;
+  }
+
+  .portfolio-grid.portfolio-carousel .project-meta strong {
+    font-size: 5px !important;
+  }
+
+
+  /* Keep both fades — soft, attached to the edges */
+
+  .work-carousel-shell.is-carousel::before,
+  .work-carousel-shell.is-carousel::after {
+    display: block !important;
+
+    width: 25px !important;
+
+    top: -1px !important;
+    bottom: 0 !important;
+
+    pointer-events: none !important;
+  }
+
+  .work-carousel-shell.is-carousel::before {
+    left: 0 !important;
+
+    background:
+      linear-gradient(
+        90deg,
+        var(--site-bg) 0%,
+        color-mix(
+          in srgb,
+          var(--site-bg) 82%,
+          transparent
+        ) 28%,
+        color-mix(
+          in srgb,
+          var(--site-bg) 34%,
+          transparent
+        ) 68%,
+        transparent 100%
+      ) !important;
+  }
+
+  .work-carousel-shell.is-carousel::after {
+    right: 0 !important;
+
+    background:
+      linear-gradient(
+        270deg,
+        var(--site-bg) 0%,
+        color-mix(
+          in srgb,
+          var(--site-bg) 82%,
+          transparent
+        ) 28%,
+        color-mix(
+          in srgb,
+          var(--site-bg) 34%,
+          transparent
+        ) 68%,
+        transparent 100%
+      ) !important;
+  }
+
+
+  .work-view-all {
+    height: 25px !important;
+    padding: 0 9px !important;
+
+    font-size: 5.5px !important;
+    letter-spacing: .08em !important;
+
+    text-decoration: none !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   NURANICO — FINAL MOBILE WORK RAIL
+   3.5 visible cards
+   VIEW ALL centered underneath
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  .work-browser-actions,
+  .work-arrows {
+    display: none !important;
+  }
+
+
+  .portfolio-grid.portfolio-carousel {
+    --work-gap: 5px !important;
+
+    display: flex !important;
+
+    gap: var(--work-gap) !important;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+
+    scroll-snap-type: x proximity !important;
+
+    -webkit-overflow-scrolling: touch;
+  }
+
+
+  /*
+     3.5 cards visible.
+     The half card is the swipe cue.
+  */
+
+  .portfolio-grid.portfolio-carousel .project-card {
+    flex:
+      0 0
+      calc(
+        (100% - (var(--work-gap) * 3))
+        / 3.5
+      ) !important;
+
+    width:
+      calc(
+        (100% - (var(--work-gap) * 3))
+        / 3.5
+      ) !important;
+
+    min-width:
+      calc(
+        (100% - (var(--work-gap) * 3))
+        / 3.5
+      ) !important;
+  }
+
+
+  /* maintain portrait 4:5 */
+
+  .portfolio-grid.portfolio-carousel .project-media {
+    aspect-ratio: 4 / 5 !important;
+
+    width: 100% !important;
+    height: auto !important;
+  }
+
+
+  /* VIEW ALL centered under cards */
+
+  .work-view-all-bottom {
+    width: 100% !important;
+
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+
+    margin-top: 20px !important;
+  }
+
+  .work-view-all-bottom .work-view-all {
+    min-width: 88px !important;
+    height: 27px !important;
+
+    padding: 0 13px !important;
+
+    font-size: 5.5px !important;
+    letter-spacing: .11em !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   NURANICO — MOBILE WORK RAIL FINAL V2
+   3.5 vertical covers visible
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  .work-carousel-shell {
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+
+  /* Fade both sides — tied to Work background */
+
+  .work-carousel-shell.is-carousel::before,
+  .work-carousel-shell.is-carousel::after {
+    display: block !important;
+
+    top: 0 !important;
+    bottom: 0 !important;
+
+    width: 28px !important;
+
+    z-index: 15 !important;
+    pointer-events: none !important;
+  }
+
+  .work-carousel-shell.is-carousel::before {
+    left: 0 !important;
+
+    background: linear-gradient(
+      90deg,
+      var(--site-bg) 0%,
+      color-mix(in srgb, var(--site-bg) 90%, transparent) 22%,
+      color-mix(in srgb, var(--site-bg) 50%, transparent) 58%,
+      transparent 100%
+    ) !important;
+  }
+
+  .work-carousel-shell.is-carousel::after {
+    right: 0 !important;
+
+    background: linear-gradient(
+      270deg,
+      var(--site-bg) 0%,
+      color-mix(in srgb, var(--site-bg) 90%, transparent) 22%,
+      color-mix(in srgb, var(--site-bg) 50%, transparent) 58%,
+      transparent 100%
+    ) !important;
+  }
+
+
+  /* Rail */
+
+  .portfolio-grid.portfolio-carousel {
+    width: 100% !important;
+    max-width: 100% !important;
+
+    gap: 6px !important;
+
+    margin: 0 !important;
+
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 3px !important;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+
+
+  /* approx 3.5 cards visible */
+
+  .portfolio-grid.portfolio-carousel .project-card {
+    flex: 0 0 calc((100% - 18px) / 3.55) !important;
+
+    width: calc((100% - 18px) / 3.55) !important;
+    min-width: calc((100% - 18px) / 3.55) !important;
+
+    scroll-snap-align: start !important;
+  }
+
+
+  /* Every cover 4:5 */
+
+  .portfolio-grid.portfolio-carousel .project-media {
+    width: 100% !important;
+
+    aspect-ratio: 4 / 5 !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .portfolio-grid.portfolio-carousel .project-media img,
+  .portfolio-grid.portfolio-carousel .project-media video {
+    width: 100% !important;
+    height: 100% !important;
+
+    object-fit: cover !important;
+  }
+
+
+  /* Edge arrows remain visible on mobile */
+
+  .work-edge-arrow {
+    display: flex !important;
+
+    top: 34% !important;
+
+    width: 27px !important;
+    height: 46px !important;
+
+    opacity: .9 !important;
+
+    background:
+      color-mix(in srgb, var(--site-bg) 76%, transparent) !important;
+
+    border-color:
+      color-mix(in srgb, var(--site-text) 32%, transparent) !important;
+
+    backdrop-filter: blur(9px) !important;
+    -webkit-backdrop-filter: blur(9px) !important;
+  }
+
+  .work-edge-arrow span {
+    font-size: 14px !important;
+  }
+
+  .work-edge-arrow-left {
+    left: 0 !important;
+  }
+
+  .work-edge-arrow-right {
+    right: 0 !important;
+  }
+
+
+  /* VIEW ALL below + centered */
+
+  .work-view-all-wrap {
+    margin-top: 20px !important;
+  }
+
+  .work-view-all {
+    height: 29px !important;
+
+    min-width: 92px !important;
+
+    padding: 0 13px !important;
+
+    font-size: 6px !important;
+    letter-spacing: .1em !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   NURANICO — MOBILE NAV V2 / DELICATE POLISH
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  .site-nav .lang-switch {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+
+    font-size: 6px !important;
+
+    border-color:
+      color-mix(
+        in srgb,
+        var(--nav-text) 14%,
+        transparent
+      ) !important;
+  }
+
+  .site-nav .menu-button {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+
+    border-color:
+      color-mix(
+        in srgb,
+        var(--nav-text) 14%,
+        transparent
+      ) !important;
+  }
+
+  .site-nav .menu-button span {
+    width: 12px !important;
+    height: .8px !important;
+  }
+
+  .site-nav .menu-button span:first-child {
+    top: 13px;
+  }
+
+  .site-nav .menu-button span:last-child {
+    top: 19px;
+  }
+
+  .site-nav.is-open .menu-button span:first-child,
+  .site-nav.is-open .menu-button span:last-child {
+    top: 16px;
+  }
+
+
+  /* menu content slightly more delicate */
+
+  .site-nav .mobile-menu {
+    padding:
+      90px
+      22px
+      32px !important;
+  }
+
+  .site-nav .mobile-menu a {
+    grid-template-columns:
+      26px
+      minmax(0, 1fr)
+      25px;
+
+    min-height: 57px;
+
+    padding: 13px 0 !important;
+
+    font-size:
+      clamp(22px, 6.5vw, 26px) !important;
+
+    font-weight: 400 !important;
+
+    letter-spacing: -.035em !important;
+
+    border-bottom-color:
+      color-mix(
+        in srgb,
+        var(--site-text) 7%,
+        transparent
+      ) !important;
+  }
+
+  .site-nav .mobile-menu a::before {
+    font-size: 5px;
+
+    opacity: .72;
+
+    letter-spacing: .14em;
+  }
+
+  .site-nav .mobile-menu a::after {
+    width: 23px;
+    height: 23px;
+
+    font-size: 8px;
+
+    border-color:
+      color-mix(
+        in srgb,
+        var(--site-text) 11%,
+        transparent
+      );
+
+    color:
+      color-mix(
+        in srgb,
+        var(--site-text) 52%,
+        transparent
+      );
+  }
+
+}
+
+
+
+/* =========================================================
+   NURANICO — SERVICES MOBILE FINAL V5
+   3 cards / original vectors / centered copy
+   MOBILE ONLY — Work/Desktop/Tablet untouched
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  /* 3 cards side by side */
+  .services .service-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+
+    width: 100% !important;
+    border: 0 !important;
+  }
+
+
+  /* compact vertical cards */
+  .services .service-card {
+    position: relative !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: 248px !important;
+
+    padding: 11px 8px 14px !important;
+
+    overflow: hidden !important;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--site-text) 10%,
+        transparent
+      ) !important;
+
+    border-radius: 7px !important;
+
+    transform: none !important;
+  }
+
+
+  /* number + arrow remain at top */
+  .services .service-card-top {
+    position: relative !important;
+    inset: auto !important;
+
+    z-index: 4 !important;
+
+    width: 100% !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+
+    flex: 0 0 auto !important;
+  }
+
+  .services .service-card-top > span {
+    font-size: 5px !important;
+    line-height: 1 !important;
+  }
+
+  .services .service-card-top b {
+    font-size: 10px !important;
+    line-height: 1 !important;
+  }
+
+
+  /* ORIGINAL VECTOR — only scale/position changes */
+  .services .service-vector {
+    position: relative !important;
+
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+
+    width: 118% !important;
+    height: 82px !important;
+
+    flex: 0 0 82px !important;
+
+    margin:
+      18px
+      -9%
+      5px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    opacity: .58 !important;
+
+    transform: none !important;
+
+    pointer-events: none !important;
+  }
+
+  .services .service-vector svg {
+    width: 100% !important;
+    height: 100% !important;
+
+    /* preserve original artwork */
+    stroke: currentColor !important;
+    fill: none;
+  }
+
+
+  /* centered copy */
+  .services .service-card-copy {
+    position: relative !important;
+
+    inset: auto !important;
+
+    z-index: 4 !important;
+
+    width: 100% !important;
+    max-width: none !important;
+
+    margin: auto 0 0 !important;
+
+    text-align: center !important;
+  }
+
+  .services .service-card-copy h3 {
+    margin:
+      0
+      auto
+      7px !important;
+
+    font-size: 13px !important;
+    line-height: 1.04 !important;
+
+    text-align: center !important;
+  }
+
+  .services .service-card-copy p {
+    width: 100% !important;
+    max-width: 105px !important;
+
+    margin: 0 auto !important;
+
+    font-size: 6.5px !important;
+    line-height: 1.38 !important;
+
+    text-align: center !important;
+  }
+
+}
+
+
+/* very small phones */
+@media (max-width: 370px) {
+
+  .services .service-grid {
+    gap: 5px !important;
+  }
+
+  .services .service-card {
+    height: 230px !important;
+    padding:
+      10px
+      6px
+      12px !important;
+  }
+
+  .services .service-vector {
+    width: 122% !important;
+    height: 74px !important;
+    flex-basis: 74px !important;
+
+    margin:
+      16px
+      -11%
+      4px !important;
+  }
+
+  .services .service-card-copy h3 {
+    font-size: 12px !important;
+  }
+
+  .services .service-card-copy p {
+    max-width: 95px !important;
+    font-size: 6px !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   SERVICES MOBILE — HEIGHT + VECTOR SIZE FINAL TUNE
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  .services .service-card {
+    height: 205px !important;
+    min-height: 205px !important;
+
+    padding:
+      10px
+      8px
+      12px !important;
+  }
+
+  /* Same original vectors — larger only */
+  .services .service-vector {
+    width: 138% !important;
+    height: 92px !important;
+    flex: 0 0 92px !important;
+
+    margin:
+      8px
+      -19%
+      -2px !important;
+
+    opacity: .62 !important;
+  }
+
+  .services .service-vector svg {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .services .service-card-copy {
+    margin-top: auto !important;
+  }
+
+  .services .service-card-copy h3 {
+    margin-bottom: 5px !important;
+  }
+
+}
+
+
+/* Small phones */
+@media (max-width: 370px) {
+
+  .services .service-card {
+    height: 195px !important;
+    min-height: 195px !important;
+  }
+
+  .services .service-vector {
+    width: 142% !important;
+    height: 86px !important;
+    flex-basis: 86px !important;
+
+    margin:
+      6px
+      -21%
+      -3px !important;
+  }
+
+}
+

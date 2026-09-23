@@ -68,6 +68,8 @@ const contentFields = [
   'contact_email',
   'contact_phone',
   'contact_instagram',
+  'personal_instagram',
+  'start_project_url',
   'seo_title_fa',
   'seo_title_en',
   'seo_description_fa',
@@ -100,6 +102,31 @@ const settingsFields = [
   'line_height_fa',
   'letter_spacing_en',
   'letter_spacing_fa',
+  'heading_color',
+  'logo_color',
+  'link_color',
+  'nav_bg',
+  'nav_text',
+  'nav_active',
+  'button_text',
+  'button_hover',
+  'card_bg',
+  'card_text',
+  'tag_color',
+  'footer_bg',
+  'footer_text',
+  'border_color',
+
+  'brands_bg',
+  'brands_text',
+  'brands_muted',
+  'brands_hover',
+
+  'contact_bg',
+  'contact_text',
+  'contact_muted',
+  'contact_button',
+  'contact_button_text',
 ];
 
 function pick(source: Record<string, any>, fields: string[]) {
@@ -124,6 +151,8 @@ export async function GET(request: NextRequest) {
         content,
         settings,
         fonts,
+        btsMedia,
+        pageTexts,
       ] = await Promise.all([
         db.from('portfolio').select('*').order('sort_order', { ascending: true }).order('id', { ascending: true }),
         db.from('media_assets').select('*').order('created_at', { ascending: false }),
@@ -135,9 +164,11 @@ export async function GET(request: NextRequest) {
         db.from('site_content').select('*').limit(1).maybeSingle(),
         db.from('site_settings').select('*').eq('id', 1).maybeSingle(),
         db.from('font_assets').select('*').order('created_at', { ascending: false }),
+        db.from('bts_media').select('id,media_asset_id,sort_order').order('sort_order', { ascending: true }).order('id', { ascending: true }),
+        db.from('page_texts').select('*').order('page', { ascending: true }).order('sort_order', { ascending: true }).order('id', { ascending: true }),
       ]);
 
-      const result = [projects, media, hero, brands, services, destinations, projectMedia, content, settings, fonts]
+      const result = [projects, media, hero, brands, services, destinations, projectMedia, content, settings, fonts, btsMedia, pageTexts]
         .find(x => x.error);
       if (result?.error) throw result.error;
 
@@ -164,6 +195,23 @@ export async function GET(request: NextRequest) {
         content: content.data || null,
         settings: settings.data || null,
         fonts: fonts.data || [],
+        btsMedia: btsMedia.data || [],
+        pageTexts: pageTexts.data || [],
+      });
+    }
+
+    if (resource === 'page-texts') {
+      const result = await db
+        .from('page_texts')
+        .select('*')
+        .order('page', { ascending: true })
+        .order('sort_order', { ascending: true })
+        .order('id', { ascending: true });
+
+      if (result.error) throw result.error;
+
+      return NextResponse.json({
+        rows: result.data || [],
       });
     }
 
@@ -171,6 +219,20 @@ export async function GET(request: NextRequest) {
       const result = await db.from('media_assets').select('*').order('created_at', { ascending: false });
       if (result.error) throw result.error;
       return NextResponse.json({ rows: result.data || [] });
+    }
+
+    if (resource === 'bts') {
+      const result = await db
+        .from('bts_media')
+        .select('id,media_asset_id,sort_order')
+        .order('sort_order', { ascending: true })
+        .order('id', { ascending: true });
+
+      if (result.error) throw result.error;
+
+      return NextResponse.json({
+        rows: result.data || [],
+      });
     }
 
     throw new Error('Unknown resource');
@@ -185,6 +247,101 @@ export async function POST(request: NextRequest) {
     const { resource } = parseResource(request);
     const body = await request.json();
     const db = getAdminSupabase();
+
+    if (resource === 'page-texts') {
+      const rows = Array.isArray(body.rows) ? body.rows : [];
+
+      const payload = rows
+        .map((row: Record<string, any>) => ({
+          id: Number(row.id),
+          page: String(row.page || '').trim(),
+          text_key: String(row.text_key || '').trim(),
+          label: row.label == null ? null : String(row.label),
+          value_en: String(row.value_en ?? ''),
+          value_fa: String(row.value_fa ?? ''),
+          sort_order: Number.isFinite(Number(row.sort_order))
+            ? Number(row.sort_order)
+            : 0,
+          updated_at: new Date().toISOString(),
+        }))
+        .filter(
+          (row: Record<string, any>) =>
+            Number.isFinite(row.id) &&
+            row.id > 0 &&
+            row.page &&
+            row.text_key
+        );
+
+      if (payload.length !== rows.length) {
+        throw new Error('Invalid page text rows');
+      }
+
+      for (const row of payload) {
+        const { id, ...updates } = row;
+
+        const result = await db
+          .from('page_texts')
+          .update(updates)
+          .eq('id', id);
+
+        if (result.error) throw result.error;
+      }
+
+      const result = await db
+        .from('page_texts')
+        .select('*')
+        .order('page', { ascending: true })
+        .order('sort_order', { ascending: true })
+        .order('id', { ascending: true });
+
+      if (result.error) throw result.error;
+
+      return NextResponse.json({
+        rows: result.data || [],
+      });
+    }
+
+    if (resource === 'bts') {
+      const mediaIds = Array.isArray(body.mediaIds)
+        ? body.mediaIds
+            .map((value: unknown) => Number(value))
+            .filter((value: number) => Number.isFinite(value) && value > 0)
+        : [];
+
+      const uniqueMediaIds = Array.from(new Set(mediaIds));
+
+      const clearResult = await db
+        .from('bts_media')
+        .delete()
+        .neq('id', 0);
+
+      if (clearResult.error) throw clearResult.error;
+
+      if (uniqueMediaIds.length) {
+        const insertResult = await db
+          .from('bts_media')
+          .insert(
+            uniqueMediaIds.map((media_asset_id, index) => ({
+              media_asset_id,
+              sort_order: index,
+            }))
+          );
+
+        if (insertResult.error) throw insertResult.error;
+      }
+
+      const result = await db
+        .from('bts_media')
+        .select('id,media_asset_id,sort_order')
+        .order('sort_order', { ascending: true })
+        .order('id', { ascending: true });
+
+      if (result.error) throw result.error;
+
+      return NextResponse.json({
+        rows: result.data || [],
+      });
+    }
 
     if (resource === 'projects') {
       const raw = body.row || {};

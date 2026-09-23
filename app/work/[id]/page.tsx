@@ -1,11 +1,12 @@
 'use client';
+import SiteHeader from '../../../components/SiteHeader';
+
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase';
-import SiteHeader from '../../components/SiteHeader';
-
+import { usePageTexts } from '../../../lib/usePageTexts';
 type AttachedMedia = {
   id: number;
   file_url: string;
@@ -28,9 +29,6 @@ type Project = {
   media_sources?: Record<string, string> | null;
   gallery_urls?: string[] | null;
   brand_id?: number | null;
-  bts_media_url?: string | null;
-  bts_media_type?: string | null;
-  bts_gallery_urls?: string[] | null;
 };
 
 
@@ -65,6 +63,26 @@ function VideoPlayer({
   const [activeSrc, setActiveSrc] = useState(src);
   const [speed, setSpeed] = useState(1);
   const [menu, setMenu] = useState(false);
+  const [videoSize, setVideoSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+
+  const videoRatio =
+    videoSize && videoSize.width > 0 && videoSize.height > 0
+      ? videoSize.width / videoSize.height
+      : null;
+
+  const orientation =
+    videoRatio == null
+      ? 'loading'
+      : videoRatio < 0.95
+        ? 'portrait'
+        : videoRatio > 1.05
+          ? 'landscape'
+          : 'square';
+
+
 
   const available = useMemo(() => {
     const entries = sources ? Object.entries(sources).filter(([, url]) => !!url) : [];
@@ -74,11 +92,16 @@ function VideoPlayer({
   async function togglePlay() {
     const video = videoRef.current;
     if (!video) return;
-    if (video.paused) {
-      await video.play().catch(() => undefined);
-      setPlaying(true);
-    } else {
+
+    if (!video.paused) {
       video.pause();
+      return;
+    }
+
+    try {
+      await video.play();
+    } catch (error) {
+      console.error('Video play failed:', error);
       setPlaying(false);
     }
   }
@@ -111,23 +134,126 @@ function VideoPlayer({
   }
 
   return (
-    <div className="player">
+    <div
+      className={`player player-${orientation}`}
+      style={
+        {
+          '--video-aspect': videoSize
+            ? `${videoSize.width} / ${videoSize.height}`
+            : 'auto',
+          '--video-ratio': videoRatio ?? 0,
+        } as React.CSSProperties
+      }
+    >
       <video
         ref={videoRef}
         src={activeSrc}
         poster={poster}
         playsInline
+        controlsList="nodownload"
+        disablePictureInPicture
+        onContextMenu={(event) => event.preventDefault()}
         preload="metadata"
-        onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
-        onTimeUpdate={(event) => setCurrent(event.currentTarget.currentTime)}
+        onLoadedMetadata={(event) => {
+          const video = event.currentTarget;
+
+          setDuration(
+            Number.isFinite(video.duration) ? video.duration : 0
+          );
+
+          if (video.videoWidth > 0 && video.videoHeight > 0) {
+            setVideoSize({
+              width: video.videoWidth,
+              height: video.videoHeight,
+            });
+          }
+        }}
+        onLoadedData={(event) => {
+          const video = event.currentTarget;
+
+          if (video.videoWidth > 0 && video.videoHeight > 0) {
+            setVideoSize({
+              width: video.videoWidth,
+              height: video.videoHeight,
+            });
+          }
+        }}
+        onTimeUpdate={(event) =>
+          setCurrent(event.currentTarget.currentTime)
+        }
         onPlay={() => setPlaying(true)}
+        onPlaying={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
-        onEnded={() => setPlaying(false)}
+        onEnded={() => {
+          setPlaying(false);
+          setCurrent(0);
+
+          const video = videoRef.current;
+          if (video) {
+            try {
+              video.currentTime = 0;
+            } catch {
+              // Safari may temporarily reject seeking while media state changes.
+            }
+          }
+        }}
+        onError={(event) => {
+          const video = event.currentTarget;
+          setPlaying(false);
+
+          console.error('Video media error:', {
+            code: video.error?.code,
+            message: video.error?.message,
+            currentSrc: video.currentSrc,
+            networkState: video.networkState,
+            readyState: video.readyState,
+          });
+        }}
+        onClick={togglePlay}
       />
+
+      {!playing && (
+        <button
+          type="button"
+          className="player-center-play"
+          onClick={togglePlay}
+          aria-label="Play"
+        >
+          <svg
+            className="player-play-icon"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path d="M9 6.8L17.2 12L9 17.2Z" />
+          </svg>
+        </button>
+      )}
+
       <div className="player-controls">
-        <button type="button" onClick={togglePlay} aria-label={playing ? 'Pause' : 'Play'}>{playing ? 'Ⅱ' : '▶'}</button>
-        <button type="button" onClick={() => seek(-10)} aria-label="Back 10 seconds">↶10</button>
-        <button type="button" onClick={() => seek(10)} aria-label="Forward 10 seconds">10↷</button>
+        <button
+          type="button"
+          className="player-skip"
+          onClick={() => seek(-10)}
+          aria-label="Back 10 seconds"
+        >
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <path className="skip-arrow" d="M11.3 9.2H6.2V4.1" />
+            <path className="skip-arrow" d="M6.8 9.1A11.2 11.2 0 1 1 5 19.7" />
+            <text x="16" y="20.2" textAnchor="middle">10</text>
+          </svg>
+        </button>
+        <button
+          type="button"
+          className="player-skip"
+          onClick={() => seek(10)}
+          aria-label="Forward 10 seconds"
+        >
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <path className="skip-arrow" d="M20.7 9.2h5.1V4.1" />
+            <path className="skip-arrow" d="M25.2 9.1A11.2 11.2 0 1 0 27 19.7" />
+            <text x="16" y="20.2" textAnchor="middle">10</text>
+          </svg>
+        </button>
         <span className="player-time">{formatTime(current)} / {formatTime(duration)}</span>
         <input
           className="seek"
@@ -146,28 +272,64 @@ function VideoPlayer({
           setMuted(next);
           if (videoRef.current) videoRef.current.muted = next;
         }} aria-label="Mute">{muted ? '×' : 'VOL'}</button>
-        <div className="player-menu-wrap">
-          <button type="button" onClick={() => setMenu((open) => !open)} aria-expanded={menu}>SET</button>
-          {menu && (
-            <div className="player-menu">
-              <strong>QUALITY</strong>
-              {available.map(([label, url]) => (
-                <button type="button" key={label} onClick={() => selectQuality(label, url)}>{label}{quality === label ? ' ✓' : ''}</button>
-              ))}
-              <strong>SPEED</strong>
-              {[.75, 1, 1.25, 1.5].map((value) => (
-                <button type="button" key={value} onClick={() => changeSpeed(value)}>{value}×{speed === value ? ' ✓' : ''}</button>
-              ))}
-            </div>
-          )}
-        </div>
-        <button type="button" onClick={() => videoRef.current?.requestFullscreen?.()} aria-label="Fullscreen">FULL</button>
+<button
+          type="button"
+          className="player-fullscreen"
+          onClick={async () => {
+            const video = videoRef.current;
+            if (!video) return;
+
+            const player = video.closest('.player') as HTMLElement | null;
+            if (!player) return;
+
+            try {
+              if (document.fullscreenElement) {
+                await document.exitFullscreen();
+              } else if (player.requestFullscreen) {
+                await player.requestFullscreen();
+              } else {
+                const safariVideo = video as HTMLVideoElement & {
+                  webkitEnterFullscreen?: () => void;
+                };
+
+                const safariPlayer = player as HTMLElement & {
+                  webkitRequestFullscreen?: () => Promise<void> | void;
+                };
+
+                if (safariVideo.webkitEnterFullscreen) {
+                  safariVideo.webkitEnterFullscreen();
+                } else if (safariPlayer.webkitRequestFullscreen) {
+                  await safariPlayer.webkitRequestFullscreen();
+                }
+              }
+            } catch (error) {
+              console.error('Fullscreen failed:', error);
+            }
+          }}
+          aria-label="Toggle fullscreen"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" />
+          </svg>
+        </button>
       </div>
     </div>
   );
 }
 
-function PhotoViewer({ images, alt }: { images: string[]; alt: string }) {
+function PhotoViewer({
+  images,
+  alt,
+  text,
+}: {
+  images: string[];
+  alt: string;
+  text: (
+    key: string,
+    fallbackEn?: string,
+    fallbackFa?: string
+  ) => string;
+}) {
   const [index, setIndex] = useState(0);
   const [zoom, setZoom] = useState(false);
 
@@ -192,7 +354,13 @@ function PhotoViewer({ images, alt }: { images: string[]; alt: string }) {
     return (
       <div className="photo-viewer photo-viewer-empty">
         <div className="photo-stage">
-          <p>No media has been added to this project yet.</p>
+          <p>
+            {text(
+              'no_media',
+              'No media has been added to this project yet.',
+              'هنوز رسانه‌ای به این پروژه اضافه نشده است.'
+            )}
+          </p>
         </div>
       </div>
     );
@@ -237,20 +405,10 @@ function PhotoViewer({ images, alt }: { images: string[]; alt: string }) {
 export default function ProjectPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id || '';
-  const [lang, setLang] = useState<'en' | 'fa'>('en');
+  const { lang, text } = usePageTexts('project');
   const [project, setProject] = useState<Project | null>(null);
   const [attachedMedia, setAttachedMedia] = useState<AttachedMedia[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem('nuranico-lang');
-    if (saved === 'fa' || saved === 'en') setLang(saved);
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.lang = lang;
-    document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
-  }, [lang]);
 
   useEffect(() => {
     async function load() {
@@ -319,12 +477,46 @@ export default function ProjectPage() {
     void load();
   }, [id]);
 
-  if (loading) return <main className="project-page"><div className="project-loading">Loading project…</div></main>;
+  if (loading) {
+    return (
+      <main className="project-page">
+        <div className="project-loading">
+          {text(
+            'loading',
+            'Loading project…',
+            'در حال بارگذاری پروژه…'
+          )}
+        </div>
+      </main>
+    );
+  }
   if (!project) {
     return (
       <main className="project-page">
         <SiteHeader />
-        <div className="project-not-found"><p>404 / PROJECT</p><h1>Project not found.</h1><Link href="/work">Return to work ↗</Link></div>
+        <div className="project-not-found">
+          <p>
+            {text(
+              'not_found_code',
+              '404 / PROJECT',
+              '۴۰۴ / پروژه'
+            )}
+          </p>
+          <h1>
+            {text(
+              'not_found_title',
+              'Project not found.',
+              'پروژه پیدا نشد.'
+            )}
+          </h1>
+          <Link href="/work">
+            {text(
+              'return_to_work',
+              'Return to work ↗',
+              'بازگشت به پروژه‌ها ↗'
+            )}
+          </Link>
+        </div>
       </main>
     );
   }
@@ -361,7 +553,15 @@ export default function ProjectPage() {
 
       <section className="project-hero">
         <div>
-          <p>{String(project.category).toUpperCase()} / PROJECT {String(project.id > 0 ? project.id : Math.abs(project.id)).padStart(2, '0')}</p>
+          <p>
+            {String(project.category).toUpperCase()} /{' '}
+            {text('project_label', 'PROJECT', 'پروژه')}{' '}
+            {String(
+              project.id > 0
+                ? project.id
+                : Math.abs(project.id)
+            ).padStart(2, '0')}
+          </p>
           <h1>{title}</h1>
           {description ? <div className="project-description">{description}</div> : null}
         </div>
@@ -377,53 +577,78 @@ export default function ProjectPage() {
         </section>
       ) : (
         <section className="project-media-block">
-          <PhotoViewer images={gallery} alt={title} />
+          <PhotoViewer
+            images={gallery}
+            alt={title}
+            text={text}
+          />
         </section>
       )}
 
       <section className="project-details">
-        <div><span>01</span><h2>THE PROJECT</h2></div>
-        <p>{description || 'A NURANICO visual project.'}</p>
+        <div>
+          <span>01</span>
+          <h2>
+            {text(
+              'the_project',
+              'THE PROJECT',
+              'پروژه'
+            )}
+          </h2>
+        </div>
+        <p>
+          {description ||
+            text(
+              'project_fallback',
+              'A NURANICO visual project.',
+              'یک پروژه تصویری از NURANICO.'
+            )}
+        </p>
       </section>
 
       {gallery.length > 1 ? (
         <section className="project-gallery">
           {gallery.map((image, index) => (
             <figure key={image} className={index % 3 === 0 ? 'wide' : ''}>
-              <img src={image} alt={`${title} gallery ${index + 1}`} loading="lazy" />
+              <img src={image} alt={`${title} ${text(
+                'gallery_label',
+                'gallery',
+                'گالری'
+              )} ${index + 1}`} loading="lazy" />
             </figure>
           ))}
         </section>
       ) : null}
 
-      {(project.bts_media_url || project.bts_gallery_urls?.length) ? (
-        <section className="project-bts">
-          <div className="project-bts-head">
-            <div>
-              <span>05 / BEHIND THE SCENES</span>
-              <h2>Behind the scenes.</h2>
-            </div>
-            <Link href="/work/behind-the-scenes">View all BTS ↗</Link>
-          </div>
-          {project.bts_media_url && (project.bts_media_type || '').toLowerCase().includes('video') ? (
-            <VideoPlayer src={project.bts_media_url} poster={project.cover_url} />
-          ) : project.bts_media_url ? (
-            <div className="bts-image"><img src={project.bts_media_url} alt={`${title} behind the scenes`} /></div>
-          ) : null}
-          {project.bts_gallery_urls?.length ? (
-            <div className="bts-grid">
-              {project.bts_gallery_urls.map((image) => <img key={image} src={image} alt={`${title} behind the scenes`} loading="lazy" />)}
-            </div>
-          ) : null}
-        </section>
-      ) : null}
-
       <section className="project-end">
-        <span>NURANICO / NEXT PROJECT</span>
-        <Link href="/#work">Explore more work <b>↗</b></Link>
+        <span>
+          {text(
+            'next_project',
+            'NURANICO / NEXT PROJECT',
+            'NURANICO / پروژه بعدی'
+          )}
+        </span>
+
+        <Link href="/#work">
+          {text(
+            'explore_more',
+            'Explore more work',
+            'مشاهده پروژه‌های بیشتر'
+          )}{' '}
+          <b>↗</b>
+        </Link>
       </section>
 
-      <footer className="project-footer"><span>NURANICO®</span><span>Creative studio / 2026</span></footer>
+      <footer className="project-footer">
+        <span>NURANICO®</span>
+        <span>
+          {text(
+            'footer_studio',
+            'Creative studio / 2026',
+            'استودیوی خلاق / ۲۰۲۶'
+          )}
+        </span>
+      </footer>
     </main>
   );
 }

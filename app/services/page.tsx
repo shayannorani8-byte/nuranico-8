@@ -1,35 +1,67 @@
 "use client";
 
 import SiteHeader from "../../components/SiteHeader";
+import { usePageTexts } from "../../lib/usePageTexts";
 
 export default function ServicesPage() {
+  const { text } = usePageTexts('services');
+
   const services = [
     {
       number: "01",
-      title: "Film & Teasers",
-      text: "Cinematic stories for products, brands and campaigns.",
+      title: text(
+        'film_title',
+        'Film & Teasers',
+        'فیلم و تیزر'
+      ),
+      text: text(
+        'film_description',
+        'Cinematic stories for products, brands and campaigns.',
+        'داستان‌های سینمایی برای محصولات، برندها و کمپین‌ها.'
+      ),
       href: "/services/film-teasers",
     },
     {
       number: "02",
-      title: "Photography",
-      text: "Precise imagery for campaigns, products and visual identity.",
+      title: text(
+        'photography_title',
+        'Photography',
+        'عکاسی'
+      ),
+      text: text(
+        'photography_description',
+        'Precise imagery for campaigns, products and visual identity.',
+        'تصاویر دقیق برای کمپین‌ها، محصولات و هویت بصری.'
+      ),
       href: "/services/photography",
     },
     {
       number: "03",
-      title: "Content",
-      text: "Social-first content with a consistent visual language.",
+      title: text(
+        'content_title',
+        'Content',
+        'محتوا'
+      ),
+      text: text(
+        'content_description',
+        'Social-first content with a consistent visual language.',
+        'محتوای شبکه‌های اجتماعی با زبان بصری یکپارچه.'
+      ),
       href: "/services/content",
     },
   ];
 
   return (
     <main className="content-page">
+      <SiteHeader />
 
       <section className="inner-hero">
-        <p>01 / SERVICES</p>
-        <h1>From idea to final frame.</h1>
+        <p>{text('eyebrow', '01 / SERVICES', '01 / خدمات')}</p>
+        <h1>{text(
+          'hero_title',
+          'From idea to final frame.',
+          'از ایده تا فریم نهایی.'
+        )}</h1>
       </section>
 
       <section className="service-list">
@@ -55,7 +87,7 @@ export default function ServicesPage() {
                   zIndex: 9999,
                 }}
               >
-                VIEW SERVICE ↗
+                {text('view_service', 'VIEW SERVICE ↗', 'مشاهده سرویس ↗')}
               </a>
             </div>
 
@@ -65,7 +97,9 @@ export default function ServicesPage() {
       </section>
 
       <footer className="content-footer">
-        <a href="/">Back home ↗</a>
+        <a href="/">
+          {text('back_home', 'Back home ↗', 'بازگشت به خانه ↗')}
+        </a>
       </footer>
     </main>
   );

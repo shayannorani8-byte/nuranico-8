@@ -1,53 +1,34 @@
 'use client';
-
-import Link from 'next/link';
 import SiteHeader from '../../../components/SiteHeader';
 
+
+import Link from 'next/link';
+import ServiceProjectShowcase from '../../../components/ServiceProjectShowcase';
+import { usePageTexts } from '../../../lib/usePageTexts';
+
 export default function PhotographyPage() {
+  const { text } = usePageTexts('photography');
+
   return (
     <main className="service-page">
       <SiteHeader />
 
-      <section className="service-hero">
-        <span>02 / PHOTOGRAPHY</span>
-        <h1>Frames<br />that stay.</h1>
-        <p>
-          Precise photography created for products, campaigns, brands and visual identity.
-        </p>
-      </section>
 
-      <section className="service-content">
-        <div className="service-line">
-          <span>02 — SERVICE</span>
-          <span>PHOTOGRAPHY</span>
-        </div>
 
-        <div className="service-grid">
-          <h2>LIGHT.<br />DETAIL.<br />IDENTITY.</h2>
-
-          <div>
-            <p>
-              Photography built around composition, lighting and detail. Every frame is
-              created to communicate the character of the product, person or brand.
-            </p>
-
-            <div className="service-meta">
-              <div><span>PRODUCT</span><strong>Product Photography</strong></div>
-              <div><span>CAMPAIGN</span><strong>Campaign Photography</strong></div>
-              <div><span>PORTRAIT</span><strong>Portrait & Lifestyle</strong></div>
-              <div><span>IDENTITY</span><strong>Visual Identity</strong></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="service-bottom">
-        <small>NURANICO / CREATIVE STUDIO</small>
-        <h2>SEE THE<br />DETAIL.</h2>
-        <Link href="/services">BACK TO SERVICES ↗</Link>
-      </section>
-
-      <style jsx>{`
+      <ServiceProjectShowcase
+        destination="photography"
+        eyebrow={text(
+          'projects_eyebrow',
+          'SELECTED PHOTOGRAPHY',
+          'عکاسی منتخب'
+        )}
+        title={text(
+          'projects_title',
+          'Photography projects.',
+          'پروژه‌های عکاسی.'
+        )}
+      />
+<style jsx>{`
         .service-page {
           min-height: 100vh;
           background: #151515;
@@ -194,9 +175,111 @@ export default function PhotographyPage() {
           }
 
           .service-bottom {
-            padding: 80px 20px;
+            min-height: auto;
+            padding: 72px 20px;
+          }
+
+          /* MOBILE TYPOGRAPHY */
+          .service-hero h1 {
+            max-width: 340px;
+            font-size: clamp(34px, 9.5vw, 40px);
+            line-height: .94;
+            letter-spacing: -.045em;
+          }
+
+          .service-grid h2 {
+            max-width: 340px;
+            font-size: clamp(27px, 7.5vw, 33px);
+            line-height: .98;
+            letter-spacing: -.04em;
+          }
+
+          .service-grid p {
+            font-size: 12px;
+            line-height: 1.8;
+            margin-bottom: 45px;
+          }
+
+          .service-bottom h2 {
+            max-width: 340px;
+            margin: 65px 0;
+            font-size: clamp(31px, 8.5vw, 38px);
+            line-height: .9;
+            letter-spacing: -.045em;
+          }
+
+          .service-bottom small {
+            font-size: 7px;
+            letter-spacing: .16em;
           }
         }
+
+
+        /* SERVICE TOP SPACING OPTIMIZATION */
+        .service-hero {
+          min-height: auto !important;
+          padding: 125px 6vw 72px !important;
+        }
+
+        .service-hero > span {
+          margin-bottom: 22px !important;
+        }
+
+        .service-hero h1 {
+          margin-bottom: 28px !important;
+        }
+
+        .service-hero p {
+          margin-top: 0 !important;
+          max-width: 520px !important;
+          line-height: 1.7 !important;
+        }
+
+        .service-content {
+          padding: 72px 6vw 95px !important;
+        }
+
+        .service-line {
+          margin-bottom: 52px !important;
+        }
+
+        .service-grid {
+          gap: 7vw !important;
+        }
+
+        @media (max-width: 700px) {
+          .service-hero {
+            min-height: auto !important;
+            padding: 92px 20px 52px !important;
+          }
+
+          .service-hero > span {
+            margin-bottom: 16px !important;
+          }
+
+          .service-hero h1 {
+            margin-bottom: 20px !important;
+          }
+
+          .service-hero p {
+            margin-top: 0 !important;
+            max-width: 100% !important;
+            line-height: 1.65 !important;
+          }
+
+          .service-content {
+            padding: 50px 20px 62px !important;
+          }
+
+          .service-line {
+            margin-bottom: 34px !important;
+          }
+
+          .service-grid {
+            gap: 32px !important;
+          }
+        }
+
       `}</style>
     </main>
   );

@@ -195,3 +195,3232 @@ button,input,textarea,select { font:inherit; }
     border-bottom:0;
   }
 }
+
+/* GLOBAL SMALL CTA / LINK POLISH */
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.small-link,
+.view-all,
+.view-all-link,
+.explore-link,
+.back-link,
+.service-link,
+.inner-bts-link,
+.project-library-viewall,
+.film-bts-head > a,
+.service-bottom > a,
+.project-end > a,
+.inner-footer > a {
+  font-size: 8px !important;
+  line-height: 1.1 !important;
+  font-weight: 500 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+  text-decoration: none !important;
+  color: inherit;
+}
+
+@media (max-width: 700px) {
+  .small-link,
+  .view-all,
+  .view-all-link,
+  .explore-link,
+  .back-link,
+  .service-link,
+  .inner-bts-link,
+  .project-library-viewall,
+  .film-bts-head > a,
+  .service-bottom > a,
+  .project-end > a,
+  .inner-footer > a {
+    font-size: 6px !important;
+    letter-spacing: .12em !important;
+  }
+}
+
+/* =========================================================
+   GLOBAL PROJECT COVER POLISH
+   Rounded covers + soft bottom cinematic gradient
+   ========================================================= */
+
+/* HOME PROJECT COVERS */
+.project-media,
+
+/* SERVICES PROJECT COVERS */
+.library-poster,
+
+/* FILM BTS COVERS */
+.film-bts-media,
+
+/* DEDICATED BTS PAGE */
+.bts-card-media,
+
+/* WORK PAGE PROJECT COVERS */
+.inner-project > div:first-child {
+  position: relative !important;
+  overflow: hidden !important;
+  border-radius: 12px !important;
+  isolation: isolate;
+}
+
+/* keep images clipped perfectly */
+.project-media img,
+.library-poster img,
+.film-bts-media img,
+.bts-card-media img,
+.inner-project > div:first-child img {
+  border-radius: inherit !important;
+}
+
+/* cinematic bottom gradient */
+.project-media::after,
+.library-poster::after,
+.film-bts-media::after,
+.bts-card-media::after,
+.inner-project > div:first-child::after {
+  content: '' !important;
+  position: absolute !important;
+  z-index: 2 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  height: 46% !important;
+  pointer-events: none !important;
+
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, .42) 0%,
+    rgba(0, 0, 0, .24) 30%,
+    rgba(0, 0, 0, .09) 65%,
+    rgba(0, 0, 0, 0) 100%
+  ) !important;
+}
+
+/* make overlays/content stay above gradient */
+.project-overlay,
+.film-bts-play {
+  z-index: 3 !important;
+}
+
+@media (max-width: 700px) {
+  .project-media,
+  .library-poster,
+  .film-bts-media,
+  .bts-card-media,
+  .inner-project > div:first-child {
+    border-radius: 10px !important;
+  }
+
+  .project-media::after,
+  .library-poster::after,
+  .film-bts-media::after,
+  .bts-card-media::after,
+  .inner-project > div:first-child::after {
+    height: 50% !important;
+
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, .46) 0%,
+      rgba(0, 0, 0, .25) 32%,
+      rgba(0, 0, 0, .08) 67%,
+      rgba(0, 0, 0, 0) 100%
+    ) !important;
+  }
+}
+
+/* ABOUT COVER RADIUS */
+.about-image,
+.about-image img {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+@media (max-width: 700px) {
+  .about-image,
+  .about-image img {
+    border-radius: 10px !important;
+  }
+}
+
+/* HOME + ABOUT RADIUS REVERT */
+
+/* Home project covers: square corners, keep gradient */
+.project-media {
+  border-radius: 0 !important;
+}
+
+.project-media img {
+  border-radius: 0 !important;
+}
+
+/* About image: square corners */
+.about-image,
+.about-image img {
+  border-radius: 0 !important;
+  overflow: hidden !important;
+}
+
+@media (max-width: 700px) {
+  .project-media,
+  .project-media img,
+  .about-image,
+  .about-image img {
+    border-radius: 0 !important;
+  }
+}
+
+
+/* =========================================================
+   NURANICO — UNIFIED HEADER FINAL
+   One header geometry for Home + all inner pages
+   ========================================================= */
+
+/* protect header from page-level typography rules */
+.global-header,
+.global-header *,
+.content-page .global-header,
+.content-page .global-header * {
+  box-sizing: border-box;
+}
+
+.global-header {
+  position: fixed !important;
+  inset: 0 0 auto 0 !important;
+  z-index: 9999 !important;
+
+  height: 78px !important;
+  min-height: 78px !important;
+
+  padding: 0 5vw !important;
+
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr !important;
+  align-items: center !important;
+
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(15,15,14,.78),
+      rgba(15,15,14,.30) 55%,
+      transparent
+    ) !important;
+
+  color: #f4f2ed !important;
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+
+/* LOGO */
+
+.global-header .global-logo,
+.content-page .global-header .global-logo {
+  position: relative;
+  z-index: 3;
+
+  justify-self: start;
+
+  display: flex !important;
+  align-items: flex-start !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  color: #f4f2ed !important;
+  text-decoration: none !important;
+
+  font-family: var(--font-heading), Arial, sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  letter-spacing: -.045em !important;
+
+  white-space: nowrap;
+}
+
+.global-header .global-logo span {
+  margin-left: 2px !important;
+
+  font-family: Arial, sans-serif !important;
+  font-size: 8px !important;
+  line-height: 1 !important;
+}
+
+.global-header .global-logo img {
+  display: block;
+
+  width: auto;
+  height: auto;
+
+  max-width: 170px !important;
+  max-height: 36px !important;
+
+  object-fit: contain;
+}
+
+
+/* DESKTOP NAV */
+
+.global-header .global-nav {
+  display: flex !important;
+  align-items: center;
+  gap: 27px;
+}
+
+.global-header .global-nav a,
+.content-page .global-header .global-nav a {
+  padding: 0 !important;
+
+  color: rgba(244,242,237,.72) !important;
+  text-decoration: none !important;
+
+  font-family: var(--font-body), Arial, sans-serif !important;
+  font-size: 9px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  letter-spacing: .14em !important;
+
+  text-transform: uppercase;
+}
+
+
+/* ACTIONS */
+
+.global-header .global-actions {
+  position: relative;
+  z-index: 3;
+
+  justify-self: end;
+
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+}
+
+
+/* LANGUAGE */
+
+.global-header .global-lang,
+.content-page .global-header .global-lang {
+  width: 39px !important;
+  height: 39px !important;
+
+  min-width: 39px !important;
+  min-height: 39px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  display: grid !important;
+  place-items: center;
+
+  border: 1px solid rgba(255,255,255,.20) !important;
+  border-radius: 50% !important;
+
+  background: rgba(18,18,17,.12) !important;
+
+  color: #f4f2ed !important;
+
+  font-family: var(--font-body), Arial, sans-serif !important;
+  font-size: 9px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  letter-spacing: .05em !important;
+
+  cursor: pointer;
+}
+
+
+/* CTA */
+
+.global-header .global-cta,
+.content-page .global-header .global-cta {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+
+  gap: 14px;
+
+  padding: 12px 17px !important;
+
+  border-radius: 999px;
+
+  background: #e9e6df !important;
+  color: #151514 !important;
+
+  text-decoration: none !important;
+
+  font-family: var(--font-body), Arial, sans-serif !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  letter-spacing: .08em !important;
+
+  text-transform: uppercase;
+}
+
+
+/* MENU BUTTON DESKTOP OFF */
+
+.global-header .global-menu {
+  display: none !important;
+}
+
+
+/* MOBILE PANEL DESKTOP OFF */
+
+.global-header .global-mobile {
+  display: none !important;
+}
+
+
+
+/* =========================================================
+   TABLET / MOBILE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  .global-header {
+    height: 68px !important;
+    min-height: 68px !important;
+
+    padding: 0 20px !important;
+
+    grid-template-columns: 1fr auto !important;
+  }
+
+
+  /* logo */
+
+  .global-header .global-logo,
+  .content-page .global-header .global-logo {
+    font-size: 16px !important;
+  }
+
+  .global-header .global-logo span {
+    font-size: 7px !important;
+  }
+
+  .global-header .global-logo img {
+    max-width: 135px !important;
+    max-height: 28px !important;
+  }
+
+
+  /* desktop elements */
+
+  .global-header .global-nav,
+  .global-header .global-cta {
+    display: none !important;
+  }
+
+
+  /* actions */
+
+  .global-header .global-actions {
+    gap: 8px !important;
+  }
+
+
+  /* language */
+
+  .global-header .global-lang,
+  .content-page .global-header .global-lang {
+    width: 36px !important;
+    height: 36px !important;
+
+    min-width: 36px !important;
+    min-height: 36px !important;
+
+    font-size: 8px !important;
+    letter-spacing: .04em !important;
+
+    background: rgba(18,18,17,.25) !important;
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+
+  /* hamburger */
+
+  .global-header .global-menu,
+  .content-page .global-header .global-menu {
+    position: relative;
+
+    display: flex !important;
+
+    width: 38px !important;
+    height: 38px !important;
+
+    min-width: 38px !important;
+    min-height: 38px !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(255,255,255,.20) !important;
+    border-radius: 50% !important;
+
+    background: rgba(18,18,17,.25) !important;
+
+    cursor: pointer;
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .global-header .global-menu span {
+    position: absolute;
+
+    left: 50%;
+
+    display: block;
+
+    width: 14px !important;
+    height: 1px !important;
+
+    margin: 0 !important;
+
+    border-radius: 20px;
+
+    background: #f4f2ed !important;
+
+    transform: translateX(-50%);
+
+    transition:
+      top .28s cubic-bezier(.22,.61,.36,1),
+      transform .28s cubic-bezier(.22,.61,.36,1);
+  }
+
+  .global-header .global-menu span:first-child {
+    top: 15px;
+  }
+
+  .global-header .global-menu span:last-child {
+    top: 21px;
+  }
+
+  .global-header.open .global-menu span:first-child {
+    top: 18px;
+
+    transform:
+      translateX(-50%)
+      rotate(45deg) !important;
+  }
+
+  .global-header.open .global-menu span:last-child {
+    top: 18px;
+
+    transform:
+      translateX(-50%)
+      rotate(-45deg) !important;
+  }
+
+
+  /* =======================================================
+     COMPACT MENU PANEL
+     ======================================================= */
+
+  .global-header .global-mobile {
+    position: absolute !important;
+
+    top: 58px !important;
+    right: 20px !important;
+    left: auto !important;
+    bottom: auto !important;
+
+    z-index: 2 !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+
+    width: min(292px, calc(100vw - 40px)) !important;
+    height: auto !important;
+
+    margin: 0 !important;
+    padding: 9px 16px !important;
+
+    border:
+      1px solid rgba(244,242,237,.10) !important;
+
+    border-radius: 14px !important;
+
+    background:
+      rgba(22,22,21,.96) !important;
+
+    box-shadow:
+      0 18px 55px rgba(0,0,0,.28);
+
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    overflow: hidden;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transform:
+      translateY(-7px)
+      scale(.985);
+
+    transform-origin: top right;
+
+    transition:
+      opacity .20s ease,
+      transform .28s cubic-bezier(.22,.61,.36,1),
+      visibility .20s ease;
+  }
+
+  .global-header.open .global-mobile {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+
+
+  /* MENU LINKS */
+
+  .global-header .global-mobile a,
+  .content-page .global-header .global-mobile a {
+    position: relative;
+
+    display: grid !important;
+
+    grid-template-columns:
+      25px
+      minmax(0,1fr)
+      25px;
+
+    align-items: center;
+
+    width: 100% !important;
+    min-height: 49px !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    border: 0 !important;
+    border-bottom:
+      1px solid rgba(244,242,237,.075) !important;
+
+    color: #f1efe9 !important;
+
+    text-decoration: none !important;
+
+    font-family:
+      var(--font-heading),
+      Arial,
+      sans-serif !important;
+
+    font-size: 15px !important;
+    font-weight: 500 !important;
+
+    line-height: 1 !important;
+    letter-spacing: -.015em !important;
+
+    text-transform: none !important;
+
+    opacity: 1 !important;
+
+    transform: none !important;
+  }
+
+  .global-header .global-mobile a:last-child {
+    border-bottom: 0 !important;
+  }
+
+
+  /* NUMBERS */
+
+  .global-header .global-mobile a::before {
+    color: rgba(241,239,233,.36);
+
+    font-family:
+      var(--font-body),
+      Arial,
+      sans-serif;
+
+    font-size: 7px !important;
+    font-weight: 500;
+
+    line-height: 1;
+
+    letter-spacing: .08em;
+  }
+
+  .global-header .global-mobile a:nth-child(1)::before {
+    content: "01";
+  }
+
+  .global-header .global-mobile a:nth-child(2)::before {
+    content: "02";
+  }
+
+  .global-header .global-mobile a:nth-child(3)::before {
+    content: "03";
+  }
+
+  .global-header .global-mobile a:nth-child(4)::before {
+    content: "04";
+  }
+
+  .global-header .global-mobile a:nth-child(5)::before {
+    content: "05";
+  }
+
+
+  /* ARROWS */
+
+  .global-header .global-mobile a::after {
+    content: "↗";
+
+    justify-self: end;
+
+    display: grid;
+    place-items: center;
+
+    width: 22px;
+    height: 22px;
+
+    border:
+      1px solid rgba(241,239,233,.14);
+
+    border-radius: 50%;
+
+    color: rgba(241,239,233,.62);
+
+    font-family: Arial, sans-serif;
+
+    font-size: 8px;
+    line-height: 1;
+  }
+
+
+  /* hover */
+
+  @media (hover:hover) {
+
+    .global-header .global-mobile a {
+      transition:
+        color .2s ease,
+        padding .2s ease;
+    }
+
+    .global-header .global-mobile a:hover {
+      color: #fff !important;
+    }
+
+  }
+
+
+  /* RTL */
+
+  html[dir="rtl"] .global-header .global-mobile {
+    right: auto !important;
+    left: 20px !important;
+
+    transform-origin: top left;
+  }
+
+  html[dir="rtl"]
+  .global-header
+  .global-mobile a {
+    letter-spacing: 0 !important;
+  }
+
+  html[dir="rtl"]
+  .global-header
+  .global-mobile a::after {
+    transform: scaleX(-1);
+  }
+
+}
+
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  .global-header {
+    height: 64px !important;
+    min-height: 64px !important;
+
+    padding: 0 16px !important;
+  }
+
+  .global-header .global-logo,
+  .content-page .global-header .global-logo {
+    font-size: 15px !important;
+  }
+
+  .global-header .global-logo img {
+    max-width: 128px !important;
+    max-height: 27px !important;
+  }
+
+  .global-header .global-lang,
+  .content-page .global-header .global-lang {
+    width: 34px !important;
+    height: 34px !important;
+
+    min-width: 34px !important;
+    min-height: 34px !important;
+
+    font-size: 8px !important;
+  }
+
+  .global-header .global-menu,
+  .content-page .global-header .global-menu {
+    width: 36px !important;
+    height: 36px !important;
+
+    min-width: 36px !important;
+    min-height: 36px !important;
+  }
+
+  .global-header .global-menu span:first-child {
+    top: 14px;
+  }
+
+  .global-header .global-menu span:last-child {
+    top: 20px;
+  }
+
+  .global-header.open .global-menu span:first-child,
+  .global-header.open .global-menu span:last-child {
+    top: 17px;
+  }
+
+  .global-header .global-mobile {
+    top: 55px !important;
+
+    right: 16px !important;
+
+    width:
+      min(280px, calc(100vw - 32px)) !important;
+
+    padding: 8px 15px !important;
+
+    border-radius: 13px !important;
+  }
+
+  html[dir="rtl"] .global-header .global-mobile {
+    right: auto !important;
+    left: 16px !important;
+  }
+
+  .global-header .global-mobile a,
+  .content-page .global-header .global-mobile a {
+    min-height: 47px !important;
+
+    grid-template-columns:
+      24px
+      minmax(0,1fr)
+      24px;
+
+    font-size: 15px !important;
+  }
+
+}
+
+
+/* Prevent inner-page generic typography from touching header */
+@media (max-width: 700px) {
+
+  .content-page .global-header button,
+  .content-page .global-header a {
+    line-height: 1 !important;
+  }
+
+  .content-page .global-header .global-lang {
+    font-size: 8px !important;
+    letter-spacing: .04em !important;
+  }
+
+  .content-page .global-header .global-mobile a {
+    font-size: 15px !important;
+    letter-spacing: -.015em !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   NURANICO — SITEHEADER FINAL GLOBAL PROTECTION
+   Single shared header for Home + all inner pages
+   ========================================================= */
+
+.global-header a,
+.global-header button {
+  text-decoration: none;
+  font-style: normal;
+}
+
+@media (max-width: 700px) {
+
+  .global-header {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 10000;
+
+    width: 100%;
+    height: 64px;
+    min-height: 64px;
+
+    padding: 0 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    background:
+      linear-gradient(
+        180deg,
+        rgba(18,18,17,.76) 0%,
+        rgba(18,18,17,.34) 60%,
+        rgba(18,18,17,0) 100%
+      );
+
+    backdrop-filter: blur(9px);
+    -webkit-backdrop-filter: blur(9px);
+  }
+
+  .global-header.open {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .global-logo {
+    position: relative;
+    z-index: 10003;
+
+    display: flex;
+    align-items: flex-start;
+
+    color: #f1efe9;
+
+    font-family: var(--font-heading), Arial, sans-serif;
+    font-size: 14px !important;
+    font-weight: 600;
+    line-height: 1 !important;
+    letter-spacing: -.04em !important;
+  }
+
+  .global-logo span {
+    margin-left: 2px;
+    font-size: 6px !important;
+  }
+
+  .global-logo img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 125px;
+    max-height: 26px;
+    object-fit: contain;
+  }
+
+  .global-nav,
+  .global-cta {
+    display: none !important;
+  }
+
+  .global-actions {
+    position: relative;
+    z-index: 10003;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .global-lang {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+
+    padding: 0 !important;
+
+    display: grid;
+    place-items: center;
+
+    border: 1px solid rgba(241,239,233,.14) !important;
+    border-radius: 50% !important;
+
+    background: rgba(23,23,22,.22) !important;
+    color: #f1efe9 !important;
+
+    font-family: var(--font-body), Arial, sans-serif !important;
+    font-size: 7px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    letter-spacing: .04em !important;
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .global-menu {
+    position: relative;
+
+    display: flex !important;
+
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+
+    padding: 0 !important;
+
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(241,239,233,.14) !important;
+    border-radius: 50% !important;
+
+    background: rgba(23,23,22,.22) !important;
+
+    overflow: hidden;
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .global-menu span {
+    position: absolute;
+
+    left: 50%;
+
+    display: block;
+
+    width: 12px !important;
+    height: 1px !important;
+
+    margin: 0 !important;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: #f1efe9 !important;
+
+    transform: translateX(-50%);
+    transform-origin: center;
+
+    transition:
+      top .32s cubic-bezier(.22,.61,.36,1),
+      transform .32s cubic-bezier(.22,.61,.36,1);
+  }
+
+  .global-menu span:first-child {
+    top: 13px;
+  }
+
+  .global-menu span:last-child {
+    top: 19px;
+  }
+
+  .global-header.open .global-menu span:first-child {
+    top: 16px;
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  .global-header.open .global-menu span:last-child {
+    top: 16px;
+    transform: translateX(-50%) rotate(-45deg);
+  }
+
+  /* FULL SCREEN MENU */
+
+  .global-mobile {
+    position: fixed !important;
+
+    inset: 0 !important;
+
+    z-index: 10001;
+
+    width: 100vw !important;
+    height: 100svh !important;
+
+    padding:
+      88px
+      22px
+      max(28px, env(safe-area-inset-bottom)) !important;
+
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+
+    background:
+      radial-gradient(
+        circle at 82% 12%,
+        rgba(255,255,255,.035),
+        transparent 31%
+      ),
+      #171716 !important;
+
+    overflow-y: auto;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transform: translateY(-8px);
+
+    transition:
+      opacity .28s ease,
+      transform .4s cubic-bezier(.22,.61,.36,1),
+      visibility .28s ease;
+  }
+
+  .global-header.open .global-mobile {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+
+    transform: translateY(0);
+  }
+
+  .global-mobile a {
+    position: relative;
+
+    display: grid !important;
+
+    grid-template-columns:
+      28px
+      minmax(0, 1fr)
+      28px;
+
+    align-items: center;
+
+    width: 100%;
+
+    min-height: 62px;
+
+    padding: 14px 0 !important;
+
+    border-bottom: 1px solid rgba(241,239,233,.08);
+
+    color: #f1efe9 !important;
+
+    font-family: var(--font-heading), Arial, sans-serif !important;
+
+    font-size: clamp(24px, 7vw, 29px) !important;
+    font-weight: 400 !important;
+
+    line-height: 1 !important;
+    letter-spacing: -.035em !important;
+
+    text-decoration: none !important;
+
+    opacity: 0;
+
+    transform: translateY(12px);
+
+    transition:
+      opacity .38s ease,
+      transform .42s cubic-bezier(.22,.61,.36,1);
+  }
+
+  .global-mobile a::before {
+    color: rgba(241,239,233,.34);
+
+    font-family: var(--font-body), Arial, sans-serif;
+
+    font-size: 7px !important;
+    font-weight: 400;
+
+    line-height: 1;
+    letter-spacing: .12em;
+  }
+
+  .global-mobile a:nth-child(1)::before { content: "01"; }
+  .global-mobile a:nth-child(2)::before { content: "02"; }
+  .global-mobile a:nth-child(3)::before { content: "03"; }
+  .global-mobile a:nth-child(4)::before { content: "04"; }
+  .global-mobile a:nth-child(5)::before { content: "05"; }
+
+  .global-mobile a::after {
+    content: "↗";
+
+    justify-self: end;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 26px;
+    height: 26px;
+
+    border: 1px solid rgba(241,239,233,.14);
+    border-radius: 50%;
+
+    color: rgba(241,239,233,.62);
+
+    font-family: Arial, sans-serif;
+
+    font-size: 9px !important;
+    line-height: 1;
+  }
+
+  .global-header.open .global-mobile a {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .global-header.open .global-mobile a:nth-child(1) {
+    transition-delay: .05s;
+  }
+
+  .global-header.open .global-mobile a:nth-child(2) {
+    transition-delay: .09s;
+  }
+
+  .global-header.open .global-mobile a:nth-child(3) {
+    transition-delay: .13s;
+  }
+
+  .global-header.open .global-mobile a:nth-child(4) {
+    transition-delay: .17s;
+  }
+
+  .global-header.open .global-mobile a:nth-child(5) {
+    transition-delay: .21s;
+  }
+
+  html[dir="rtl"] .global-mobile a {
+    letter-spacing: 0 !important;
+  }
+
+  html[dir="rtl"] .global-mobile a::after {
+    transform: scaleX(-1);
+  }
+}
+
+/* FILM PAGE — mobile header clearance */
+@media (max-width: 700px) {
+  .service-page > .project-library-film:first-of-type {
+    padding-top: 105px !important;
+  }
+}
+
+/* CONTENT + PHOTOGRAPHY — mobile header clearance */
+@media (max-width: 700px) {
+  .service-page > .project-library-content:first-of-type,
+  .service-page > .project-library-photography:first-of-type {
+    padding-top: 105px !important;
+  }
+}
+
+/* BTS PAGE — MOBILE LAYOUT FIX */
+@media (max-width: 700px) {
+
+  .bts-page .bts-hero {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .bts-page-legacy-disabled .bts-columns {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 48px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .bts-page-legacy-disabled .bts-column {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .bts-page-legacy-disabled .bts-column-list {
+    width: 100% !important;
+  }
+
+  .bts-page-legacy-disabled .bts-card {
+    display: block !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .bts-page-legacy-disabled .bts-media {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 4 / 3 !important;
+    overflow: hidden !important;
+  }
+
+  .bts-page-legacy-disabled .bts-media img,
+  .bts-page-legacy-disabled .bts-media video {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  .bts-page-legacy-disabled .bts-column-head {
+    width: 100% !important;
+  }
+
+  .bts-page .bts-empty {
+    min-height: 90px !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+}
+
+
+/* =========================================================
+   NURANICO BTS — FINAL GLOBAL RAIL FIX
+   ========================================================= */
+
+.nur-bts-page .nur-bts-rail {
+  --nur-bts-gap: 10px;
+
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+
+  width: 100% !important;
+  min-width: 0 !important;
+
+  gap: var(--nur-bts-gap) !important;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch !important;
+
+  scroll-snap-type: x proximity !important;
+}
+
+.nur-bts-page .nur-bts-rail::-webkit-scrollbar {
+  display: none !important;
+}
+
+
+/* ---------- DESKTOP ---------- */
+
+.nur-bts-page .nur-bts-rail > .nur-bts-card {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+
+  box-sizing: border-box !important;
+  display: block !important;
+
+  flex-grow: 0 !important;
+  flex-shrink: 0 !important;
+  flex-basis: calc((100% - 30px) / 4) !important;
+
+  width: calc((100% - 30px) / 4) !important;
+  min-width: calc((100% - 30px) / 4) !important;
+  max-width: calc((100% - 30px) / 4) !important;
+
+  height: auto !important;
+  min-height: 0 !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  background: transparent !important;
+  box-shadow: none !important;
+
+  overflow: visible !important;
+
+  scroll-snap-align: start !important;
+}
+
+
+.nur-bts-page .nur-bts-card > .nur-bts-media {
+  box-sizing: border-box !important;
+
+  position: relative !important;
+  display: block !important;
+
+  width: 100% !important;
+  height: auto !important;
+
+  aspect-ratio: 4 / 5 !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  overflow: hidden !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  background: #222 !important;
+}
+
+
+.nur-bts-page .nur-bts-media > img,
+.nur-bts-page .nur-bts-media > video {
+  position: absolute !important;
+
+  inset: 0 !important;
+
+  display: block !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  max-width: none !important;
+  max-height: none !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  object-fit: cover !important;
+  object-position: center !important;
+
+  border: 0 !important;
+}
+
+
+/* ---------- TABLET ---------- */
+
+@media (min-width: 701px) and (max-width: 1000px) {
+
+  .nur-bts-page .nur-bts-rail > .nur-bts-card {
+    flex-basis: calc((100% - 20px) / 3) !important;
+
+    width: calc((100% - 20px) / 3) !important;
+    min-width: calc((100% - 20px) / 3) !important;
+    max-width: calc((100% - 20px) / 3) !important;
+  }
+
+}
+
+
+/* ---------- MOBILE ---------- */
+
+@media (max-width: 700px) {
+
+  .nur-bts-page .nur-bts-rail {
+    --nur-bts-gap: 5px;
+
+    box-sizing: border-box !important;
+
+    width: 100% !important;
+
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    padding-bottom: 5px !important;
+
+    gap: 5px !important;
+
+    scroll-padding-left: 20px !important;
+  }
+
+
+  .nur-bts-page .nur-bts-rail > .nur-bts-card {
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+
+    /* roughly 3.5 items visible */
+    flex-basis: calc((100vw - 55px) / 3.5) !important;
+
+    width: calc((100vw - 55px) / 3.5) !important;
+    min-width: calc((100vw - 55px) / 3.5) !important;
+    max-width: calc((100vw - 55px) / 3.5) !important;
+
+    height: auto !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    background: transparent !important;
+  }
+
+
+  .nur-bts-page .nur-bts-card > .nur-bts-media {
+    width: 100% !important;
+    height: auto !important;
+
+    aspect-ratio: 4 / 5 !important;
+  }
+
+}
+
+
+/* =========================================================
+   BTS ARROWS — FORCE VISIBLE FINAL
+   ========================================================= */
+
+.bts-page .bts-column {
+  position: relative !important;
+}
+
+/* arrows container */
+.bts-page .bts-arrows {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+
+  position: absolute !important;
+  z-index: 999 !important;
+
+  right: 5vw !important;
+  top: 7px !important;
+
+  align-items: center !important;
+  gap: 6px !important;
+
+  pointer-events: auto !important;
+}
+
+/* actual buttons */
+.bts-page .bts-arrow {
+  all: unset !important;
+
+  box-sizing: border-box !important;
+
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+
+  width: 32px !important;
+  height: 32px !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  border: 1px solid rgba(241,239,233,.42) !important;
+  border-radius: 999px !important;
+
+  background: #171716 !important;
+  color: #f1efe9 !important;
+
+  font-family: Arial, sans-serif !important;
+  font-size: 17px !important;
+  font-weight: 300 !important;
+  line-height: 1 !important;
+
+  cursor: pointer !important;
+  pointer-events: auto !important;
+
+  transition:
+    background .2s ease,
+    border-color .2s ease,
+    transform .2s ease !important;
+}
+
+.bts-page .bts-arrow:hover {
+  background: #f1efe9 !important;
+  color: #171716 !important;
+  border-color: #f1efe9 !important;
+}
+
+.bts-page .bts-arrow:active {
+  transform: scale(.92) !important;
+}
+
+
+/* MOBILE */
+@media (max-width: 700px) {
+
+  .bts-page .bts-arrows {
+    right: 20px !important;
+    top: 5px !important;
+    gap: 4px !important;
+  }
+
+  .bts-page .bts-arrow {
+    width: 24px !important;
+    height: 24px !important;
+
+    font-size: 13px !important;
+  }
+}
+
+
+/* ==================================================
+   BTS ARROWS — MINIMAL / OUTSIDE IMAGE / FINAL
+   ================================================== */
+
+.nur-bts-page .nur-bts-rail-wrap {
+  position: relative !important;
+}
+
+/* only the arrow glyph — no circle / no background */
+.nur-bts-page .nur-bts-gallery-arrow {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+
+  position: absolute !important;
+  z-index: 50 !important;
+  top: 50% !important;
+
+  width: 22px !important;
+  height: 34px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  background: transparent !important;
+  box-shadow: none !important;
+
+  color: #f1efe9 !important;
+
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+
+  font-family: Arial, sans-serif !important;
+  font-size: 25px !important;
+  font-weight: 300 !important;
+  line-height: 1 !important;
+
+  cursor: pointer !important;
+
+  transform: translateY(-50%) !important;
+
+  opacity: .88 !important;
+
+  transition:
+    opacity .2s ease,
+    transform .2s ease !important;
+}
+
+/* move them OUTSIDE the image area */
+.nur-bts-page .nur-bts-gallery-arrow-left {
+  left: -30px !important;
+}
+
+.nur-bts-page .nur-bts-gallery-arrow-right {
+  right: -30px !important;
+}
+
+.nur-bts-page .nur-bts-gallery-arrow:hover {
+  background: transparent !important;
+  color: #f1efe9 !important;
+  border: 0 !important;
+
+  opacity: 1 !important;
+
+  transform:
+    translateY(-50%)
+    scale(1.12) !important;
+}
+
+.nur-bts-page .nur-bts-gallery-arrow:active {
+  transform:
+    translateY(-50%)
+    scale(.92) !important;
+}
+
+
+/* MOBILE */
+@media (max-width: 700px) {
+
+  .nur-bts-page .nur-bts-gallery-arrow {
+    width: 16px !important;
+    height: 28px !important;
+
+    font-size: 21px !important;
+
+    opacity: .9 !important;
+  }
+
+  /*
+    Mobile rail already has 20px side padding.
+    Put arrows inside that empty padding,
+    NOT over the photos.
+  */
+  .nur-bts-page .nur-bts-gallery-arrow-left {
+    left: 1px !important;
+  }
+
+  .nur-bts-page .nur-bts-gallery-arrow-right {
+    right: 1px !important;
+  }
+}
+
+/* =========================================================
+   NURANICO — CLIENTS / FINAL
+   2 rows / 3.5 columns / horizontal scroll
+   ========================================================= */
+
+.brands {
+  background: var(--brands-bg) !important;
+  color: var(--brands-text) !important;
+  overflow: hidden;
+}
+
+/* Full-bleed carousel */
+.brands .clients-carousel-shell {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: var(--brands-bg);
+}
+
+/* 2 rows — extra clients continue horizontally */
+.brands .clients-carousel {
+  --client-gap: 1px;
+  --client-h: 130px;
+  --client-w: calc((100% - 2.5px) / 3.5);
+
+  display: grid;
+  grid-template-rows: repeat(2, var(--client-h));
+  grid-auto-flow: column;
+  grid-auto-columns: var(--client-w);
+
+  gap: var(--client-gap);
+
+  width: 100%;
+  margin: 0;
+  padding: 0;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+
+  background: transparent;
+}
+
+.brands .clients-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+/* Individual logo cell */
+.brands .clients-carousel-card {
+  box-sizing: border-box;
+
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin: 0;
+  padding: 18px;
+
+  background: transparent;
+
+  border: 0;
+  border-right: 1px solid color-mix(
+    in srgb,
+    var(--brands-text) 14%,
+    transparent
+  );
+  border-bottom: 1px solid color-mix(
+    in srgb,
+    var(--brands-text) 14%,
+    transparent
+  );
+
+  overflow: hidden;
+  scroll-snap-align: start;
+}
+
+/* Logo */
+.brands .clients-carousel-card img {
+  display: block;
+
+  width: 58%;
+  height: 58%;
+
+  max-width: 150px;
+  max-height: 65px;
+
+  object-fit: contain;
+
+  opacity: .82;
+
+  transition:
+    transform .3s ease,
+    opacity .3s ease;
+}
+
+.brands .clients-carousel-card:hover img {
+  transform: scale(1.05);
+  opacity: 1;
+}
+
+/* Client name if there is no logo */
+.brands .clients-carousel-card > span {
+  color: var(--brands-text);
+  font-size: 9px;
+  letter-spacing: .12em;
+}
+
+/* Temporary preview cells */
+.brands .clients-preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  color: var(--brands-text);
+  opacity: .22;
+}
+
+.brands .clients-preview-placeholder strong {
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.brands .clients-preview-placeholder span {
+  font-size: 6px;
+  letter-spacing: .18em;
+}
+
+
+/* =========================
+   FEATHER
+   ========================= */
+
+.brands .clients-carousel-shell::before,
+.brands .clients-carousel-shell::after {
+  content: "";
+
+  position: absolute;
+  top: 0;
+  bottom: 0;
+
+  z-index: 4;
+
+  width: 72px;
+
+  pointer-events: none;
+}
+
+.brands .clients-carousel-shell::before {
+  left: 0;
+
+  background: linear-gradient(
+    90deg,
+    var(--brands-bg) 0%,
+    color-mix(in srgb, var(--brands-bg) 82%, transparent) 35%,
+    transparent 100%
+  );
+}
+
+.brands .clients-carousel-shell::after {
+  right: 0;
+
+  background: linear-gradient(
+    270deg,
+    var(--brands-bg) 0%,
+    color-mix(in srgb, var(--brands-bg) 82%, transparent) 35%,
+    transparent 100%
+  );
+}
+
+
+/* =========================
+   ARROWS
+   ========================= */
+
+.brands .clients-edge-arrow {
+  appearance: none;
+  -webkit-appearance: none;
+
+  position: absolute;
+  top: 50%;
+  z-index: 10;
+
+  transform: translateY(-50%);
+
+  width: 36px;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 0;
+
+  background: transparent;
+
+  color: var(--brands-text);
+
+  cursor: pointer;
+
+  opacity: .75;
+
+  transition:
+    opacity .2s ease,
+    transform .2s ease;
+}
+
+.brands .clients-edge-arrow span {
+  display: block;
+
+  font-family: Arial, sans-serif;
+  font-size: 25px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.brands .clients-edge-arrow:hover {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.brands .clients-edge-arrow-left {
+  left: 8px;
+}
+
+.brands .clients-edge-arrow-right {
+  right: 8px;
+}
+
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 700px) {
+
+  .brands .clients-carousel {
+    --client-h: 86px;
+
+    /* Still exactly 3.5 visible columns */
+    --client-w: calc((100% - 2.5px) / 3.5);
+  }
+
+  .brands .clients-carousel-card {
+    padding: 10px;
+  }
+
+  .brands .clients-carousel-card img {
+    width: 68%;
+    height: 68%;
+    max-height: 48px;
+  }
+
+  .brands .clients-carousel-shell::before,
+  .brands .clients-carousel-shell::after {
+    width: 34px;
+  }
+
+  .brands .clients-edge-arrow {
+    width: 25px;
+    height: 38px;
+  }
+
+  .brands .clients-edge-arrow span {
+    font-size: 19px;
+  }
+
+  .brands .clients-edge-arrow-left {
+    left: 1px;
+  }
+
+  .brands .clients-edge-arrow-right {
+    right: 1px;
+  }
+
+  .brands .clients-preview-placeholder strong {
+    font-size: 11px;
+  }
+
+  .brands .clients-preview-placeholder span {
+    font-size: 5px;
+  }
+}
+
+/* =========================================================
+   CLIENTS — SINGLE UNIFIED FRAME / ONE COLOR
+   ========================================================= */
+
+/* کل سکشن یک رنگ */
+.brands {
+  background: var(--brands-bg) !important;
+}
+
+/* تمام لایه‌های داخلی کاملاً شفاف */
+.brands .clients-carousel-shell,
+.brands .clients-carousel,
+.brands .clients-carousel-card,
+.brands .clients-preview-placeholder {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* حذف هر frame / box روشن دور ریل */
+.brands .clients-carousel-shell {
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+/* فقط خطوط ظریف بین خانه‌های لوگو */
+.brands .clients-carousel-card {
+  border: 0 !important;
+  border-right: 1px solid color-mix(
+    in srgb,
+    var(--brands-text) 12%,
+    transparent
+  ) !important;
+
+  border-bottom: 1px solid color-mix(
+    in srgb,
+    var(--brands-text) 12%,
+    transparent
+  ) !important;
+
+  box-shadow: none !important;
+}
+
+/* Feather از همان رنگ اصلی Clients */
+.brands .clients-carousel-shell::before {
+  background: linear-gradient(
+    90deg,
+    var(--brands-bg) 0%,
+    color-mix(in srgb, var(--brands-bg) 94%, transparent) 30%,
+    transparent 100%
+  ) !important;
+}
+
+.brands .clients-carousel-shell::after {
+  background: linear-gradient(
+    270deg,
+    var(--brands-bg) 0%,
+    color-mix(in srgb, var(--brands-bg) 94%, transparent) 30%,
+    transparent 100%
+  ) !important;
+}
+
+
+/* =========================================================
+   CLIENTS — ADMIN CONTROLLED / ONE UNIFIED BACKGROUND
+   ========================================================= */
+
+/*
+  SINGLE SOURCE OF COLOR:
+  --brands-bg = Admin Clients Background
+*/
+
+.brands {
+  background: var(--brands-bg) !important;
+}
+
+/* هیچ لایه داخلی رنگ مستقل نداشته باشد */
+.brands .section-head,
+.brands .clients-carousel-shell,
+.brands .clients-carousel,
+.brands .clients-carousel-card,
+.brands .clients-preview-placeholder {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* خود قاب Carousel هم بخشی از همان background اصلی است */
+.brands .clients-carousel-shell {
+  border: 0 !important;
+}
+
+/* خطوط فقط از رنگ متن Admin مشتق شوند */
+.brands .clients-carousel-card {
+  border: 0 !important;
+
+  border-right: 1px solid
+    color-mix(
+      in srgb,
+      var(--brands-text) 12%,
+      transparent
+    ) !important;
+
+  border-bottom: 1px solid
+    color-mix(
+      in srgb,
+      var(--brands-text) 12%,
+      transparent
+    ) !important;
+}
+
+/* Feather نیز مستقیماً از همان Admin background */
+.brands .clients-carousel-shell::before {
+  background: linear-gradient(
+    90deg,
+    var(--brands-bg) 0%,
+    color-mix(in srgb, var(--brands-bg) 96%, transparent) 24%,
+    color-mix(in srgb, var(--brands-bg) 70%, transparent) 58%,
+    transparent 100%
+  ) !important;
+}
+
+.brands .clients-carousel-shell::after {
+  background: linear-gradient(
+    270deg,
+    var(--brands-bg) 0%,
+    color-mix(in srgb, var(--brands-bg) 96%, transparent) 24%,
+    color-mix(in srgb, var(--brands-bg) 70%, transparent) 58%,
+    transparent 100%
+  ) !important;
+}
+
+/* فلش‌ها هم از رنگ متن Clients در Admin */
+.brands .clients-edge-arrow,
+.brands .clients-edge-arrow span {
+  color: var(--brands-text) !important;
+  background: transparent !important;
+}
+
+/* متن کل Clients */
+.brands,
+.brands h2 {
+  color: var(--brands-text) !important;
+}
+
+.brands .eyebrow,
+.brands .section-index {
+  color: var(--brands-muted) !important;
+}
+
+
+/* CLIENTS — REMOVE FEATHER / FULL UNIFIED ADMIN COLOR */
+
+.brands,
+.brands .section-head,
+.brands .clients-carousel-shell {
+  background: var(--brands-bg) !important;
+}
+
+/* Rail + cards have NO separate background */
+.brands .clients-carousel,
+.brands .clients-carousel-card,
+.brands .clients-preview-placeholder {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* REMOVE BOTH EDGE FEATHERS COMPLETELY */
+.brands .clients-carousel-shell::before,
+.brands .clients-carousel-shell::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+}
+
+/* Keep arrows, but no background behind them */
+.brands .clients-edge-arrow,
+.brands .clients-edge-arrow span {
+  background: transparent !important;
+  color: var(--brands-text) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* Grid lines only */
+.brands .clients-carousel-card {
+  border: 0 !important;
+
+  border-right: 1px solid
+    color-mix(in srgb, var(--brands-text) 12%, transparent) !important;
+
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--brands-text) 12%, transparent) !important;
+}
+
+
+/* =========================================================
+   CLIENTS — MASTER FIX
+   ONE ADMIN COLOR + GRID + ARROWS + FEATHER
+   ========================================================= */
+
+/* ONE COLOR FOR THE WHOLE CLIENTS SECTION */
+.brands,
+.brands .section-head,
+.brands .clients-carousel-shell,
+.brands .clients-carousel {
+  background: var(--brands-bg) !important;
+  background-color: var(--brands-bg) !important;
+  background-image: none !important;
+}
+
+/* Prevent separate blocks inside Clients */
+.brands .section-head {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* CAROUSEL FRAME */
+.brands .clients-carousel-shell {
+  position: relative !important;
+  width: 100% !important;
+  overflow: hidden !important;
+
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+
+/* =========================================================
+   TWO ROWS / 3.5 COLUMNS
+   ========================================================= */
+
+.brands .clients-carousel {
+  --client-gap: 0px;
+  --client-h: 112px;
+  --client-w: calc(100% / 3.5);
+
+  display: grid !important;
+
+  grid-template-rows:
+    repeat(2, var(--client-h)) !important;
+
+  grid-auto-flow: column !important;
+
+  grid-auto-columns:
+    var(--client-w) !important;
+
+  gap: 0 !important;
+
+  width: 100% !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+
+  scroll-behavior: smooth !important;
+  scroll-snap-type: x proximity !important;
+
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.brands .clients-carousel::-webkit-scrollbar {
+  display: none !important;
+}
+
+
+/* =========================================================
+   CELLS + SEPARATOR LINES
+   ========================================================= */
+
+.brands .clients-carousel-card {
+  box-sizing: border-box !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  margin: 0 !important;
+  padding: 14px !important;
+
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+
+  /* VERTICAL SEPARATOR */
+  border: 0 !important;
+
+  border-right:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--brands-text) 18%,
+      transparent
+    ) !important;
+
+  /* HORIZONTAL SEPARATOR */
+  border-bottom:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--brands-text) 18%,
+      transparent
+    ) !important;
+
+  box-shadow: none !important;
+
+  scroll-snap-align: start;
+}
+
+
+/* LOGOS */
+
+.brands .clients-carousel-card img {
+  display: block !important;
+
+  width: 62% !important;
+  height: 62% !important;
+
+  max-width: 150px !important;
+  max-height: 58px !important;
+
+  object-fit: contain !important;
+
+  opacity: .88;
+
+  transition:
+    opacity .25s ease,
+    transform .25s ease;
+}
+
+.brands .clients-carousel-card:hover img {
+  opacity: 1;
+  transform: scale(1.04);
+}
+
+
+/* PLACEHOLDER PREVIEW */
+
+.brands .clients-preview-placeholder {
+  background: transparent !important;
+
+  color: var(--brands-text) !important;
+
+  opacity: .28;
+}
+
+.brands .clients-preview-placeholder strong,
+.brands .clients-preview-placeholder span {
+  color: var(--brands-text) !important;
+}
+
+
+/* =========================================================
+   FEATHER — SAME ADMIN COLOR
+   ========================================================= */
+
+.brands .clients-carousel-shell::before,
+.brands .clients-carousel-shell::after {
+  content: "" !important;
+  display: block !important;
+
+  position: absolute !important;
+
+  top: 0 !important;
+  bottom: 0 !important;
+
+  width: 58px !important;
+
+  z-index: 5 !important;
+
+  pointer-events: none !important;
+}
+
+/* LEFT FEATHER */
+
+.brands .clients-carousel-shell::before {
+  left: 0 !important;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--brands-bg) 0%,
+      var(--brands-bg) 18%,
+      color-mix(
+        in srgb,
+        var(--brands-bg) 88%,
+        transparent
+      ) 48%,
+      transparent 100%
+    ) !important;
+}
+
+/* RIGHT FEATHER */
+
+.brands .clients-carousel-shell::after {
+  right: 0 !important;
+
+  background:
+    linear-gradient(
+      270deg,
+      var(--brands-bg) 0%,
+      var(--brands-bg) 18%,
+      color-mix(
+        in srgb,
+        var(--brands-bg) 88%,
+        transparent
+      ) 48%,
+      transparent 100%
+    ) !important;
+}
+
+
+/* =========================================================
+   LEFT / RIGHT ARROWS
+   ========================================================= */
+
+.brands .clients-edge-arrow {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+
+  display: flex !important;
+
+  position: absolute !important;
+
+  top: 50% !important;
+
+  width: 34px !important;
+  height: 46px !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  transform: translateY(-50%) !important;
+
+  z-index: 20 !important;
+
+  border: 0 !important;
+  outline: 0 !important;
+
+  background: transparent !important;
+
+  color: var(--brands-text) !important;
+
+  opacity: .8 !important;
+
+  cursor: pointer !important;
+
+  box-shadow: none !important;
+
+  transition:
+    opacity .2s ease,
+    transform .2s ease !important;
+}
+
+.brands .clients-edge-arrow span {
+  display: block !important;
+
+  color: var(--brands-text) !important;
+
+  font-family: Arial, sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 300 !important;
+  line-height: 1 !important;
+
+  background: transparent !important;
+
+  text-shadow: none !important;
+}
+
+.brands .clients-edge-arrow-left {
+  left: 7px !important;
+}
+
+.brands .clients-edge-arrow-right {
+  right: 7px !important;
+}
+
+.brands .clients-edge-arrow:hover {
+  opacity: 1 !important;
+
+  transform:
+    translateY(-50%)
+    scale(1.08) !important;
+}
+
+
+/* =========================================================
+   TEXT — ADMIN COLORS
+   ========================================================= */
+
+.brands,
+.brands h2 {
+  color: var(--brands-text) !important;
+}
+
+.brands .eyebrow,
+.brands .section-index {
+  color: var(--brands-muted) !important;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  .brands .clients-carousel {
+    --client-h: 82px;
+    --client-w: calc(100% / 3.5);
+  }
+
+  .brands .clients-carousel-card {
+    padding: 8px !important;
+  }
+
+  .brands .clients-carousel-card img {
+    width: 67% !important;
+    height: 67% !important;
+
+    max-height: 44px !important;
+  }
+
+  .brands .clients-carousel-shell::before,
+  .brands .clients-carousel-shell::after {
+    width: 32px !important;
+  }
+
+  .brands .clients-edge-arrow {
+    width: 24px !important;
+    height: 34px !important;
+  }
+
+  .brands .clients-edge-arrow span {
+    font-size: 18px !important;
+  }
+
+  .brands .clients-edge-arrow-left {
+    left: 1px !important;
+  }
+
+  .brands .clients-edge-arrow-right {
+    right: 1px !important;
+  }
+}
+
+
+/* =========================================================
+   CLIENTS — MASTER FIX
+   ONE ADMIN COLOR + GRID + ARROWS + FEATHER
+   ========================================================= */
+
+/* ONE COLOR FOR THE WHOLE CLIENTS SECTION */
+.brands,
+.brands .section-head,
+.brands .clients-carousel-shell,
+.brands .clients-carousel {
+  background: var(--brands-bg) !important;
+  background-color: var(--brands-bg) !important;
+  background-image: none !important;
+}
+
+/* Prevent separate blocks inside Clients */
+.brands .section-head {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* CAROUSEL FRAME */
+.brands .clients-carousel-shell {
+  position: relative !important;
+  width: 100% !important;
+  overflow: hidden !important;
+
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+
+/* =========================================================
+   TWO ROWS / 3.5 COLUMNS
+   ========================================================= */
+
+.brands .clients-carousel {
+  --client-gap: 0px;
+  --client-h: 112px;
+  --client-w: calc(100% / 3.5);
+
+  display: grid !important;
+
+  grid-template-rows:
+    repeat(2, var(--client-h)) !important;
+
+  grid-auto-flow: column !important;
+
+  grid-auto-columns:
+    var(--client-w) !important;
+
+  gap: 0 !important;
+
+  width: 100% !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+
+  scroll-behavior: smooth !important;
+  scroll-snap-type: x proximity !important;
+
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.brands .clients-carousel::-webkit-scrollbar {
+  display: none !important;
+}
+
+
+/* =========================================================
+   CELLS + SEPARATOR LINES
+   ========================================================= */
+
+.brands .clients-carousel-card {
+  box-sizing: border-box !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  margin: 0 !important;
+  padding: 14px !important;
+
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+
+  /* VERTICAL SEPARATOR */
+  border: 0 !important;
+
+  border-right:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--brands-text) 18%,
+      transparent
+    ) !important;
+
+  /* HORIZONTAL SEPARATOR */
+  border-bottom:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--brands-text) 18%,
+      transparent
+    ) !important;
+
+  box-shadow: none !important;
+
+  scroll-snap-align: start;
+}
+
+
+/* LOGOS */
+
+.brands .clients-carousel-card img {
+  display: block !important;
+
+  width: 62% !important;
+  height: 62% !important;
+
+  max-width: 150px !important;
+  max-height: 58px !important;
+
+  object-fit: contain !important;
+
+  opacity: .88;
+
+  transition:
+    opacity .25s ease,
+    transform .25s ease;
+}
+
+.brands .clients-carousel-card:hover img {
+  opacity: 1;
+  transform: scale(1.04);
+}
+
+
+/* PLACEHOLDER PREVIEW */
+
+.brands .clients-preview-placeholder {
+  background: transparent !important;
+
+  color: var(--brands-text) !important;
+
+  opacity: .28;
+}
+
+.brands .clients-preview-placeholder strong,
+.brands .clients-preview-placeholder span {
+  color: var(--brands-text) !important;
+}
+
+
+/* =========================================================
+   FEATHER — SAME ADMIN COLOR
+   ========================================================= */
+
+.brands .clients-carousel-shell::before,
+.brands .clients-carousel-shell::after {
+  content: "" !important;
+  display: block !important;
+
+  position: absolute !important;
+
+  top: 0 !important;
+  bottom: 0 !important;
+
+  width: 58px !important;
+
+  z-index: 5 !important;
+
+  pointer-events: none !important;
+}
+
+/* LEFT FEATHER */
+
+.brands .clients-carousel-shell::before {
+  left: 0 !important;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--brands-bg) 0%,
+      var(--brands-bg) 18%,
+      color-mix(
+        in srgb,
+        var(--brands-bg) 88%,
+        transparent
+      ) 48%,
+      transparent 100%
+    ) !important;
+}
+
+/* RIGHT FEATHER */
+
+.brands .clients-carousel-shell::after {
+  right: 0 !important;
+
+  background:
+    linear-gradient(
+      270deg,
+      var(--brands-bg) 0%,
+      var(--brands-bg) 18%,
+      color-mix(
+        in srgb,
+        var(--brands-bg) 88%,
+        transparent
+      ) 48%,
+      transparent 100%
+    ) !important;
+}
+
+
+/* =========================================================
+   LEFT / RIGHT ARROWS
+   ========================================================= */
+
+.brands .clients-edge-arrow {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+
+  display: flex !important;
+
+  position: absolute !important;
+
+  top: 50% !important;
+
+  width: 34px !important;
+  height: 46px !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  transform: translateY(-50%) !important;
+
+  z-index: 20 !important;
+
+  border: 0 !important;
+  outline: 0 !important;
+
+  background: transparent !important;
+
+  color: var(--brands-text) !important;
+
+  opacity: .8 !important;
+
+  cursor: pointer !important;
+
+  box-shadow: none !important;
+
+  transition:
+    opacity .2s ease,
+    transform .2s ease !important;
+}
+
+.brands .clients-edge-arrow span {
+  display: block !important;
+
+  color: var(--brands-text) !important;
+
+  font-family: Arial, sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 300 !important;
+  line-height: 1 !important;
+
+  background: transparent !important;
+
+  text-shadow: none !important;
+}
+
+.brands .clients-edge-arrow-left {
+  left: 7px !important;
+}
+
+.brands .clients-edge-arrow-right {
+  right: 7px !important;
+}
+
+.brands .clients-edge-arrow:hover {
+  opacity: 1 !important;
+
+  transform:
+    translateY(-50%)
+    scale(1.08) !important;
+}
+
+
+/* =========================================================
+   TEXT — ADMIN COLORS
+   ========================================================= */
+
+.brands,
+.brands h2 {
+  color: var(--brands-text) !important;
+}
+
+.brands .eyebrow,
+.brands .section-index {
+  color: var(--brands-muted) !important;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  .brands .clients-carousel {
+    --client-h: 82px;
+    --client-w: calc(100% / 3.5);
+  }
+
+  .brands .clients-carousel-card {
+    padding: 8px !important;
+  }
+
+  .brands .clients-carousel-card img {
+    width: 67% !important;
+    height: 67% !important;
+
+    max-height: 44px !important;
+  }
+
+  .brands .clients-carousel-shell::before,
+  .brands .clients-carousel-shell::after {
+    width: 32px !important;
+  }
+
+  .brands .clients-edge-arrow {
+    width: 24px !important;
+    height: 34px !important;
+  }
+
+  .brands .clients-edge-arrow span {
+    font-size: 18px !important;
+  }
+
+  .brands .clients-edge-arrow-left {
+    left: 1px !important;
+  }
+
+  .brands .clients-edge-arrow-right {
+    right: 1px !important;
+  }
+}
+
+
+/* =========================================================
+   BRANDS — FORCE ONE ADMIN COLOR
+   ========================================================= */
+
+/* Entire Clients section = Admin Brands Background */
+#brands.brands {
+  background: var(--brands-bg) !important;
+  background-color: var(--brands-bg) !important;
+}
+
+/* Remove every internal background layer */
+#brands.brands .section-head,
+#brands.brands .section-head > div,
+#brands.brands .brand-grid,
+#brands.brands .brand-card {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Text colors also come from Admin */
+#brands.brands .section-head h2,
+#brands.brands .brand-card {
+  color: var(--brands-text) !important;
+}
+
+#brands.brands .eyebrow,
+#brands.brands .section-index,
+#brands.brands .brand-card.placeholder {
+  color: var(--brands-muted) !important;
+}
+
+/* Grid lines use Brands text color, not fixed black/white */
+#brands.brands .brand-grid {
+  border-top:
+    1px solid color-mix(in srgb, var(--brands-text) 18%, transparent) !important;
+
+  border-left:
+    1px solid color-mix(in srgb, var(--brands-text) 18%, transparent) !important;
+}
+
+#brands.brands .brand-card {
+  border-right:
+    1px solid color-mix(in srgb, var(--brands-text) 18%, transparent) !important;
+
+  border-bottom:
+    1px solid color-mix(in srgb, var(--brands-text) 18%, transparent) !important;
+}
+
+/* Keep original hover but based on Admin */
+#brands.brands .brand-card:hover {
+  background: var(--brands-hover) !important;
+}
+
+
+/* BRANDS — dark gray typography */
+#brands.brands,
+#brands.brands .section-head h2,
+#brands.brands .brand-card {
+  color: #3f3f3c !important;
+}
+
+#brands.brands .eyebrow,
+#brands.brands .section-index,
+#brands.brands .brand-card.placeholder {
+  color: #666662 !important;
+}
+
+
+/* =========================================================
+   BRANDS — FINAL HORIZONTAL SCROLL
+   Keep current visual design
+   ========================================================= */
+
+#brands .brand-scroll-shell {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+
+/* exactly 2 rows + horizontal continuation */
+
+#brands .brand-grid {
+  --brand-h: 170px;
+  --brand-w: calc(100% / 3.5);
+
+  display: grid !important;
+
+  grid-template-rows:
+    repeat(2, var(--brand-h)) !important;
+
+  grid-auto-flow: column !important;
+  grid-auto-columns: var(--brand-w) !important;
+
+  grid-template-columns: none !important;
+
+  width: 100% !important;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+
+  scroll-behavior: smooth !important;
+  scroll-snap-type: x proximity;
+
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  border-top:
+    1px solid color-mix(in srgb, var(--brands-text) 18%, transparent) !important;
+
+  border-left:
+    1px solid color-mix(in srgb, var(--brands-text) 18%, transparent) !important;
+}
+
+#brands .brand-grid::-webkit-scrollbar {
+  display: none;
+}
+
+
+#brands .brand-card {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+
+  scroll-snap-align: start;
+
+  border-right:
+    1px solid color-mix(in srgb, var(--brands-text) 18%, transparent) !important;
+
+  border-bottom:
+    1px solid color-mix(in srgb, var(--brands-text) 18%, transparent) !important;
+}
+
+
+/* arrows */
+
+#brands .brand-scroll-arrow {
+  appearance: none;
+  -webkit-appearance: none;
+
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+
+  z-index: 20;
+
+  width: 42px;
+  height: 52px;
+
+  padding: 0;
+  border: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: transparent;
+
+  color: #3f3f3c;
+
+  font-family: Arial, sans-serif;
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1;
+
+  cursor: pointer;
+
+  opacity: .7;
+
+  transition:
+    opacity .2s ease,
+    transform .2s ease;
+}
+
+#brands .brand-scroll-arrow:hover {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.08);
+}
+
+#brands .brand-scroll-arrow-left {
+  left: 5px;
+}
+
+#brands .brand-scroll-arrow-right {
+  right: 5px;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 700px) {
+
+  #brands .brand-grid {
+    --brand-h: 110px;
+    --brand-w: calc(100% / 3.5);
+  }
+
+  #brands .brand-card {
+    padding: 12px !important;
+  }
+
+  #brands .brand-card img {
+    max-width: 75px !important;
+    max-height: 38px !important;
+  }
+
+  #brands .brand-scroll-arrow {
+    width: 25px;
+    height: 38px;
+    font-size: 19px;
+  }
+
+  #brands .brand-scroll-arrow-left {
+    left: 1px;
+  }
+
+  #brands .brand-scroll-arrow-right {
+    right: 1px;
+  }
+}
+
+
+/* =========================================================
+   BRANDS — ELEGANT VISIBLE ARROWS
+   ========================================================= */
+
+#brands .brand-scroll-arrow {
+  width: 44px !important;
+  height: 44px !important;
+
+  border-radius: 50% !important;
+
+  background:
+    color-mix(in srgb, var(--brands-bg) 82%, transparent) !important;
+
+  border:
+    1px solid color-mix(
+      in srgb,
+      var(--brands-text) 22%,
+      transparent
+    ) !important;
+
+  color: #3f3f3c !important;
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow:
+    0 4px 18px rgba(0,0,0,.08);
+
+  font-family: Arial, sans-serif !important;
+  font-size: 22px !important;
+  font-weight: 400 !important;
+
+  opacity: .92 !important;
+
+  transition:
+    transform .25s ease,
+    background .25s ease,
+    border-color .25s ease,
+    opacity .25s ease !important;
+}
+
+#brands .brand-scroll-arrow-left {
+  left: 14px !important;
+}
+
+#brands .brand-scroll-arrow-right {
+  right: 14px !important;
+}
+
+#brands .brand-scroll-arrow:hover {
+  opacity: 1 !important;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--brands-bg) 65%,
+      var(--brands-text) 8%
+    ) !important;
+
+  transform:
+    translateY(-50%)
+    scale(1.08) !important;
+}
+
+#brands .brand-scroll-arrow:active {
+  transform:
+    translateY(-50%)
+    scale(.94) !important;
+}
+
+
+/* Mobile — smaller but still obvious */
+@media (max-width: 700px) {
+
+  #brands .brand-scroll-arrow {
+    width: 34px !important;
+    height: 34px !important;
+
+    font-size: 18px !important;
+
+    box-shadow:
+      0 3px 14px rgba(0,0,0,.09);
+  }
+
+  #brands .brand-scroll-arrow-left {
+    left: 7px !important;
+  }
+
+  #brands .brand-scroll-arrow-right {
+    right: 7px !important;
+  }
+}
+
+
+/* NURANICO — footer readability */
+.footer {
+  font-size: 1.2em;
+}
+
+.footer > div > span,
+.footer > div > a,
+.footer > div > p {
+  font-size: 1.2em;
+}
+
+.inner-footer,
+.project-footer,
+.content-footer {
+  font-size: 1.2em;
+}
+

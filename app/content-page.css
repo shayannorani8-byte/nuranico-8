@@ -32,3 +32,1254 @@
 .brand-grid-projects{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:42px 18px}.brand-grid-projects>a{min-width:0}.brand-grid-projects>a>div{aspect-ratio:4/3;overflow:hidden;background:#222}.brand-grid-projects img{width:100%;height:100%;object-fit:cover;transition:transform .8s ease,filter .5s ease}.brand-grid-projects>a:hover img{transform:scale(1.035);filter:brightness(.78)}.brand-grid-projects p{margin:15px 0 7px;color:#77746e;font-size:8px;letter-spacing:.16em}.brand-grid-projects h2{margin:0;font:500 21px var(--font-heading);letter-spacing:-.03em}
 @media(max-width:800px){.brand-hero{grid-template-columns:1fr;padding:120px 6vw 70px;gap:45px}.brand-logo-stage{height:300px}.brand-grid-projects{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.brand-grid-projects{grid-template-columns:1fr}.brand-projects{padding:75px 5vw 80px}}
+
+/* =========================================================
+   NURANICO — INNER PAGES MOBILE RESPONSIVE FIX
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  .content-page {
+    overflow-x: hidden;
+  }
+
+  .inner-hero {
+    min-height: auto;
+    padding: 115px 5vw 60px;
+  }
+
+  .inner-hero h1,
+  .contact-inner h1 {
+    max-width: 100%;
+    font-size: clamp(44px, 14vw, 68px);
+    line-height: .9;
+    letter-spacing: -.055em;
+  }
+
+  .inner-hero.split {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 40px;
+  }
+
+  .inner-hero.split img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    margin-top: 0;
+    object-fit: cover;
+  }
+
+  .copy-section {
+    padding: 75px 5vw 95px;
+  }
+
+  .copy-section h2 {
+    font-size: clamp(40px, 12vw, 58px);
+    line-height: .94;
+    margin-bottom: 35px;
+  }
+
+  .copy-section > p:last-child {
+    max-width: 100%;
+    font-size: 13px;
+    line-height: 1.85;
+  }
+
+  /* PROJECT GRIDS */
+  .inner-grid {
+    grid-template-columns: 1fr;
+    gap: 38px;
+    padding: 0 5vw 80px;
+  }
+
+  /* SERVICES LIST */
+  .service-list {
+    padding: 0 5vw 80px;
+  }
+
+  .service-list article {
+    min-height: auto;
+    grid-template-columns: 32px minmax(0,1fr);
+    gap: 15px;
+    padding: 32px 0;
+    align-items: start;
+  }
+
+  .service-list article > b {
+    display: none;
+  }
+
+  .service-list h2 {
+    font-size: clamp(30px, 9vw, 42px);
+    line-height: 1;
+  }
+
+  .service-list p {
+    max-width: 100%;
+    font-size: 12px;
+    line-height: 1.75;
+  }
+
+  /* BRAND */
+  .brand-hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding: 115px 5vw 65px;
+    gap: 35px;
+  }
+
+  .brand-logo-stage {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+
+  .brand-hero h1 {
+    font-size: clamp(44px, 14vw, 68px);
+    line-height: .9;
+  }
+
+  .brand-grid-projects {
+    grid-template-columns: 1fr;
+  }
+
+  /* FOOTER */
+  .inner-footer {
+    flex-direction: column;
+    gap: 12px;
+    padding: 26px 5vw;
+  }
+}
+
+/* =========================================================
+   NURANICO — INNER PAGES MOBILE TYPOGRAPHY
+   Desktop untouched
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  /* Main page hero: Work / Film / Photography / Content */
+  .inner-hero h1,
+  .contact-inner h1 {
+    font-size: clamp(36px, 10vw, 48px) !important;
+    line-height: .94 !important;
+    letter-spacing: -.045em !important;
+  }
+
+  .inner-hero p,
+  .contact-inner > p:first-child {
+    font-size: 7px !important;
+    letter-spacing: .16em !important;
+  }
+
+  /* About / copy pages */
+  .copy-section h2 {
+    font-size: clamp(32px, 9vw, 44px) !important;
+    line-height: .96 !important;
+    letter-spacing: -.045em !important;
+  }
+
+  .copy-section > p:last-child {
+    font-size: 13px !important;
+    line-height: 1.85 !important;
+  }
+
+  /* Services */
+  .service-list h2 {
+    font-size: clamp(26px, 7.5vw, 36px) !important;
+    line-height: 1 !important;
+    letter-spacing: -.035em !important;
+  }
+
+  .service-list p {
+    font-size: 11px !important;
+    line-height: 1.7 !important;
+  }
+
+  /* Contact link / email */
+  .contact-link {
+    max-width: 100%;
+    font-size: clamp(20px, 6vw, 30px) !important;
+    line-height: 1.1 !important;
+    overflow-wrap: anywhere;
+  }
+
+  /* Brand page */
+  .brand-hero h1,
+  .brand-loading h1 {
+    font-size: clamp(36px, 10vw, 48px) !important;
+    line-height: .94 !important;
+    letter-spacing: -.045em !important;
+  }
+
+  .brand-logo-stage span {
+    font-size: clamp(24px, 7vw, 34px) !important;
+  }
+
+  .brand-grid-projects h2,
+  .inner-project h2 {
+    font-size: 18px !important;
+    line-height: 1.05 !important;
+  }
+}
+
+@media (max-width: 370px) {
+  .inner-hero h1,
+  .contact-inner h1,
+  .brand-hero h1,
+  .brand-loading h1 {
+    font-size: 34px !important;
+  }
+
+  .copy-section h2 {
+    font-size: 30px !important;
+  }
+
+  .service-list h2 {
+    font-size: 25px !important;
+  }
+}
+
+
+/* =========================================================
+   NURANICO — MOBILE INNER PAGE SIZE FIX V2
+   Mobile only / Desktop untouched
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  /* SERVICE / CONTENT PAGE HERO */
+  .inner-hero {
+    min-height: 520px !important;
+    padding: 105px 20px 58px !important;
+  }
+
+  .inner-hero h1,
+  .contact-inner h1 {
+    max-width: 340px !important;
+    font-size: clamp(34px, 9.5vw, 40px) !important;
+    line-height: .94 !important;
+    letter-spacing: -.045em !important;
+  }
+
+  .inner-hero p {
+    font-size: 7px !important;
+    letter-spacing: .17em !important;
+  }
+
+  /* COPY SECTION */
+  .copy-section {
+    padding: 72px 20px 90px !important;
+  }
+
+  .copy-section h2 {
+    max-width: 340px !important;
+    font-size: clamp(29px, 8vw, 36px) !important;
+    line-height: .98 !important;
+    letter-spacing: -.04em !important;
+  }
+
+  /* SERVICES */
+  .service-list {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  .service-list h2 {
+    font-size: clamp(24px, 7vw, 31px) !important;
+  }
+
+  /* CONTACT */
+  .contact-inner {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  .contact-link {
+    font-size: clamp(19px, 5.5vw, 25px) !important;
+  }
+
+  /* BRAND / CLIENT-LIKE CONTENT HEADINGS */
+  .brand-hero h1,
+  .brand-loading h1 {
+    font-size: clamp(34px, 9.5vw, 40px) !important;
+    line-height: .94 !important;
+  }
+}
+
+
+/* =========================================================
+   NURANICO — INNER PAGES MOBILE POLISH V3
+   FINAL MOBILE OVERRIDE
+   Desktop / Home / Admin untouched
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  /* ---------- INNER NAV ---------- */
+
+  .inner-nav {
+    height: 64px !important;
+    min-height: 64px !important;
+    padding: 0 20px !important;
+  }
+
+  .inner-logo {
+    font-size: 14px !important;
+  }
+
+  .inner-logo span {
+    font-size: 6px !important;
+  }
+
+  .inner-nav nav {
+    gap: 8px !important;
+  }
+
+  .inner-nav nav button {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 7px !important;
+  }
+
+
+  /* ---------- GENERAL HERO ---------- */
+
+  .inner-hero {
+    min-height: 430px !important;
+    padding:
+      108px
+      20px
+      58px !important;
+  }
+
+  .inner-hero > div {
+    min-width: 0 !important;
+  }
+
+  .inner-hero p,
+  .contact-inner > p:first-child {
+    margin-bottom: 15px !important;
+    font-size: 7px !important;
+    line-height: 1.3 !important;
+    letter-spacing: .16em !important;
+  }
+
+  .inner-hero h1,
+  .contact-inner h1 {
+    max-width: 330px !important;
+    margin-top: 0 !important;
+
+    font-size:
+      clamp(32px, 8.8vw, 38px) !important;
+
+    line-height: .96 !important;
+    letter-spacing: -.04em !important;
+  }
+
+
+  /* ---------- WORK / CONTENT GRID ---------- */
+
+  .inner-grid {
+    grid-template-columns: 1fr !important;
+
+    padding:
+      0
+      20px
+      82px !important;
+
+    gap: 34px !important;
+  }
+
+  .inner-project {
+    padding: 0 !important;
+  }
+
+  .inner-project > div {
+    width: 100% !important;
+    aspect-ratio: 4 / 3 !important;
+  }
+
+  .inner-project > p {
+    margin:
+      12px
+      0
+      6px !important;
+
+    font-size: 7px !important;
+    letter-spacing: .14em !important;
+  }
+
+  .inner-project h2 {
+    font-size: 17px !important;
+    line-height: 1.08 !important;
+    letter-spacing: -.025em !important;
+  }
+
+
+  /* ---------- SPLIT / ABOUT ---------- */
+
+  .inner-hero.split {
+    display: block !important;
+  }
+
+  .inner-hero.split img {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 4 / 5 !important;
+    object-fit: cover !important;
+
+    margin-top: 42px !important;
+  }
+
+  .copy-section {
+    padding:
+      72px
+      20px
+      88px !important;
+  }
+
+  .copy-section h2 {
+    max-width: 330px !important;
+
+    margin:
+      14px
+      0
+      30px !important;
+
+    font-size:
+      clamp(28px, 7.8vw, 34px) !important;
+
+    line-height: .98 !important;
+    letter-spacing: -.04em !important;
+  }
+
+  .copy-section > p:last-child {
+    max-width: 330px !important;
+
+    font-size: 11px !important;
+    line-height: 1.8 !important;
+  }
+
+
+  /* ---------- SERVICES ---------- */
+
+  .service-list {
+    padding:
+      0
+      20px
+      82px !important;
+  }
+
+  .service-list article {
+    min-height: 0 !important;
+
+    grid-template-columns:
+      30px
+      minmax(0, 1fr)
+      18px !important;
+
+    gap: 13px !important;
+
+    padding:
+      28px
+      0 !important;
+  }
+
+  .service-list span,
+  .service-list b {
+    font-size: 7px !important;
+  }
+
+  .service-list h2 {
+    margin-bottom: 12px !important;
+
+    font-size:
+      clamp(22px, 6.2vw, 27px) !important;
+
+    line-height: 1 !important;
+    letter-spacing: -.035em !important;
+  }
+
+  .service-list p {
+    margin: 0 !important;
+
+    max-width: 280px !important;
+
+    font-size: 10px !important;
+    line-height: 1.7 !important;
+  }
+
+
+  /* ---------- BTS ---------- */
+
+  .bts-list {
+    grid-template-columns: 1fr !important;
+
+    padding:
+      0
+      20px
+      82px !important;
+
+    gap: 32px !important;
+  }
+
+  .bts-card {
+    min-width: 0 !important;
+  }
+
+  .bts-card-media {
+    width: 100% !important;
+    aspect-ratio: 4 / 3 !important;
+  }
+
+  .bts-card-meta {
+    margin-top: 12px !important;
+  }
+
+  .bts-card-meta p,
+  .bts-card-meta > span {
+    font-size: 7px !important;
+  }
+
+  .bts-play {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 11px !important;
+  }
+
+  .inner-bts-link {
+    margin-top: 20px !important;
+    font-size: 8px !important;
+  }
+
+
+  /* ---------- CONTACT ---------- */
+
+  .contact-inner {
+    min-height:
+      calc(100svh - 128px) !important;
+
+    padding:
+      95px
+      20px
+      72px !important;
+  }
+
+  .contact-inner h1 {
+    margin:
+      12px
+      0
+      18px !important;
+  }
+
+  .contact-inner > p:not(:first-child) {
+    max-width: 300px !important;
+
+    font-size: 11px !important;
+    line-height: 1.7 !important;
+  }
+
+  .contact-link {
+    margin-top: 22px !important;
+
+    font-size:
+      clamp(18px, 5vw, 22px) !important;
+
+    line-height: 1.15 !important;
+
+    overflow-wrap: anywhere !important;
+  }
+
+
+  /* ---------- FOOTER ---------- */
+
+  .inner-footer {
+    padding:
+      25px
+      20px !important;
+
+    gap: 12px !important;
+
+    font-size: 7px !important;
+    line-height: 1.5 !important;
+    letter-spacing: .1em !important;
+  }
+
+
+  /* ---------- MOBILE TOUCH ---------- */
+
+  @media (hover: none) {
+
+    .inner-project:hover img,
+    .bts-card:hover img {
+      transform: none !important;
+      filter: none !important;
+    }
+  }
+}
+
+
+/* ---------- SMALL MOBILE ---------- */
+
+@media (max-width: 370px) {
+
+  .inner-hero {
+    min-height: 400px !important;
+    padding-top: 100px !important;
+  }
+
+  .inner-hero h1,
+  .contact-inner h1 {
+    font-size: 30px !important;
+  }
+
+  .copy-section h2 {
+    font-size: 27px !important;
+  }
+
+  .service-list h2 {
+    font-size: 22px !important;
+  }
+}
+
+
+/* =========================================================
+   NURANICO — INNER PAGE TYPOGRAPHY FINAL V4
+   Work / About / Services / BTS / Brand / Contact
+   Desktop untouched
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  .inner-hero h1,
+  .contact-inner h1,
+  .brand-hero h1,
+  .brand-loading h1 {
+    max-width: 330px !important;
+    font-size: clamp(31px, 8.5vw, 37px) !important;
+    line-height: .97 !important;
+    letter-spacing: -.04em !important;
+  }
+
+  .copy-section h2 {
+    max-width: 330px !important;
+    font-size: clamp(27px, 7.5vw, 33px) !important;
+    line-height: 1 !important;
+    letter-spacing: -.035em !important;
+  }
+
+  .service-list h2 {
+    font-size: clamp(23px, 6.5vw, 28px) !important;
+    line-height: 1.02 !important;
+    letter-spacing: -.03em !important;
+  }
+
+  .brand-logo-stage span {
+    font-size: clamp(22px, 6vw, 28px) !important;
+  }
+
+  .brand-grid-projects h2,
+  .inner-project h2 {
+    font-size: 17px !important;
+    line-height: 1.08 !important;
+  }
+
+  .contact-link {
+    max-width: 100% !important;
+    font-size: clamp(18px, 5vw, 23px) !important;
+    line-height: 1.15 !important;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 370px) {
+  .inner-hero h1,
+  .contact-inner h1,
+  .brand-hero h1,
+  .brand-loading h1 {
+    font-size: 30px !important;
+  }
+
+  .copy-section h2 {
+    font-size: 26px !important;
+  }
+
+  .service-list h2 {
+    font-size: 22px !important;
+  }
+}
+
+/* =========================================================
+   NURANICO — BTS MAIN PAGE GALLERY
+   Compact responsive gallery
+   ========================================================= */
+
+.bts-page .bts-list {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 34px 12px !important;
+  padding: 0 5vw 110px !important;
+}
+
+.bts-page .bts-card {
+  min-width: 0 !important;
+}
+
+.bts-page .bts-card-media {
+  width: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  overflow: hidden !important;
+}
+
+.bts-page .bts-card-media img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.bts-page .bts-card-meta {
+  padding-top: 10px !important;
+  margin-top: 0 !important;
+}
+
+.bts-page .bts-card-meta h2 {
+  font-size: 16px !important;
+  line-height: 1.1 !important;
+}
+
+.bts-page .bts-card-meta p,
+.bts-page .bts-card-meta > span {
+  font-size: 7px !important;
+}
+
+
+/* TABLET */
+@media (max-width: 900px) {
+  .bts-page .bts-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 26px 8px !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+}
+
+
+/* MOBILE */
+@media (max-width: 700px) {
+  .bts-page .bts-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 24px 7px !important;
+    padding: 0 12px 70px !important;
+  }
+
+  .bts-page .bts-card-media {
+    aspect-ratio: 1 / 1 !important;
+  }
+
+  .bts-page .bts-card-meta {
+    padding-top: 8px !important;
+  }
+
+  .bts-page .bts-card-meta h2 {
+    font-size: 13px !important;
+  }
+
+  .bts-page .bts-card-meta p,
+  .bts-page .bts-card-meta > span {
+    font-size: 6px !important;
+  }
+
+  .bts-page .bts-play {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 9px !important;
+  }
+}
+
+
+/* SMALL MOBILE — KEEP 2 COLUMN GALLERY */
+@media (max-width: 370px) {
+  .bts-page .bts-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 20px 6px !important;
+  }
+}
+
+/* =========================================================
+   NURANICO — BTS GALLERY FINAL V2
+   Desktop 3 columns / Tablet 3 / Mobile 2
+   ========================================================= */
+
+/* ---------- DESKTOP ---------- */
+
+.bts-page .inner-hero {
+  min-height: 0 !important;
+  padding-top: 125px !important;
+  padding-bottom: 55px !important;
+}
+
+.bts-page .inner-hero h1 {
+  font-size: clamp(34px, 4vw, 54px) !important;
+  line-height: 1 !important;
+  letter-spacing: -.04em !important;
+}
+
+.bts-page .bts-list {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+
+  width: 100% !important;
+  max-width: 1120px !important;
+
+  margin: 0 auto !important;
+  padding: 0 24px 110px !important;
+
+  gap: 34px 18px !important;
+}
+
+.bts-page .bts-card {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.bts-page .bts-card-media {
+  position: relative !important;
+
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1 !important;
+
+  overflow: hidden !important;
+  background: #20201e !important;
+}
+
+.bts-page .bts-card-media img {
+  display: block !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+.bts-page .bts-card-meta {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+
+  gap: 12px !important;
+
+  margin: 0 !important;
+  padding: 11px 0 0 !important;
+}
+
+.bts-page .bts-card-meta h2 {
+  margin: 0 !important;
+
+  font-size: 15px !important;
+  line-height: 1.1 !important;
+  letter-spacing: -.02em !important;
+}
+
+.bts-page .bts-card-meta p {
+  margin: 5px 0 0 !important;
+
+  font-size: 7px !important;
+  line-height: 1.2 !important;
+  letter-spacing: .14em !important;
+}
+
+.bts-page .bts-card-meta > span {
+  margin: 2px 0 0 !important;
+
+  font-size: 7px !important;
+  line-height: 1.2 !important;
+  letter-spacing: .12em !important;
+}
+
+.bts-page .bts-play {
+  width: 42px !important;
+  height: 42px !important;
+
+  font-size: 10px !important;
+}
+
+
+/* ---------- TABLET ---------- */
+
+@media (max-width: 900px) {
+
+  .bts-page .bts-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+
+    max-width: none !important;
+
+    padding:
+      0
+      18px
+      90px !important;
+
+    gap:
+      26px
+      9px !important;
+  }
+
+  .bts-page .bts-card-meta h2 {
+    font-size: 13px !important;
+  }
+}
+
+
+/* ---------- MOBILE ---------- */
+
+@media (max-width: 700px) {
+
+  .bts-page .inner-hero {
+    min-height: 0 !important;
+
+    padding:
+      92px
+      16px
+      38px !important;
+  }
+
+  .bts-page .inner-hero h1 {
+    max-width: 100% !important;
+
+    font-size: 27px !important;
+    line-height: 1 !important;
+  }
+
+  .bts-page .bts-list {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr)) !important;
+
+    width: 100% !important;
+
+    padding:
+      0
+      10px
+      70px !important;
+
+    gap:
+      22px
+      7px !important;
+  }
+
+  .bts-page .bts-card-media {
+    aspect-ratio: 1 / 1 !important;
+  }
+
+  .bts-page .bts-card-meta {
+    display: block !important;
+
+    padding-top: 8px !important;
+  }
+
+  .bts-page .bts-card-meta h2 {
+    font-size: 12px !important;
+    line-height: 1.08 !important;
+  }
+
+  .bts-page .bts-card-meta p {
+    margin-top: 4px !important;
+
+    font-size: 6px !important;
+  }
+
+  .bts-page .bts-card-meta > span {
+    display: block !important;
+
+    margin-top: 5px !important;
+
+    font-size: 6px !important;
+  }
+
+  .bts-page .bts-play {
+    width: 34px !important;
+    height: 34px !important;
+
+    font-size: 8px !important;
+  }
+}
+
+
+/* ---------- SMALL MOBILE ---------- */
+
+@media (max-width: 370px) {
+
+  .bts-page .bts-list {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr)) !important;
+
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+
+    gap:
+      20px
+      6px !important;
+  }
+
+  .bts-page .bts-card-meta h2 {
+    font-size: 11px !important;
+  }
+}
+
+
+
+/* =========================================================
+   WORK VIEW ALL — CLEAN SQUARE GALLERY
+   Scoped ONLY to /work
+   ========================================================= */
+
+.work-all-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+
+  padding: 0 5vw 130px !important;
+}
+
+.work-all-grid .inner-project {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden !important;
+}
+
+.work-all-grid .inner-project > div {
+  width: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden !important;
+  background: #222 !important;
+}
+
+.work-all-grid .inner-project img {
+  display: block !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  object-fit: cover !important;
+
+  margin: 0 !important;
+}
+
+.work-all-grid .inner-project > p,
+.work-all-grid .inner-project > h2 {
+  display: none !important;
+}
+
+
+/* TABLET */
+@media (max-width: 900px) {
+  .work-all-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+}
+
+
+/* MOBILE — EXACTLY 3 SQUARES PER ROW */
+@media (max-width: 700px) {
+  .work-all-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+
+    gap: 4px !important;
+
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    padding-bottom: 80px !important;
+  }
+
+  .work-all-grid .inner-project {
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .work-all-grid .inner-project > div {
+    aspect-ratio: 1 / 1 !important;
+  }
+}
+
+
+/* VERY SMALL MOBILE — STILL 3 PER ROW */
+@media (max-width: 370px) {
+  .work-all-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+
+    gap: 3px !important;
+
+    padding-left: 9px !important;
+    padding-right: 9px !important;
+  }
+}
+
+/* NURANICO WORK — rounded gallery covers */
+.inner-grid .inner-project > div {
+  border-radius: 20px !important;
+  overflow: hidden !important;
+}
+
+.inner-grid .inner-project img,
+.inner-grid .inner-project video {
+  border-radius: inherit !important;
+}
+
+@media (max-width: 700px) {
+  .inner-grid .inner-project > div {
+    border-radius: 14px !important;
+  }
+}
+
+
+/* =========================================================
+   NURANICO / WORK — CLEAN GALLERY
+   ========================================================= */
+
+.work-gallery-page {
+  min-height: 100vh;
+  background: #171716;
+}
+
+.work-clean-grid {
+  width: 100%;
+  padding: 115px 3vw 70px;
+
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px 12px;
+}
+
+.work-clean-item {
+  display: block;
+  min-width: 0;
+  color: #f1efe9;
+  text-decoration: none;
+}
+
+.work-clean-media {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+
+  overflow: hidden;
+  border-radius: 20px;
+
+  background: #20201f;
+}
+
+.work-clean-media img,
+.work-clean-media video {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  transition:
+    transform .5s ease,
+    opacity .5s ease;
+}
+
+.work-clean-item:hover .work-clean-media img {
+  transform: scale(1.025);
+}
+
+.work-clean-type {
+  display: block;
+
+  margin-top: 9px;
+
+  font-size: 8px;
+  font-weight: 500;
+  line-height: 1;
+
+  letter-spacing: .16em;
+
+  color: rgba(241,239,233,.55);
+}
+
+
+/* TABLET */
+
+@media (max-width: 900px) {
+  .work-clean-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+
+/* MOBILE — exactly 3 items per row */
+
+@media (max-width: 700px) {
+  .work-clean-grid {
+    padding:
+      92px
+      12px
+      45px;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 20px 6px;
+  }
+
+  .work-clean-media {
+    border-radius: 13px;
+  }
+
+  .work-clean-type {
+    margin-top: 6px;
+
+    font-size: 6px;
+    letter-spacing: .12em;
+  }
+}
+
+/* WORK GALLERY — PROJECT NAME */
+
+.work-clean-info {
+  padding-top: 10px;
+}
+
+.work-clean-info h2 {
+  margin: 0 0 6px !important;
+
+  font-family: var(--font-heading), serif;
+  font-size: 17px !important;
+  font-weight: 500;
+  line-height: 1.05;
+
+  letter-spacing: -.02em;
+  color: #f1efe9;
+}
+
+.work-clean-info .work-clean-type {
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .work-clean-info {
+    padding-top: 7px;
+  }
+
+  .work-clean-info h2 {
+    margin-bottom: 4px !important;
+    font-size: 10px !important;
+    line-height: 1.1;
+  }
+}

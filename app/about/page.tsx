@@ -1,9 +1,11 @@
 'use client';
-
 import SiteHeader from '../../components/SiteHeader';
+
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
+import { usePageTexts } from '../../lib/usePageTexts';
 
 type AboutContent = {
   about_title_en?: string | null;
@@ -16,6 +18,7 @@ type AboutContent = {
 export default function AboutPage() {
   const [lang, setLang] = useState<'en' | 'fa'>('en');
   const [content, setContent] = useState<AboutContent>({});
+  const { text: pageText } = usePageTexts('about');
 
   useEffect(() => {
     const savedLang = localStorage.getItem('nuranico-lang');
@@ -65,14 +68,18 @@ export default function AboutPage() {
 
       <section className="inner-hero split">
         <div>
-          <p>03 / ABOUT</p>
+          <p>{pageText('eyebrow', '03 / ABOUT', '03 / درباره')}</p>
           <h1>{title}</h1>
         </div>
 
         {content.about_image_url ? (
           <img
             src={content.about_image_url}
-            alt="NURANICO creative direction"
+            alt={pageText(
+              'image_alt',
+              'NURANICO creative direction',
+              'کارگردانی خلاق NURANICO'
+            )}
           />
         ) : (
           <div className="about-image-placeholder" />
@@ -81,13 +88,15 @@ export default function AboutPage() {
 
       <section className="copy-section">
         <p className="eyebrow">
-          {lang === 'fa' ? 'رویکرد ما' : 'OUR APPROACH'}
+          {pageText('approach_eyebrow', 'OUR APPROACH', 'رویکرد ما')}
         </p>
 
         <h2>
-          {lang === 'fa'
-            ? 'تصویر، وقتی ماندگار می‌شود که داستان داشته باشد.'
-            : 'Images become memorable when they carry a story.'}
+          {pageText(
+            'approach_title',
+            'Images become memorable when they carry a story.',
+            'تصویر، وقتی ماندگار می‌شود که داستان داشته باشد.'
+          )}
         </h2>
 
         <p>{text}</p>
@@ -96,7 +105,7 @@ export default function AboutPage() {
       <footer className="inner-footer">
         <span>NURANICO®</span>
         <Link href="/">
-          {lang === 'fa' ? 'بازگشت به خانه ↗' : 'Back home ↗'}
+          {pageText('back_home', 'Back home ↗', 'بازگشت به خانه ↗')}
         </Link>
       </footer>
     </main>

@@ -1,9 +1,12 @@
 'use client';
+import SiteHeader from '../components/SiteHeader';
+
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePageTexts } from '../lib/usePageTexts';
 import './home.css';
-
+import './home-mobile.css';
 type Lang = 'en' | 'fa';
 
 type Settings = {
@@ -26,6 +29,18 @@ type Settings = {
   footer_bg?: string;
   footer_text?: string;
   border_color?: string;
+
+  brands_bg?: string;
+  brands_text?: string;
+  brands_muted?: string;
+  brands_hover?: string;
+
+  contact_bg?: string;
+  contact_text?: string;
+  contact_muted?: string;
+  contact_button?: string;
+  contact_button_text?: string;
+
   logo_url?: string;
   font_en?: string;
   font_fa?: string;
@@ -63,6 +78,8 @@ type Content = {
   contact_email?: string;
   contact_phone?: string;
   contact_instagram?: string;
+  personal_instagram?: string;
+  start_project_url?: string;
 };
 
 type PortfolioItem = {
@@ -80,9 +97,6 @@ type PortfolioItem = {
   preview_enabled?: boolean | null;
   featured?: boolean;
   brand_id?: number | null;
-  bts_media_url?: string | null;
-  bts_media_type?: string | null;
-  bts_gallery_urls?: string[] | null;
 };
 
 type Brand = {
@@ -90,6 +104,7 @@ type Brand = {
   name: string;
   logo_url?: string;
   website_url?: string;
+  sort_order?: number | null;
 };
 
 type Service = {
@@ -165,15 +180,23 @@ function PreviewVideo({
 }
 
 export default function HomePage() {
+  const { text: pageText } = usePageTexts('home');
   const [lang, setLang] = useState<Lang>('en');
   const [langReady, setLangReady] = useState(false);
   const [settings, setSettings] = useState<Settings>({});
   const [fonts, setFonts] = useState<FontAsset[]>([]);
   const [content, setContent] = useState<Content>({});
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
+  const [filmPortfolio, setFilmPortfolio] = useState<PortfolioItem[]>([]);
+  const [photoPortfolio, setPhotoPortfolio] = useState<PortfolioItem[]>([]);
+  const [contentPortfolio, setContentPortfolio] = useState<PortfolioItem[]>([]);
+  const [btsPortfolio, setBtsPortfolio] = useState<PortfolioItem[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [filter, setFilter] = useState('all');
+  const [workViewAll, setWorkViewAll] = useState(false);
+  const workCarouselRef = useRef<HTMLDivElement>(null);
+  const clientsCarouselRef = useRef<HTMLDivElement>(null);
   const [heroIndex, setHeroIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -355,6 +378,54 @@ export default function HomePage() {
       setPortfolio(portfolioResult.data);
     }
 
+    try {
+      const [filmResponse, photoResponse, contentResponse, btsResponse] =
+        await Promise.all([
+          fetch('/api/public/projects?destination=film', { cache: 'no-store' }),
+          fetch('/api/public/projects?destination=photography', { cache: 'no-store' }),
+          fetch('/api/public/projects?destination=content', { cache: 'no-store' }),
+          fetch('/api/public/bts', { cache: 'no-store' }),
+        ]);
+
+      const [filmResult, photoResult, contentResult2, btsResult] =
+        await Promise.all([
+          filmResponse.json(),
+          photoResponse.json(),
+          contentResponse.json(),
+          btsResponse.json(),
+        ]);
+
+      setFilmPortfolio(filmResponse.ok ? filmResult.items || [] : []);
+      setPhotoPortfolio(photoResponse.ok ? photoResult.items || [] : []);
+      setContentPortfolio(contentResponse.ok ? contentResult2.items || [] : []);
+      setBtsPortfolio(
+        btsResponse.ok
+          ? (btsResult.items || []).map((item: any) => ({
+              ...item,
+              cover_url: item.file_url || item.cover_url || '',
+              preview_url:
+                item.kind === 'video'
+                  ? item.file_url
+                  : item.preview_url || null,
+              category:
+                item.kind === 'video'
+                  ? 'video'
+                  : 'photo',
+              title_en: item.name || 'Behind the Scenes',
+              title_fa: item.name || 'Behind the Scenes',
+              description_en: '',
+              description_fa: '',
+            }))
+          : []
+      );
+    } catch (error) {
+      console.error('Could not load destination projects on home:', error);
+      setFilmPortfolio([]);
+      setPhotoPortfolio([]);
+      setContentPortfolio([]);
+      setBtsPortfolio([]);
+    }
+
     if (brandsResult.data) {
       setBrands(brandsResult.data);
     }
@@ -372,21 +443,74 @@ export default function HomePage() {
 
   const shown = useMemo(() => {
     if (filter === 'all') return portfolio;
+    if (filter === 'video') return filmPortfolio;
+    if (filter === 'photo') return photoPortfolio;
+    if (filter === 'content') return contentPortfolio;
+    if (filter === 'bts') return btsPortfolio;
 
-    if (filter === 'bts') {
+    // Advertising currently has no dedicated destination in Admin,
+    // so keep using its category.
+    if (filter === 'advertising') {
       return portfolio.filter(
-        (item) =>
-          !!item.bts_media_url ||
-          !!item.bts_gallery_urls?.length
+        (item) => item.category === 'advertising'
       );
     }
 
-    return portfolio.filter(
-      (item) => item.category === filter
-    );
-  }, [portfolio, filter]);
+    return [];
+  }, [
+    portfolio,
+    filmPortfolio,
+    photoPortfolio,
+    contentPortfolio,
+    btsPortfolio,
+    filter,
+  ]);
 
   const displayItems = shown;
+
+  // Homepage work is always a horizontal browser.
+  const workIsCarousel = true;
+
+  // Desktop shows 6 cards, mobile shows 4.
+  // Controls are useful as soon as there is more than one item.
+  const showWorkControls = shown.length > 1;
+
+  const workViewAllHref =
+    filter === 'video'
+      ? '/services/film-teasers'
+      : filter === 'photo'
+      ? '/services/photography'
+      : filter === 'content'
+      ? '/services/content'
+      : filter === 'bts'
+      ? '/work/behind-the-scenes'
+      : filter === 'advertising'
+      ? '/work?category=advertising'
+      : '/work';
+
+  function scrollClients(direction: 'prev' | 'next') {
+    const container = clientsCarouselRef.current;
+    if (!container) return;
+
+    const amount = container.clientWidth * 0.75;
+
+    container.scrollBy({
+      left: direction === 'next' ? amount : -amount,
+      behavior: 'smooth',
+    });
+  }
+
+  function scrollWork(direction: 'prev' | 'next') {
+    const container = workCarouselRef.current;
+    if (!container) return;
+
+    const amount = container.clientWidth * 0.78;
+
+    container.scrollBy({
+      left: direction === 'next' ? amount : -amount,
+      behavior: 'smooth',
+    });
+  }
 
   const currentHero = heroSlides[heroIndex];
 
@@ -394,16 +518,89 @@ export default function HomePage() {
     currentHero?.cover_url || '';
 
   const cssVars = {
-    '--site-bg': settings.bg_color || '#171716',
-    '--site-text': settings.text_color || '#f4f2ed',
+    '--site-bg':
+      settings.bg_color || '#171716',
+
+    '--site-text':
+      settings.text_color || '#f1efe9',
+
     '--site-surface':
-      settings.surface_color || '#222220',
+      settings.surface_color || '#20201e',
+
     '--site-muted':
-      settings.muted_color || '#98958e',
+      settings.muted_color || '#99958d',
+
     '--site-line':
-      settings.border_color || 'rgba(255,255,255,.13)',
+      settings.border_color || '#3a3936',
+
     '--site-accent':
       settings.button_color || '#e9e6df',
+
+    '--site-heading':
+      settings.heading_color || settings.text_color || '#f1efe9',
+
+    '--site-logo':
+      settings.logo_color || settings.text_color || '#f1efe9',
+
+    '--site-link':
+      settings.link_color || settings.text_color || '#f1efe9',
+
+    '--nav-bg':
+      settings.nav_bg || settings.bg_color || '#171716',
+
+    '--nav-text':
+      settings.nav_text || settings.text_color || '#f1efe9',
+
+    '--nav-active':
+      settings.nav_active || '#ffffff',
+
+    '--button-text':
+      settings.button_text || '#151514',
+
+    '--button-hover':
+      settings.button_hover || '#ffffff',
+
+    '--card-bg':
+      settings.card_bg || '#1d1d1b',
+
+    '--card-text':
+      settings.card_text || settings.text_color || '#f1efe9',
+
+    '--tag-color':
+      settings.tag_color || settings.muted_color || '#99958d',
+
+    '--footer-bg':
+      settings.footer_bg || '#111110',
+
+    '--footer-text':
+      settings.footer_text || '#e8e5de',
+
+    '--brands-bg':
+      settings.brands_bg || '#e2dfd8',
+
+    '--brands-text':
+      settings.brands_text || '#171716',
+
+    '--brands-muted':
+      settings.brands_muted || '#68655f',
+
+    '--brands-hover':
+      settings.brands_hover || '#d6d2c9',
+
+    '--contact-bg':
+      settings.contact_bg || '#e7e4dd',
+
+    '--contact-text':
+      settings.contact_text || '#151514',
+
+    '--contact-muted':
+      settings.contact_muted || '#66635e',
+
+    '--contact-button':
+      settings.contact_button || '#151514',
+
+    '--contact-button-text':
+      settings.contact_button_text || '#eeeae2',
 
     '--heading-size':
       `${settings.heading_size || 48}px`,
@@ -425,75 +622,90 @@ export default function HomePage() {
   } as React.CSSProperties;
 
   const t = {
-    navWork: lang === 'fa' ? 'نمونه‌کارها' : 'Work',
-    navServices: lang === 'fa' ? 'خدمات' : 'Services',
-    navAbout: lang === 'fa' ? 'درباره' : 'About',
-    navClients: lang === 'fa' ? 'مشتریان' : 'Clients',
-    navContact: lang === 'fa' ? 'تماس' : 'Contact',
+    navWork: pageText('nav_work', 'Work', 'نمونه‌کارها'),
+    navServices: pageText('nav_services', 'Services', 'خدمات'),
+    navAbout: pageText('nav_about', 'About', 'درباره'),
+    navClients: pageText('nav_clients', 'Clients', 'مشتریان'),
+    navContact: pageText('nav_contact', 'Contact', 'تماس'),
 
-    cta:
-      lang === 'fa'
-        ? 'شروع یک پروژه'
-        : 'Start a project',
+    cta: pageText(
+      'start_project',
+      'Start a project',
+      'شروع یک پروژه'
+    ),
 
-    servicesTitle:
-      lang === 'fa'
-        ? 'از ایده تا فریم نهایی.'
-        : 'From idea to final frame.',
+    servicesTitle: pageText(
+      'services_title',
+      'From idea to final frame.',
+      'از ایده تا فریم نهایی.'
+    ),
 
-    workTitle:
-      lang === 'fa'
-        ? 'منتخب پروژه‌ها.'
-        : 'Selected work.',
+    workTitle: pageText(
+      'work_title',
+      'Selected work.',
+      'منتخب پروژه‌ها.'
+    ),
 
     aboutFallback:
       lang === 'fa'
         ? 'NURANICO یک استودیوی خلاق برای ساخت تصویر، ویدیو و محتوای تبلیغاتی است؛ از ایده و کارگردانی تا تولید و فریم نهایی.'
         : 'NURANICO is a creative studio for image, film and campaign content — from concept and direction to production and the final frame.',
 
-    brandsTitle:
-      lang === 'fa'
-        ? 'برندهایی که با ما دیده شدند.'
-        : 'Brands we have brought into focus.',
+    brandsTitle: pageText(
+      'brands_title',
+      'Brands we have brought into focus.',
+      'برندهایی که با ما دیده شدند.'
+    ),
 
-    contactFallback:
-      lang === 'fa'
-        ? 'بیایید چیزی بسازیم.'
-        : 'Let’s create something.',
+    contactFallback: pageText(
+      'contact_title',
+      'Let’s create something.',
+      'بیایید چیزی بسازیم.'
+    ),
 
-    contactSub:
-      lang === 'fa'
-        ? 'پروژه بعدی‌تان را برای ما بفرستید.'
-        : 'Tell us about the next project.',
+    contactSub: pageText(
+      'contact_description',
+      'Tell us about the next project.',
+      'پروژه بعدی‌تان را برای ما بفرستید.'
+    ),
   };
 
   const categories = [
     {
       key: 'all',
-      label: lang === 'fa' ? 'همه' : 'All',
+      label: pageText('filter_all', 'All', 'همه'),
     },
     {
       key: 'video',
-      label: lang === 'fa' ? 'ویدیو' : 'Film',
+      label: pageText(
+        'filter_video',
+        'Film & Teasers',
+        'فیلم و تیزر'
+      ),
     },
     {
       key: 'photo',
-      label: lang === 'fa' ? 'عکس' : 'Photography',
+      label: pageText(
+        'filter_photo',
+        'Photography',
+        'عکس'
+      ),
     },
     {
       key: 'content',
-      label: lang === 'fa' ? 'محتوا' : 'Content',
-    },
-    {
-      key: 'advertising',
-      label: lang === 'fa' ? 'تبلیغات' : 'Advertising',
+      label: pageText(
+        'filter_content',
+        'Content',
+        'محتوا'
+      ),
     },
     {
       key: 'bts',
-      label:
-        lang === 'fa'
-          ? 'پشت صحنه'
-          : 'Behind the Scenes',
+      label: pageText(
+        'filter_bts',
+        'Behind the Scenes',
+        'پشت صحنه'
+      ),
     },
   ];
 
@@ -523,113 +735,7 @@ export default function HomePage() {
         ['--letter-spacing' as string]:
           `${settings.letter_spacing || 0}px`,
       }}>
-      <header
-        className={`site-nav ${
-          menuOpen ? 'is-open' : ''
-        }`}
-      >
-        <Link
-          className="brand"
-          href="#top"
-          aria-label="NURANICO"
-        >
-          {settings.logo_url ? (
-            <img
-              src={settings.logo_url}
-              alt="NURANICO"
-            />
-          ) : (
-            <span>
-              <span className="latin" lang="en">NURANICO</span>
-              <span className="brand-mark latin" lang="en">®</span>
-            </span>
-          )}
-        </Link>
-
-        <nav
-          className="desktop-nav"
-          aria-label="Main navigation"
-        >
-          <a href="#work">{t.navWork}</a>
-          <a href="#services">{t.navServices}</a>
-          <a href="#about">{t.navAbout}</a>
-          <a href="#brands">{t.navClients}</a>
-          <a href="#contact">{t.navContact}</a>
-        </nav>
-
-        <div className="nav-actions">
-          <button
-            className="lang-switch"
-            type="button"
-            onClick={() =>
-              setLang(lang === 'en' ? 'fa' : 'en')
-            }
-            aria-label="Change language"
-          >
-            {lang === 'en' ? 'FA' : 'EN'}
-          </button>
-
-          <a
-            className="nav-cta"
-            href={`mailto:${
-              content.contact_email ||
-              'hello@nuranico.com'
-            }`}
-          >
-            {t.cta}
-          </a>
-
-          <button
-            className="menu-button"
-            type="button"
-            onClick={() =>
-              setMenuOpen((open) => !open)
-            }
-            aria-label="Open menu"
-            aria-expanded={menuOpen}
-          >
-            <span />
-            <span />
-          </button>
-        </div>
-
-        <div className="mobile-menu">
-          <a
-            href="#work"
-            onClick={() => setMenuOpen(false)}
-          >
-            {t.navWork}
-          </a>
-
-          <a
-            href="#services"
-            onClick={() => setMenuOpen(false)}
-          >
-            {t.navServices}
-          </a>
-
-          <a
-            href="#about"
-            onClick={() => setMenuOpen(false)}
-          >
-            {t.navAbout}
-          </a>
-
-          <a
-            href="#brands"
-            onClick={() => setMenuOpen(false)}
-          >
-            {t.navClients}
-          </a>
-
-          <a
-            href="#contact"
-            onClick={() => setMenuOpen(false)}
-          >
-            {t.navContact}
-          </a>
-        </div>
-      </header>
+      <SiteHeader />
 
       <div id="top" />
 
@@ -677,7 +783,11 @@ export default function HomePage() {
 
         <div className="hero-content reveal">
           <p className="eyebrow">
-            NURANICO / CREATIVE STUDIO
+            {pageText(
+              'studio_label',
+              'NURANICO / CREATIVE STUDIO',
+              'NURANICO / استودیوی خلاق'
+            )}
           </p>
 
           <h1>
@@ -712,7 +822,13 @@ export default function HomePage() {
         </div>
 
         <div className="hero-meta">
-          <span className="latin" lang="en">SCROLL TO EXPLORE</span>
+          <span className="latin">
+            {pageText(
+              'scroll_to_explore',
+              'SCROLL TO EXPLORE',
+              'برای مشاهده اسکرول کنید'
+            )}
+          </span>
 
           <div className="hero-dots">
             {(heroSlides.length
@@ -746,7 +862,11 @@ export default function HomePage() {
         <div className="section-head">
           <div>
             <p className="eyebrow">
-              01 / SERVICES
+              01 / {pageText(
+                'services_eyebrow',
+                'SERVICES',
+                'خدمات'
+              )}
             </p>
 
             <h2>{t.servicesTitle}</h2>
@@ -824,14 +944,89 @@ export default function HomePage() {
                   cursor: 'pointer',
                 }}
               >
-                <span>{number}</span>
+                <div className="service-card-top">
+                  <span>{number}</span>
+                  <b>↗</b>
+                </div>
 
-                <div>
+                <div
+                  className={`service-vector service-vector-${index + 1}`}
+                  aria-hidden="true"
+                >
+                  {index === 0 ? (
+                    <svg
+                      viewBox="0 0 260 120"
+                      fill="none"
+                      className="service-art-film"
+                    >
+                      <g className="art-main">
+                        <rect x="43" y="34" width="116" height="64" rx="2" />
+                        <rect x="72" y="22" width="116" height="64" rx="2" />
+                        <rect x="101" y="10" width="116" height="64" rx="2" />
+                      </g>
+
+                      <g className="art-detail">
+                        <path d="M116 42H173" />
+                        <path d="M116 50H157" />
+                        <circle cx="196" cy="91" r="3" />
+                        <path d="M188 91H153" />
+                      </g>
+                    </svg>
+                  ) : index === 1 ? (
+                    <svg
+                      viewBox="0 0 260 120"
+                      fill="none"
+                      className="service-art-photo"
+                    >
+                      <g className="art-main">
+                        <circle cx="130" cy="60" r="42" />
+                        <circle cx="130" cy="60" r="23" />
+
+                        <path d="M130 18L146 42" />
+                        <path d="M166 39L145 52" />
+                        <path d="M172 76L145 72" />
+                        <path d="M130 102L119 78" />
+                        <path d="M94 81L115 68" />
+                        <path d="M88 44L115 48" />
+                      </g>
+
+                      <g className="art-detail">
+                        <path d="M72 25H91M72 25V44" />
+                        <path d="M188 25H169M188 25V44" />
+                        <path d="M72 95H91M72 95V76" />
+                        <path d="M188 95H169M188 95V76" />
+                      </g>
+                    </svg>
+                  ) : (
+                    <svg
+                      viewBox="0 0 260 120"
+                      fill="none"
+                      className="service-art-content"
+                    >
+                      <g className="art-main">
+                        <rect x="63" y="21" width="58" height="36" rx="2" />
+                        <rect x="128" y="21" width="69" height="36" rx="2" />
+                        <rect x="63" y="64" width="82" height="35" rx="2" />
+                        <rect x="152" y="64" width="45" height="35" rx="2" />
+                      </g>
+
+                      <g className="art-detail">
+                        <circle cx="92" cy="39" r="5" />
+                        <path d="M143 34H180" />
+                        <path d="M143 43H168" />
+                        <path d="M77 78H130" />
+                        <path d="M77 86H112" />
+                        <path d="M166 76L184 87" />
+                        <path d="M184 76L166 87" />
+                      </g>
+                    </svg>
+                  )}
+                </div>
+
+                <div className="service-card-copy">
                   <h3>{title}</h3>
                   <p>{description}</p>
                 </div>
-
-                <b>↗</b>
               </a>
             );
           })}
@@ -845,7 +1040,11 @@ export default function HomePage() {
         <div className="section-head">
           <div>
             <p className="eyebrow">
-              02 / SELECTED WORK
+              02 / {pageText(
+                'work_eyebrow',
+                'SELECTED WORK',
+                'نمونه‌کارهای منتخب'
+              )}
             </p>
 
             <h2>{t.workTitle}</h2>
@@ -872,9 +1071,16 @@ export default function HomePage() {
                   ? 'active'
                   : ''
               }
-              onClick={() =>
-                setFilter(category.key)
-              }
+              onClick={() => {
+                setFilter(category.key);
+
+                requestAnimationFrame(() => {
+                  workCarouselRef.current?.scrollTo({
+                    left: 0,
+                    behavior: 'smooth',
+                  });
+                });
+              }}
             >
               {category.label}
             </button>
@@ -883,20 +1089,82 @@ export default function HomePage() {
 
         {loading ? (
           <div className="loading-line">
-            Loading projects…
+            {pageText(
+              'loading_projects',
+              'Loading projects…',
+              'در حال بارگذاری پروژه‌ها…'
+            )}
           </div>
         ) : filter === 'bts' &&
           !shown.length ? (
           <div className="loading-line">
-            {lang === 'fa'
-              ? 'هنوز پشت صحنه‌ای اضافه نشده.'
-              : 'No Behind the Scenes has been added yet.'}
+            {pageText(
+              'no_bts',
+              'No Behind the Scenes has been added yet.',
+              'هنوز پشت صحنه‌ای اضافه نشده است.'
+            )}
           </div>
         ) : (
-          <div className="portfolio-grid">
+          <>
+            {shown.length > 0 ? (
+              <div className="work-browser-head">
+                <div className="work-browser-count">
+                  {String(shown.length).padStart(2, '0')}{' '}
+                  {pageText(
+                    'projects_label',
+                    'PROJECTS',
+                    'پروژه'
+                  )}
+                </div>
+
+              </div>
+            ) : null}
+
+            <div className={`work-carousel-shell ${
+              workIsCarousel ? 'is-carousel' : ''
+            }`}>
+              {workIsCarousel && showWorkControls ? (
+                <>
+                  <button
+                    type="button"
+                    className="work-edge-arrow work-edge-arrow-left"
+                    aria-label={pageText(
+                    'previous_projects',
+                    'Previous projects',
+                    'پروژه‌های قبلی'
+                  )}
+                    onClick={() => scrollWork('prev')}
+                  >
+                    <span>←</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="work-edge-arrow work-edge-arrow-right"
+                    aria-label={pageText(
+                    'next_projects',
+                    'Next projects',
+                    'پروژه‌های بعدی'
+                  )}
+                    onClick={() => scrollWork('next')}
+                  >
+                    <span>→</span>
+                  </button>
+                </>
+              ) : null}
+
+            <div
+              ref={workCarouselRef}
+              className={`portfolio-grid ${
+                workIsCarousel ? 'portfolio-carousel' : ''
+              }`}
+            >
             {displayItems.map(
               (item, index) => {
-                const href = `/work/${item.id}`;
+                const href =
+                  filter === 'bts'
+                    ? '/work/behind-the-scenes'
+                    : `/work/${item.id}`;
 
                 const title =
                   lang === 'fa'
@@ -942,9 +1210,11 @@ export default function HomePage() {
 
                       <div className="project-overlay">
                         <span>
-                          {lang === 'fa'
-                            ? 'مشاهده پروژه'
-                            : 'VIEW PROJECT'}
+                          {pageText(
+                            'view_project',
+                            'VIEW PROJECT',
+                            'مشاهده پروژه'
+                          )}
                         </span>
                         <b>↗</b>
                       </div>
@@ -953,19 +1223,35 @@ export default function HomePage() {
                     <div className="project-meta">
                       <div>
                         <p>
-                          {item.category ===
-                          'video'
-                            ? 'FILM'
-                            : item.category ===
-                              'photo'
-                            ? 'PHOTO'
-                            : item.category ===
-                              'advertising'
-                            ? 'ADVERTISING'
-                            : item.category ===
-                              'bts'
-                            ? 'BEHIND THE SCENES'
-                            : 'CONTENT'}
+                          {filter === 'bts'
+                            ? pageText(
+                                'card_bts',
+                                'BEHIND THE SCENES',
+                                'پشت صحنه'
+                              )
+                            : item.category === 'video'
+                            ? pageText(
+                                'card_film',
+                                'FILM',
+                                'فیلم'
+                              )
+                            : item.category === 'photo'
+                            ? pageText(
+                                'card_photo',
+                                'PHOTO',
+                                'عکس'
+                              )
+                            : item.category === 'advertising'
+                            ? pageText(
+                                'card_advertising',
+                                'ADVERTISING',
+                                'تبلیغات'
+                              )
+                            : pageText(
+                                'card_content',
+                                'CONTENT',
+                                'محتوا'
+                              )}
                         </p>
 
                         <h3>{title}</h3>
@@ -988,7 +1274,24 @@ export default function HomePage() {
                 );
               }
             )}
-          </div>
+            </div>
+            </div>
+
+            {shown.length ? (
+              <div className="work-view-all-bottom">
+                <Link
+                  className="work-view-all"
+                  href={workViewAllHref}
+                >
+                  {pageText(
+                    'view_all',
+                    'VIEW ALL',
+                    'مشاهده همه'
+                  )}
+                </Link>
+              </div>
+            ) : null}
+          </>
         )}
       </section>
 
@@ -1000,7 +1303,11 @@ export default function HomePage() {
           {content.about_image_url ? (
             <img
               src={content.about_image_url}
-              alt="NURANICO creative direction"
+              alt={pageText(
+                'about_image_alt',
+                'NURANICO creative direction',
+                'کارگردانی خلاق NURANICO'
+              )}
               loading="lazy"
             />
           ) : (
@@ -1012,7 +1319,11 @@ export default function HomePage() {
 
         <div className="about-copy">
           <p className="eyebrow">
-            03 / ABOUT
+            03 / {pageText(
+              'about_eyebrow',
+              'ABOUT',
+              'درباره ما'
+            )}
           </p>
 
           <h2>
@@ -1031,34 +1342,6 @@ export default function HomePage() {
                 t.aboutFallback}
           </p>
 
-          <div className="about-stats">
-            <div>
-              <strong>01</strong>
-              <span>
-                {lang === 'fa'
-                  ? 'ایده تا اجرا'
-                  : 'Concept to frame'}
-              </span>
-            </div>
-
-            <div>
-              <strong>∞</strong>
-              <span>
-                {lang === 'fa'
-                  ? 'قاب‌های تازه'
-                  : 'Fresh frames'}
-              </span>
-            </div>
-
-            <div>
-              <strong>24/7</strong>
-              <span>
-                {lang === 'fa'
-                  ? 'برای پروژه'
-                  : 'For the project'}
-              </span>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -1069,69 +1352,148 @@ export default function HomePage() {
         <div className="section-head">
           <div>
             <p className="eyebrow">
-              04 / CLIENTS
+              04 / {pageText(
+                'brands_eyebrow',
+                'SELECTED CLIENTS',
+                'مشتریان منتخب'
+              )}
             </p>
 
             <h2>{t.brandsTitle}</h2>
           </div>
         </div>
 
-        <div className="brand-grid">
-          {(brands.length
-            ? brands
-            : [1, 2, 3, 4, 5, 6]
-          ).map((brand) => {
-            if (typeof brand === 'number') {
-              return (
-                <Link
-                  className="brand-card placeholder"
-                  key={brand}
-                  href={`/clients/${brand}`}
-                >
-                  CLIENT /{' '}
-                  {String(brand).padStart(
-                    2,
-                    '0'
-                  )}
-                </Link>
-              );
-            }
+        <div className="brand-scroll-shell">
 
-            return (
-              <Link
-                className="brand-card"
-                key={brand.id}
-                href={`/clients/${brand.id}`}
-              >
-                {brand.logo_url ? (
-                  <img
-                    src={brand.logo_url}
-                    alt={brand.name}
-                  />
-                ) : (
-                  brand.name
-                )}
-              </Link>
+          <button
+            type="button"
+            className="brand-scroll-arrow brand-scroll-arrow-left"
+            aria-label={pageText(
+              'previous_clients',
+              'Previous clients',
+              'مشتریان قبلی'
+            )}
+            onClick={() => {
+              const el = document.querySelector('.brand-grid');
+              if (el) {
+                el.scrollBy({
+                  left: -el.clientWidth * 0.75,
+                  behavior: 'smooth'
+                });
+              }
+            }}
+          >
+            ←
+          </button>
+
+          <button
+            type="button"
+            className="brand-scroll-arrow brand-scroll-arrow-right"
+            aria-label={pageText(
+              'next_clients',
+              'Next clients',
+              'مشتریان بعدی'
+            )}
+            onClick={() => {
+              const el = document.querySelector('.brand-grid');
+              if (el) {
+                el.scrollBy({
+                  left: el.clientWidth * 0.75,
+                  behavior: 'smooth'
+                });
+              }
+            }}
+          >
+            →
+          </button>
+
+          <div className="brand-grid">
+          {(() => {
+            const brandBySlot = new Map<number, Brand>();
+
+            brands.forEach((brand, fallbackIndex) => {
+              const slot =
+                typeof brand.sort_order === 'number'
+                  ? brand.sort_order
+                  : fallbackIndex;
+
+              if (!brandBySlot.has(slot)) {
+                brandBySlot.set(slot, brand);
+              }
+            });
+
+            const highestUsedSlot = Math.max(
+              -1,
+              ...Array.from(brandBySlot.keys())
             );
-          })}
+
+            const totalSlots = Math.max(14, highestUsedSlot + 1);
+
+            return Array.from({ length: totalSlots }, (_, index) => {
+              const brand = brandBySlot.get(index);
+              const slotNumber = index + 1;
+
+              if (!brand) {
+                return (
+                  <div
+                    className="brand-card placeholder"
+                    key={`placeholder-${slotNumber}`}
+                  >
+                    {pageText(
+                      'client_placeholder',
+                      'CLIENT',
+                      'مشتری'
+                    )} /{' '}
+                    {String(slotNumber).padStart(2, '0')}
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  className="brand-card"
+                  key={brand.id}
+                >
+                  {brand.logo_url ? (
+                    <img
+                      src={brand.logo_url}
+                      alt={brand.name}
+                      loading="lazy"
+                    />
+                  ) : (
+                    brand.name
+                  )}
+                </div>
+              );
+            });
+          })()}
+          </div>
         </div>
       </section>
 
       <section className="statement reveal">
         <p className="eyebrow">
-          05 / THE APPROACH
+          05 / {pageText(
+            'statement_eyebrow',
+            'OUR APPROACH',
+            'رویکرد ما'
+          )}
         </p>
 
         <h2>
-          Less noise.
-          <br />
-          <em>More impact.</em>
+          {pageText(
+            'statement_title',
+            'Less noise. More impact.',
+            'کمتر شلوغی. تأثیر بیشتر.'
+          )}
         </h2>
 
         <p>
-          {lang === 'fa'
-            ? 'حرکت، نور، قاب و جزئیات؛ همه برای یک چیز: دیده‌شدن و ماندن.'
-            : 'Movement, light, framing and detail — all in service of one thing: making brands seen and remembered.'}
+          {pageText(
+            'statement_description',
+            'Movement, light, framing and detail — all in service of one thing: making brands seen and remembered.',
+            'حرکت، نور، قاب و جزئیات؛ همه برای یک چیز: دیده‌شدن و ماندن.'
+          )}
         </p>
       </section>
 
@@ -1139,7 +1501,11 @@ export default function HomePage() {
         {content.about_image_url ? (
           <img
             src={content.about_image_url}
-            alt="NURANICO cinematic landscape"
+            alt={pageText(
+              'landscape_alt',
+              'NURANICO cinematic landscape',
+              'تصویر سینمایی NURANICO'
+            )}
             loading="lazy"
           />
         ) : null}
@@ -1148,9 +1514,9 @@ export default function HomePage() {
           <span className="latin" lang="en">NURANICO / 05</span>
 
           <strong>
-            KEEP
+            {pageText('keep_line_1', 'KEEP', 'ادامه بده')}
             <br />
-            LOOKING.
+            {pageText('keep_line_2', 'LOOKING.', 'به دیدن.')}
           </strong>
         </div>
       </section>
@@ -1161,7 +1527,11 @@ export default function HomePage() {
       >
         <div>
           <p className="eyebrow">
-            06 / LET’S TALK
+            06 / {pageText(
+              'contact_eyebrow',
+              "LET'S TALK",
+              'تماس با ما'
+            )}
           </p>
 
           <h2>
@@ -1176,10 +1546,7 @@ export default function HomePage() {
 
           <a
             className="primary-button"
-            href={`mailto:${
-              content.contact_email ||
-              'hello@nuranico.com'
-            }`}
+            href={content.start_project_url || '/contact'}
           >
             <span>{t.cta}</span>
             <b>↗</b>
@@ -1204,13 +1571,22 @@ export default function HomePage() {
           </a>
 
           <p>
-            Creative studio for brands that
-            want to be seen differently.
+            {pageText(
+              'footer_description',
+              'Creative studio for brands that want to be seen differently.',
+              'استودیوی خلاق برای برندهایی که می‌خواهند متفاوت دیده شوند.'
+            )}
           </p>
         </div>
 
         <div>
-          <span>CONTACT</span>
+          <span>
+            {pageText(
+              'footer_contact',
+              'CONTACT',
+              'تماس'
+            )}
+          </span>
 
           <a
             href={`mailto:${
@@ -1227,18 +1603,90 @@ export default function HomePage() {
               href={content.contact_instagram}
               target="_blank"
               rel="noreferrer"
+              aria-label="Instagram"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
             >
-              Instagram ↗
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+              </svg>
+
+              <span className="latin" lang="en">
+                @{content.contact_instagram
+                  .replace(/^https?:\/\/(www\.)?instagram\.com\//i, '')
+                  .replace(/^@/, '')
+                  .split(/[/?#]/)[0]
+                  .replace(/\/$/, '')}
+              </span>
+            </a>
+          ) : null}
+
+          {content.personal_instagram ? (
+            <a
+              href={content.personal_instagram}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Instagram"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+              </svg>
+
+              <span className="latin" lang="en">
+                @{content.personal_instagram
+                  .replace(/^https?:\/\/(www\.)?instagram\.com\//i, '')
+                  .replace(/^@/, '')
+                  .split(/[/?#]/)[0]
+                  .replace(/\/$/, '')}
+              </span>
             </a>
           ) : null}
         </div>
 
         <div>
-          <span>NAVIGATION</span>
+          <span>
+            {pageText(
+              'footer_navigation',
+              'NAVIGATION',
+              'ناوبری'
+            )}
+          </span>
 
-          <a href="#work">Work</a>
-          <a href="#about">About</a>
-          <a href="#contact">Contact</a>
+          <a href="#work">{t.navWork}</a>
+          <a href="#about">{t.navAbout}</a>
+          <a href="#contact">{t.navContact}</a>
         </div>
       </footer>
     </main>
