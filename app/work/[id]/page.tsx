@@ -332,6 +332,45 @@ function PhotoViewer({
 }) {
   const [index, setIndex] = useState(0);
   const [zoom, setZoom] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+
+  const showPrevious = () => {
+    if (images.length < 2) return;
+    setZoom(false);
+    setIndex((value) => (value - 1 + images.length) % images.length);
+  };
+
+  const showNext = () => {
+    if (images.length < 2) return;
+    setZoom(false);
+    setIndex((value) => (value + 1) % images.length);
+  };
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    touchEndX.current = null;
+    touchStartX.current = event.touches[0]?.clientX ?? null;
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    touchEndX.current = event.touches[0]?.clientX ?? null;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+
+    const distance = touchStartX.current - touchEndX.current;
+    const threshold = 45;
+
+    if (distance > threshold) {
+      showNext();
+    } else if (distance < -threshold) {
+      showPrevious();
+    }
+
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
 
   useEffect(() => {
     if (!images.length) return;
@@ -370,13 +409,18 @@ function PhotoViewer({
 
   return (
     <div className={`photo-viewer ${zoom ? 'zoomed' : ''}`}>
-      <div className="photo-stage">
+      <div
+        className="photo-stage"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <img src={image} alt={`${alt} ${index + 1}`} onClick={() => setZoom((value) => !value)} />
 
         {images.length > 1 && (
           <>
-            <button type="button" className="photo-prev" onClick={() => setIndex((value) => (value - 1 + images.length) % images.length)}>←</button>
-            <button type="button" className="photo-next" onClick={() => setIndex((value) => (value + 1) % images.length)}>→</button>
+            <button type="button" className="photo-prev" onClick={showPrevious} aria-label="Previous image">←</button>
+            <button type="button" className="photo-next" onClick={showNext} aria-label="Next image">→</button>
             <span className="photo-counter">
               {String(index + 1).padStart(2, '0')} / {String(images.length).padStart(2, '0')}
             </span>

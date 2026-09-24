@@ -3765,3 +3765,237 @@
   object-fit: contain !important;
 }
 
+
+/* =========================================================
+   NURANICO — PHOTO VIEWER / GALLERY UI
+   Project pages only
+   ========================================================= */
+
+.project-page .photo-viewer {
+  position: relative !important;
+  background: #111 !important;
+  overflow: hidden !important;
+}
+
+/* MAIN ACTIVE IMAGE */
+.project-page .photo-stage {
+  position: relative !important;
+  background: #0d0d0d !important;
+}
+
+/* PREV / NEXT — clearly visible */
+.project-page .photo-prev,
+.project-page .photo-next {
+  z-index: 10 !important;
+
+  width: 48px !important;
+  height: 48px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border: 1px solid rgba(255,255,255,.28) !important;
+  border-radius: 50% !important;
+
+  background: rgba(10,10,10,.55) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  color: #fff !important;
+  font-size: 18px !important;
+
+  cursor: pointer !important;
+
+  transition:
+    background .25s ease,
+    border-color .25s ease,
+    transform .25s ease !important;
+}
+
+.project-page .photo-prev {
+  left: 20px !important;
+}
+
+.project-page .photo-next {
+  right: 20px !important;
+}
+
+.project-page .photo-prev:hover,
+.project-page .photo-next:hover {
+  background: rgba(255,255,255,.14) !important;
+  border-color: rgba(255,255,255,.55) !important;
+}
+
+/* IMAGE COUNTER */
+.project-page .photo-counter {
+  z-index: 10 !important;
+
+  left: auto !important;
+  right: 20px !important;
+  bottom: 18px !important;
+
+  padding: 7px 10px !important;
+
+  border-radius: 20px !important;
+
+  background: rgba(10,10,10,.55) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  color: rgba(255,255,255,.82) !important;
+
+  font-size: 8px !important;
+  line-height: 1 !important;
+  letter-spacing: .14em !important;
+}
+
+/* =========================================================
+   THUMBNAIL FILMSTRIP
+   Makes it immediately obvious this is a gallery
+   ========================================================= */
+
+.project-page .photo-thumbs {
+  display: flex !important;
+
+  gap: 8px !important;
+
+  padding: 10px !important;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+
+  scroll-behavior: smooth !important;
+  overscroll-behavior-x: contain !important;
+
+  background: #151515 !important;
+
+  border-top:
+    1px solid rgba(255,255,255,.08) !important;
+
+  scrollbar-width: none;
+}
+
+.project-page .photo-thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.project-page .photo-thumbs button {
+  position: relative !important;
+
+  flex: 0 0 clamp(110px, 11vw, 165px) !important;
+
+  width: auto !important;
+  height: auto !important;
+
+  aspect-ratio: 4 / 3 !important;
+
+  padding: 0 !important;
+
+  overflow: hidden !important;
+
+  border:
+    1px solid rgba(255,255,255,.08) !important;
+
+  border-radius: 5px !important;
+
+  background: #222 !important;
+
+  opacity: .48 !important;
+
+  cursor: pointer !important;
+
+  transition:
+    opacity .25s ease,
+    border-color .25s ease,
+    transform .25s ease !important;
+}
+
+.project-page .photo-thumbs button:hover {
+  opacity: .8 !important;
+}
+
+.project-page .photo-thumbs button.active {
+  opacity: 1 !important;
+
+  border-color:
+    rgba(255,255,255,.85) !important;
+}
+
+.project-page .photo-thumbs button.active::after {
+  content: '' !important;
+
+  position: absolute !important;
+
+  left: 8px !important;
+  right: 8px !important;
+  bottom: 5px !important;
+
+  height: 2px !important;
+
+  border-radius: 999px !important;
+
+  background: #fff !important;
+
+  pointer-events: none !important;
+}
+
+.project-page .photo-thumbs img {
+  display: block !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  object-fit: cover !important;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  .project-page .photo-prev,
+  .project-page .photo-next {
+    width: 38px !important;
+    height: 38px !important;
+
+    font-size: 15px !important;
+
+    transform:
+      translateY(-50%) !important;
+  }
+
+  .project-page .photo-prev {
+    left: 10px !important;
+  }
+
+  .project-page .photo-next {
+    right: 10px !important;
+  }
+
+  .project-page .photo-counter {
+    right: 10px !important;
+    bottom: 10px !important;
+
+    padding: 6px 8px !important;
+
+    font-size: 7px !important;
+  }
+
+  .project-page .photo-thumbs {
+    gap: 6px !important;
+
+    padding:
+      7px 8px 9px !important;
+  }
+
+  .project-page .photo-thumbs button {
+    flex-basis: 92px !important;
+
+    border-radius: 4px !important;
+  }
+
+}
+

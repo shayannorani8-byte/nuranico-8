@@ -2710,3 +2710,13 @@
     max-height: 27px;
   }
 }
+
+/* =========================================================
+   NURANICO — HIDE SERVICE CARD TOP META
+   Hide number + arrow only
+   ========================================================= */
+
+.services .service-card-top {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
