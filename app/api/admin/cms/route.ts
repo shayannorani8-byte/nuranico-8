@@ -302,32 +302,47 @@ export async function POST(request: NextRequest) {
     }
 
     if (resource === 'bts') {
-      const mediaIds = Array.isArray(body.mediaIds)
-        ? body.mediaIds
-            .map((value: unknown) => Number(value))
-            .filter((value: number) => Number.isFinite(value) && value > 0)
-        : [];
-
+      if (!Array.isArray(body.mediaIds)) throw new Error('Missing media selection.');
+      const mediaIds: number[] = body.mediaIds.map((value: unknown) => Number(value));
+      if (mediaIds.some(value => !Number.isSafeInteger(value) || value <= 0)) {
+        throw new Error('Invalid media selection.');
+      }
       const uniqueMediaIds = Array.from(new Set(mediaIds));
-
-      const clearResult = await db
-        .from('bts_media')
-        .delete()
-        .neq('id', 0);
-
-      if (clearResult.error) throw clearResult.error;
-
       if (uniqueMediaIds.length) {
-        const insertResult = await db
-          .from('bts_media')
-          .insert(
-            uniqueMediaIds.map((media_asset_id, index) => ({
-              media_asset_id,
-              sort_order: index,
-            }))
-          );
-
-        if (insertResult.error) throw insertResult.error;
+        const assets = await db.from('media_assets').select('id').in('id', uniqueMediaIds);
+        if (assets.error) throw assets.error;
+        if ((assets.data || []).length !== uniqueMediaIds.length) {
+          throw new Error('One or more selected files no longer exist. Refresh the media library.');
+        }
+      }
+      const existing = await db.from('bts_media').select('id,media_asset_id');
+      if (existing.error) throw existing.error;
+      const byAsset = new Map<number, { id: number; media_asset_id: number }>();
+      for (const row of existing.data || []) {
+        if (!byAsset.has(row.media_asset_id)) byAsset.set(row.media_asset_id, row);
+      }
+      const additions = uniqueMediaIds.filter(id => !byAsset.has(id));
+      // Additions must succeed before any previous selection is removed.
+      if (additions.length) {
+        const inserted = await db.from('bts_media').insert(additions.map(media_asset_id => ({
+          media_asset_id, sort_order: uniqueMediaIds.indexOf(media_asset_id),
+        })));
+        if (inserted.error) throw inserted.error;
+      }
+      const retained = uniqueMediaIds.filter(id => byAsset.has(id)).map(media_asset_id => ({
+        id: byAsset.get(media_asset_id)!.id, media_asset_id,
+        sort_order: uniqueMediaIds.indexOf(media_asset_id),
+      }));
+      if (retained.length) {
+        const reordered = await db.from('bts_media').upsert(retained, { onConflict: 'id' });
+        if (reordered.error) throw reordered.error;
+      }
+      const removals = (existing.data || []).filter(row =>
+        !uniqueMediaIds.includes(row.media_asset_id) || byAsset.get(row.media_asset_id)?.id !== row.id
+      ).map(row => row.id);
+      if (removals.length) {
+        const removed = await db.from('bts_media').delete().in('id', removals);
+        if (removed.error) throw removed.error;
       }
 
       const result = await db

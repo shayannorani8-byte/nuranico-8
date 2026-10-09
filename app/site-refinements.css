@@ -202,12 +202,12 @@ html body .site-nav .nav-cta { font-size: 12px !important; letter-spacing: 0 !im
 
 /* The native modal is portalled to body, outside page filters and legacy menu CSS. */
 html body dialog.full-menu {
-  position: fixed; inset: 0; margin: 0; width: 100%; height: 100dvh;
-  max-width: none; max-height: none; padding: 0; border: 0; border-radius: 0;
+  position: fixed; inset: 0; margin: auto; width: min(420px, calc(100% - 32px)); height: fit-content;
+  max-width: calc(100% - 32px); max-height: calc(100dvh - 32px); padding: 0; border: 1px solid #ffffff24; border-radius: 18px;
   background: #17191c; color: #f1efe9; overflow-x: hidden; overflow-y: auto;
   overscroll-behavior: contain; box-sizing: border-box; font-family: var(--font-body), sans-serif;
 }
-html body dialog.full-menu::backdrop { background: #17191c; }
+html body dialog.full-menu::backdrop { background: #0008; backdrop-filter: blur(5px); }
 html body .full-menu .full-menu-top {
   display: flex; align-items: center; justify-content: space-between; gap: 20px;
   padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 24px max(24px, env(safe-area-inset-left));
@@ -219,8 +219,8 @@ html body .full-menu .full-menu-brand span { font-size: 18px; font-weight: 700; 
 html body .full-menu .full-menu-actions { display: flex; gap: 10px; }
 html body .full-menu .full-menu-actions button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; background: transparent; border: 1px solid #ffffff30; border-radius: 10px; color: #f1efe9 !important; font-size: 12px; font-weight: 500; cursor: pointer; }
 html body .full-menu .full-menu-actions svg { width: 22px; height: 22px; }
-html body .full-menu .full-menu-links { display: flex; flex-direction: column; width: 100%; max-width: 1040px; margin: 0 auto; padding: 40px 48px max(36px, env(safe-area-inset-bottom)); box-sizing: border-box; }
-html body .full-menu .full-menu-links a { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 88px; padding: 16px 8px; margin: 0; border: 0; border-bottom: 1px solid #ffffff20; border-radius: 0; background: transparent; color: #f1efe9 !important; text-decoration: none; text-indent: 0; font-size: clamp(28px, 4vw, 46px) !important; font-weight: 600 !important; line-height: 1.5; letter-spacing: 0 !important; }
+html body .full-menu .full-menu-links { display: flex; flex-direction: column; width: 100%; max-width: 1040px; margin: 0 auto; padding: 12px 24px 24px; box-sizing: border-box; }
+html body .full-menu .full-menu-links a { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 52px; padding: 10px 4px; margin: 0; border: 0; border-bottom: 1px solid #ffffff20; border-radius: 0; background: transparent; color: #f1efe9 !important; text-decoration: none; text-indent: 0; font-size: 21px !important; font-weight: 600 !important; line-height: 1.5; letter-spacing: 0 !important; }
 html body .full-menu .full-menu-links a > span { display: block; visibility: visible; opacity: 1; color: inherit !important; overflow-wrap: anywhere; }
 html body .full-menu .full-menu-links a::before, html body .full-menu .full-menu-links a::after { content: none !important; }
 html body .full-menu .full-menu-links svg { display: block; flex-shrink: 0; width: 26px; height: 26px; color: #b4b8bf; }
@@ -232,7 +232,7 @@ html body .full-menu :is(a,button):focus-visible { outline: 2px solid #bcd0ff; o
 @media(max-width:700px) {
   html body .full-menu .full-menu-top { padding-inline: 20px; padding-block: max(18px, env(safe-area-inset-top)) 18px; }
   html body .full-menu .full-menu-brand img { width: 116px; }
-  html body .full-menu .full-menu-links { padding: 24px 24px max(28px, env(safe-area-inset-bottom)); }
-  html body .full-menu .full-menu-links a { min-height: 70px; padding: 12px 0; font-size: 28px !important; }
+  html body .full-menu .full-menu-links { padding: 12px 20px 20px; }
+  html body .full-menu .full-menu-links a { min-height: 52px; padding: 10px 0; font-size: 21px !important; }
   html body .full-menu .full-menu-links .full-menu-project { padding: 14px 18px; margin-top: 24px; min-height: 56px; }
 }

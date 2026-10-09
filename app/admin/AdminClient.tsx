@@ -425,6 +425,11 @@ export default function AdminPage() {
   const [mediaSearch, setMediaSearch] = useState('');
   const [mediaFilter, setMediaFilter] = useState('all');
 
+  async function refreshMedia() {
+    const data = await api<{ rows: MediaAsset[] }>('media');
+    setMedia(data.rows || []);
+  }
+
   function flash(text: string) {
     setError('');
     setMessage(text);
@@ -880,9 +885,7 @@ export default function AdminPage() {
               <div className="media-picker">
                 {media.map(item => {
                   const selected = btsMediaIds.includes(item.id);
-                  const isVideo =
-                    item.mime_type?.startsWith('video/') ||
-                    (item.file_type || '').toLowerCase() === 'video';
+                  const isVideo = isVideoAsset(item);
 
                   return (
                     <label
@@ -928,9 +931,7 @@ export default function AdminPage() {
 
                     if (!item) return null;
 
-                    const isVideo =
-                      item.mime_type?.startsWith('video/') ||
-                      (item.file_type || '').toLowerCase() === 'video';
+                    const isVideo = isVideoAsset(item);
 
                     return (
                       <article
@@ -972,12 +973,16 @@ export default function AdminPage() {
             <SectionHeader
               title="Projects"
               description="Portfolio projects, destinations, media and publication."
-              action={<button className="primary" onClick={() => setEditingProject({
+              action={<button className="primary" onClick={() => {
+                setDestMap(current => ({ ...current, 0: [] }));
+                setProjectMediaMap(current => ({ ...current, 0: [] }));
+                setProjectMediaSearch('');
+                setEditingProject({
                 id: 0, title_fa: '', title_en: '', description_fa: '', description_en: '',
                 category: 'Content', cover_url: '', media_url: '', media_type: 'image',
                 preview_url: '', preview_type: 'video', preview_enabled: false,
                 featured: false, published: false, sort_order: projects.length,
-              })}>+ New project</button>}
+              }); }}>+ New project</button>}
             />
             <div className="toolbar">
               <input aria-label="Search projects" placeholder="Search projects…" value={projectSearch} onChange={e => setProjectSearch(e.target.value)} />
@@ -1060,7 +1065,7 @@ export default function AdminPage() {
 
                     <div className="media-picker">
                       {mediaOptions
-                        .filter(item => !item.mime_type?.startsWith('video'))
+                        .filter(item => !isVideoAsset(item))
                         .map(item => {
                           const selected = editingProject.cover_url === item.file_url;
 
@@ -1112,7 +1117,7 @@ export default function AdminPage() {
                     <div className="media-picker">
                       {mediaOptions.map(item => {
                         const selected = editingProject.media_url === item.file_url;
-                        const isVideo = !!item.mime_type?.startsWith('video');
+                        const isVideo = isVideoAsset(item);
 
                         return (
                           <label
@@ -1179,7 +1184,7 @@ export default function AdminPage() {
 
                     <div className="media-picker">
                       {mediaOptions
-                        .filter(item => item.mime_type?.startsWith('video'))
+                        .filter(item => isVideoAsset(item))
                         .map(item => {
                           const selected = editingProject.preview_url === item.file_url;
 
@@ -1261,7 +1266,7 @@ export default function AdminPage() {
                               }
                             />
 
-                            {item.mime_type?.startsWith('video')
+                            {isVideoAsset(item)
                               ? 'VIDEO'
                               : 'IMAGE'} · {item.name}
                           </label>
@@ -1305,7 +1310,7 @@ export default function AdminPage() {
 
         {section === 'media' && (
           <>
-            <SectionHeader title="Media Library" description="Upload images and videos once and reuse them across the site." action={<MediaUploader onDone={loadAll} onError={setError} />} />
+            <SectionHeader title="Media Library" description="Upload images and videos once and reuse them across the site." action={<MediaUploader onDone={refreshMedia} onError={setError} />} />
             <div className="toolbar">
               <input aria-label="Search media" placeholder="Search media…" value={mediaSearch} onChange={e => setMediaSearch(e.target.value)} />
               <select aria-label="Filter media type" value={mediaFilter} onChange={e => setMediaFilter(e.target.value)}>
