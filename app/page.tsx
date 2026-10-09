@@ -367,11 +367,11 @@ export default function HomePage() {
     try {
       const [filmResponse, photoResponse, contentResponse, btsResponse, homeResponse] =
         await Promise.all([
-          fetch('/api/public/projects?destination=film&home=1', { cache: 'no-store' }),
-          fetch('/api/public/projects?destination=photography&home=1', { cache: 'no-store' }),
-          fetch('/api/public/projects?destination=content&home=1', { cache: 'no-store' }),
-          fetch('/api/public/bts?home=1', { cache: 'no-store' }),
-          fetch('/api/public/projects?destination=home', {cache:'no-store'}),
+          fetch('/api/public/projects?destination=film', { cache: 'no-store' }),
+          fetch('/api/public/projects?destination=photography', { cache: 'no-store' }),
+          fetch('/api/public/projects?destination=content', { cache: 'no-store' }),
+          fetch('/api/public/bts', { cache: 'no-store' }),
+          fetch('/api/public/projects?destination=all', {cache:'no-store'}),
         ]);
 
       const [filmResult, photoResult, contentResult2, btsResult, homeResult] =
@@ -431,7 +431,11 @@ export default function HomePage() {
   }
 
   const shown = useMemo(() => {
-    if (filter === 'all') return portfolio;
+    if (filter === 'all') {
+      const projectUrls = new Set(portfolio.flatMap(item => [item.media_url,item.cover_url].filter(Boolean)));
+      const extraBts = btsPortfolio.filter(item => !projectUrls.has(item.cover_url)).map(item => ({...item,id:-(1_000_000_000 + Math.abs(item.id)),href:'/work/behind-the-scenes'}));
+      return [...portfolio,...extraBts];
+    }
     if (filter === 'video') return filmPortfolio;
     if (filter === 'photo') return photoPortfolio;
     if (filter === 'content') return contentPortfolio;

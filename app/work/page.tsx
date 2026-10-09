@@ -23,7 +23,7 @@ type Item = {
 export default function WorkPage() {
   const searchParams = useSearchParams();
   const requestedDestination = searchParams.get('destination') || 'work';
-  const destination = ['film', 'photography', 'content'].includes(requestedDestination) ? requestedDestination : 'work';
+  const destination = ['film', 'photography', 'content'].includes(requestedDestination) ? requestedDestination : 'all';
   const { lang, text } = usePageTexts('work');
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);

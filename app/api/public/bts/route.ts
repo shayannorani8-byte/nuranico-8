@@ -8,20 +8,18 @@ export async function GET(request:NextRequest) {
   try {
     const db = getAdminSupabase();
     const homeOnly = request.nextUrl.searchParams.get('home') === '1';
-    const [links, destinations] = await Promise.all([
+    const [links, destinations, homeLinks] = await Promise.all([
       db.from('bts_media').select('id,media_asset_id,sort_order').order('sort_order').order('id'),
       db.from('project_destinations').select('project_id').eq('destination', 'bts'),
+      db.from('project_destinations').select('project_id').eq('destination','home'),
     ]);
     if (links.error) throw links.error;
     if (destinations.error) throw destinations.error;
+    if (homeLinks.error) throw homeLinks.error;
+    const homeIds = new Set((homeLinks.data || []).map(row => row.project_id));
 
     let projectIds = Array.from(new Set((destinations.data || []).map(row => row.project_id)));
-    if (homeOnly) {
-      const home = await db.from('project_destinations').select('project_id').eq('destination','home');
-      if (home.error) throw home.error;
-      const homeIds = new Set((home.data || []).map(row => row.project_id));
-      projectIds = projectIds.filter(id => homeIds.has(id));
-    }
+    if (homeOnly) projectIds = projectIds.filter(id => homeIds.has(id));
     let directQuery = db.from('media_assets').select('*').eq('published',true).contains('destinations',['bts']).order('created_at',{ascending:false});
     if (homeOnly) directQuery = directQuery.eq('show_on_home',true);
     const direct = await directQuery;
@@ -49,16 +47,16 @@ export async function GET(request:NextRequest) {
     const items: {
       id: number; media_asset_id: number | null; name: string; file_url: string;
       file_type: string | null; mime_type: string | null; alt_text_en: string | null;
-      alt_text_fa: string | null; sort_order: number; kind: 'video' | 'photo'; brand_name: string | null; project_name: string | null;
+      alt_text_fa: string | null; sort_order: number; kind: 'video' | 'photo'; brand_name: string | null; project_name: string | null; show_on_home:boolean;
     }[] = [];
     const add = (id: number, asset: {
-      brand_name?: string | null; project_name?: string | null; id?: number; name: string; file_url: string; file_type?: string | null;
+      show_on_home?: boolean; brand_name?: string | null; project_name?: string | null; id?: number; name: string; file_url: string; file_type?: string | null;
       mime_type?: string | null; alt_text_en?: string | null; alt_text_fa?: string | null;
     }) => {
       if (!asset.file_url || seen.has(asset.file_url)) return;
       seen.add(asset.file_url);
       items.push({
-        brand_name:asset.brand_name || null, project_name:asset.project_name || null, id, media_asset_id: asset.id ?? null, name: asset.name, file_url: asset.file_url,
+        show_on_home:!!asset.show_on_home, brand_name:asset.brand_name || null, project_name:asset.project_name || null, id, media_asset_id: asset.id ?? null, name: asset.name, file_url: asset.file_url,
         file_type: asset.file_type || null, mime_type: asset.mime_type || null,
         alt_text_en: asset.alt_text_en || null, alt_text_fa: asset.alt_text_fa || null,
         sort_order: items.length, kind: isVideoAsset(asset) ? 'video' : 'photo',
@@ -78,15 +76,16 @@ export async function GET(request:NextRequest) {
         ...(!project.media_url && !projectAssets.length ? [project.cover_url] : []),
       ].filter((url): url is string => typeof url === 'string' && !!url)));
       urls.forEach((file_url, index) => add(-(project.id * 1_000_000 + index + 1), {
-        name: localizedValue('en', project.title_en, project.title_fa, 'Behind the scenes'),
+        show_on_home:homeIds.has(project.id), name: localizedValue('en', project.title_en, project.title_fa, 'Behind the scenes'),
         file_url, file_type: file_url === project.media_url ? project.media_type : null,
         alt_text_en: project.title_en, alt_text_fa: project.title_fa,
       }));
       for (const row of projectAssets) {
         const asset = assetMap.get(row.media_asset_id);
-        if (asset) add(-asset.id, asset);
+        if (asset) add(-asset.id, {...asset,show_on_home:asset.show_on_home || homeIds.has(project.id)});
       }
     }
+    items.sort((a,b) => Number(b.show_on_home) - Number(a.show_on_home));
     return NextResponse.json({
       items,
       photos: items.filter(item => item.kind === 'photo'),
