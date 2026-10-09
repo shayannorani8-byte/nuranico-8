@@ -74,17 +74,7 @@ export default function ServicesPage() {
 
               <Link
                 href={service.href}
-                style={{
-                  display: "inline-block",
-                  marginTop: "24px",
-                  padding: "12px 20px",
-                  border: "1px solid rgba(255,255,255,.35)",
-                  color: "#fff",
-                  textDecoration: "none",
-                  cursor: "pointer",
-                  position: "relative",
-
-                }}
+                className="service-details-link"
               >
                 {text('view_service', 'VIEW SERVICE', 'مشاهده سرویس')}
               </Link>

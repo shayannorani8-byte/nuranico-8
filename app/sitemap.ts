@@ -5,6 +5,7 @@ const SITE_URL = 'https://nuranico.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
+    {url:`${SITE_URL}/brands`,changeFrequency:'monthly',priority:0.7},
     {
       url: SITE_URL,
       lastModified: new Date(),
