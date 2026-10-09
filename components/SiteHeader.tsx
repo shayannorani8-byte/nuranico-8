@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { createPortal } from 'react-dom';
+import ArrowUpRight from './ArrowUpRight';
 import { usePageTexts } from '../lib/usePageTexts';
 import { useSiteData } from './SiteData';
 
@@ -11,14 +13,25 @@ export default function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   useEffect(() => { setMenuOpen(false); }, [pathname]);
   useEffect(() => {
     if (!menuOpen) return;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    dialogRef.current?.showModal();
+    closeButtonRef.current?.focus();
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') { setMenuOpen(false); menuButtonRef.current?.focus(); }
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = overflow;
+      dialogRef.current?.close();
+      menuButtonRef.current?.focus();
+    };
   }, [menuOpen]);
   const initialData = useSiteData();
   const [logoUrl, setLogoUrl] = useState(String(initialData.settings.logo_url || ''));
@@ -160,29 +173,29 @@ export default function SiteHeader() {
         </button>
       </div>
 
-      {menuOpen && <button className="menu-backdrop" type="button" tabIndex={-1} aria-label={text('close_menu', 'Close menu', 'بستن منو')} onClick={closeMenu} />}
-      <nav className="mobile-menu" id="site-mobile-menu" aria-label={text('main_navigation', 'Main navigation', 'ناوبری اصلی')} inert={!menuOpen} aria-hidden={!menuOpen}>
-        <Link href="/work" onClick={closeMenu} aria-current={pathname.startsWith('/work') ? 'page' : undefined}>
-          {t.work}
-        </Link>
-
-        <Link href="/services" onClick={closeMenu} aria-current={pathname.startsWith('/services') ? 'page' : undefined}>
-          {t.services}
-        </Link>
-
-        <Link href="/about" onClick={closeMenu} aria-current={pathname === '/about' ? 'page' : undefined}>
-          {t.about}
-        </Link>
-
-        <Link href="/#brands" onClick={closeMenu}>
-          {t.brands}
-        </Link>
-
-        <Link href="/contact" onClick={closeMenu} aria-current={pathname === '/contact' ? 'page' : undefined}>
-          {t.contact}
-        </Link>
-        <Link className="menu-project-link" href={startProjectUrl || '/contact'} onClick={closeMenu}>{t.cta}<span aria-hidden="true">↗</span></Link>
-      </nav>
+      {menuOpen && createPortal(
+        <dialog ref={dialogRef} className="full-menu" id="site-mobile-menu" lang={lang} dir={lang === 'fa' ? 'rtl' : 'ltr'} aria-label={text('main_navigation', 'Main navigation', 'ناوبری اصلی')} onCancel={event => { event.preventDefault(); closeMenu(); }}>
+          <div className="full-menu-top">
+            <Link className="full-menu-brand" href="/" onClick={closeMenu} aria-label="NURANICO">
+              {logoUrl ? <img src={logoUrl} alt="NURANICO" /> : <span lang="en">NURANICO</span>}
+            </Link>
+            <div className="full-menu-actions">
+              <button type="button" onClick={() => setLang(lang === 'en' ? 'fa' : 'en')} aria-label={text('change_language', 'Change language', 'تغییر زبان')}>{lang === 'en' ? 'FA' : 'EN'}</button>
+              <button ref={closeButtonRef} type="button" onClick={closeMenu} aria-label={text('close_menu', 'Close menu', 'بستن منو')}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="m6 6 12 12M18 6 6 18" /></svg></button>
+            </div>
+          </div>
+          <nav className="full-menu-links" aria-label={text('main_navigation', 'Main navigation', 'ناوبری اصلی')}>
+            {[
+              ['/work', t.work, pathname.startsWith('/work')],
+              ['/services', t.services, pathname.startsWith('/services')],
+              ['/about', t.about, pathname === '/about'],
+              ['/#brands', t.brands, false],
+              ['/contact', t.contact, pathname === '/contact'],
+            ].map(([href, label, active]) => <Link key={String(href)} href={String(href)} onClick={closeMenu} aria-current={active ? 'page' : undefined}><span>{String(label)}</span><ArrowUpRight /></Link>)}
+            <Link className="full-menu-project" href={startProjectUrl || '/contact'} onClick={closeMenu}><span>{t.cta}</span><ArrowUpRight /></Link>
+          </nav>
+        </dialog>, document.body
+      )}
     </header>
   );
 }
