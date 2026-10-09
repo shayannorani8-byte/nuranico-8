@@ -324,3 +324,5 @@
 .admin .bts-type-switch button[aria-pressed='true'] { background:#bdd0ff;color:#101827;border-color:#bdd0ff; }
 .admin .bts-type-switch button span { opacity:.7;font-size:12px; }
 .admin .bts-type-switch button:disabled { opacity:.5;cursor:wait; }
+
+.admin.admin :is(.admin-site-link,.logout) { justify-content:center;text-align:center;gap:0;min-height:40px;font-size:12px;line-height:1.6;padding:9px 14px; }
