@@ -161,3 +161,43 @@
 .admin.admin :is(input,textarea,select,.hint,.section-header p,.panel p) { font-weight: 400; }
 .admin.admin :is(.ghost,.danger,.admin-site-link,.sidebar nav button) { font-weight: 500; }
 .admin.admin .sidebar nav .nav-active { font-weight: 600; }
+/* Visual media library: bounded browsing, retained selections and ordered galleries. */
+.admin.admin .asset-role{padding:18px 0;border-bottom:1px solid var(--admin-border,#303b49)}
+.admin.admin .asset-role-head,.admin.admin .asset-pagination,.admin.admin .asset-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.admin.admin .asset-role-head{justify-content:space-between;margin-bottom:12px}
+.admin.admin .asset-role-head h3{margin:0;font-size:15px}
+.admin.admin .asset-role-head>span,.admin.admin .asset-pagination>span{color:#9facc0;font-size:12px}
+.admin.admin .asset-browser summary,.admin.admin .text-entry summary{cursor:pointer;font-weight:600;padding:12px 0}
+.admin.admin .asset-browser-body{padding:12px 0}
+.admin.admin .asset-tools>input{flex:1;min-width:160px}
+.admin.admin .asset-tools label{font-size:12px;display:flex;gap:8px;align-items:center}
+.admin.admin .asset-tools input[type=checkbox]{width:16px;height:16px}
+.admin.admin .asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:12px;margin:16px 0}
+.admin.admin .asset-tile{padding:0;overflow:hidden;display:flex;flex-direction:column;text-align:left;border:1px solid #354255;border-radius:12px;background:#101722;color:#e8edf6;min-width:0}
+.admin.admin .asset-tile.selected{border:2px solid #bbceff;background:#1c2b43}
+.admin.admin .asset-image{height:110px;width:100%;position:relative;background:#080d14;overflow:hidden}
+.admin.admin .asset-image img,.admin.admin .asset-image video{width:100%;height:100%;object-fit:contain;display:block}
+.admin.admin .asset-kind{position:absolute;bottom:6px;left:6px;font-size:9px;background:#080d14cc;padding:3px 6px;border-radius:4px}
+.admin.admin .asset-name{padding:9px 10px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-size:12px;font-weight:600}
+.admin.admin .asset-tile>small{padding:0 10px;font-size:11px;color:#a1adc0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%}
+.admin.admin .asset-check{padding:8px 10px;font-size:11px;color:#bbceff}
+.admin.admin .asset-selection{display:grid;gap:8px;max-height:320px;overflow:auto;margin-bottom:12px}
+.admin.admin .asset-selected{display:flex;gap:12px;align-items:center;padding:8px;border:1px solid #354255;border-radius:10px;min-width:0}
+.admin.admin .asset-selected>.asset-image{width:64px;height:64px;flex-shrink:0;border-radius:6px}
+.admin.admin .asset-selected>div:last-child{min-width:0;flex:1}
+.admin.admin .asset-selected b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.admin.admin .asset-selected small{font-size:11px;color:#9facc0}
+.admin.admin .asset-order{display:flex;gap:6px;margin-top:5px}
+.admin.admin .asset-order button{font-size:11px;padding:4px 8px;min-height:28px}
+.admin.admin .asset-pagination{justify-content:space-between;margin:16px 0}
+.admin.admin .asset-pagination button{padding:8px 12px}
+.admin.admin .asset-label-panel{margin:16px 0}
+.admin.admin .asset-bulk-check{display:flex;gap:9px;align-items:center}
+.admin.admin .asset-bulk-check input{width:17px;height:17px;flex-shrink:0}
+.admin.admin .text-page{margin-top:24px}
+.admin.admin .text-page>h3{text-transform:capitalize;font-size:17px}
+.admin.admin .text-entry{border-bottom:1px solid #303b49;padding:0 8px}
+.admin.admin .text-entry summary{font-size:13px}
+.admin.admin .text-entry summary p{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-size:12px;line-height:1.5;color:#9facc0;margin:5px 0 0;font-weight:400}
+.admin.admin .text-entry summary small{margin-left:12px;color:#bbceff}
+@media(max-width:600px){.admin.admin .asset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin.admin .asset-tools>input,.admin.admin .asset-tools>.field{width:100%;flex-basis:100%}.admin.admin .asset-pagination{font-size:11px}.admin.admin .asset-label-panel .grid2{grid-template-columns:1fr}}

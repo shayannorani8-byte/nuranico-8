@@ -10,6 +10,8 @@ import { usePageTexts } from '../../lib/usePageTexts';
 
 type Item = {
   id: number;
+  href?: string;
+  brand_name?: string | null;
   title_en?: string;
   title_fa: string;
   category: string;
@@ -93,7 +95,7 @@ export default function WorkPage() {
 
             return (
               <Link
-                href={`/work/${item.id}`}
+                href={item.href || `/work/${item.id}`}
                 className="work-clean-item"
                 key={item.id}
               >
@@ -105,11 +107,11 @@ export default function WorkPage() {
                       loading="lazy"
                     />
                   ) : (
-                    <div className="work-clean-empty" />
+                    <video src={item.media_url || undefined} preload="metadata" muted playsInline />
                   )}
                 </div>
 
-                <div className="work-clean-info">
+                <div className="work-clean-info">{item.brand_name && <p className="asset-brand-caption" dir="auto">{item.brand_name}</p>}
                   <h2>
                     {localizedValue(lang, item.title_en, item.title_fa, text('untitled', 'Untitled', 'بدون عنوان'))}
                   </h2>

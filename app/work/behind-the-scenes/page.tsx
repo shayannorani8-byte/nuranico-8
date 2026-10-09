@@ -10,6 +10,8 @@ type BtsItem = {
   id: number;
   media_asset_id: number;
   name: string;
+  brand_name?: string | null;
+  project_name?: string | null;
   file_url: string;
   file_type?: string | null;
   mime_type?: string | null;
@@ -143,6 +145,7 @@ export default function BehindTheScenesPage() {
             </span>
           )}
         </span>
+        {(item.brand_name || item.project_name) && <span className="bts-caption" dir="auto">{[item.brand_name,item.project_name].filter(Boolean).join(" · ")}</span>}
       </button>
     );
   };

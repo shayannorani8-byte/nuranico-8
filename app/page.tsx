@@ -100,6 +100,7 @@ type PortfolioItem = {
   preview_enabled?: boolean | null;
   featured?: boolean;
   brand_id?: number | null;
+  href?: string;
 };
 
 type Brand = {
@@ -188,6 +189,7 @@ export default function HomePage() {
   const [settings, setSettings] = useState<Settings>(initialData.settings as Settings);
   const [fonts, setFonts] = useState<FontAsset[]>(initialData.fonts);
   const [content, setContent] = useState<Content>(initialData.content as Content);
+  const [heroPortfolio, setHeroPortfolio] = useState<PortfolioItem[]>([]);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [filmPortfolio, setFilmPortfolio] = useState<PortfolioItem[]>([]);
   const [photoPortfolio, setPhotoPortfolio] = useState<PortfolioItem[]>([]);
@@ -278,11 +280,11 @@ export default function HomePage() {
   }, [loading]);
 
   const heroSlides = useMemo(() => {
-    const featured = portfolio.filter((item) => item.featured);
-    const source = featured.length ? featured : portfolio;
+    const featured = heroPortfolio.filter((item) => item.featured);
+    const source = featured.length ? featured : heroPortfolio;
 
     return source.slice(0, 3);
-  }, [portfolio]);
+  }, [heroPortfolio]);
 
   useEffect(() => {
     if (!heroSlides.length) return;
@@ -359,26 +361,29 @@ export default function HomePage() {
     }
 
     if (portfolioResult.data) {
-      setPortfolio(portfolioResult.data);
+      setHeroPortfolio(portfolioResult.data);
     }
 
     try {
-      const [filmResponse, photoResponse, contentResponse, btsResponse] =
+      const [filmResponse, photoResponse, contentResponse, btsResponse, homeResponse] =
         await Promise.all([
-          fetch('/api/public/projects?destination=film', { cache: 'no-store' }),
-          fetch('/api/public/projects?destination=photography', { cache: 'no-store' }),
-          fetch('/api/public/projects?destination=content', { cache: 'no-store' }),
-          fetch('/api/public/bts', { cache: 'no-store' }),
+          fetch('/api/public/projects?destination=film&home=1', { cache: 'no-store' }),
+          fetch('/api/public/projects?destination=photography&home=1', { cache: 'no-store' }),
+          fetch('/api/public/projects?destination=content&home=1', { cache: 'no-store' }),
+          fetch('/api/public/bts?home=1', { cache: 'no-store' }),
+          fetch('/api/public/projects?destination=home', {cache:'no-store'}),
         ]);
 
-      const [filmResult, photoResult, contentResult2, btsResult] =
+      const [filmResult, photoResult, contentResult2, btsResult, homeResult] =
         await Promise.all([
           filmResponse.json(),
           photoResponse.json(),
           contentResponse.json(),
           btsResponse.json(),
+          homeResponse.json(),
         ]);
 
+      if (homeResponse.ok) setPortfolio(homeResult.items || []);
       setFilmPortfolio(filmResponse.ok ? filmResult.items || [] : []);
       setPhotoPortfolio(photoResponse.ok ? photoResult.items || [] : []);
       setContentPortfolio(contentResponse.ok ? contentResult2.items || [] : []);
@@ -1145,10 +1150,10 @@ export default function HomePage() {
             >
             {displayItems.map(
               (item, index) => {
-                const href =
+                const href = item.href || (
                   filter === 'bts'
                     ? '/work/behind-the-scenes'
-                    : `/work/${item.id}`;
+                    : `/work/${item.id}`);
 
                 const title = localizedValue(lang, item.title_en, item.title_fa, pageText('untitled', 'Untitled', 'بدون عنوان'));
 
@@ -1170,10 +1175,7 @@ export default function HomePage() {
                           loading="lazy"
                         />
                       ) : (
-                        <div
-                          className="project-media-empty"
-                          aria-label={title}
-                        />
+                        <video src={item.media_url || item.preview_url || undefined} muted playsInline preload="metadata" className="project-card-video" aria-label={title} />
                       )}
 
                       {hasVideoPreview(item) &&
@@ -1447,93 +1449,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="statement reveal">
-        <p className="eyebrow">
-          05 / {pageText(
-            'statement_eyebrow',
-            'OUR APPROACH',
-            'رویکرد ما'
-          )}
-        </p>
-
-        <h2>
-          {pageText(
-            'statement_title',
-            'Less noise. More impact.',
-            'کمتر شلوغی. تأثیر بیشتر.'
-          )}
-        </h2>
-
-        <p>
-          {pageText(
-            'statement_description',
-            'Movement, light, framing and detail — all in service of one thing: making brands seen and remembered.',
-            'حرکت، نور، قاب و جزئیات؛ همه برای یک چیز: دیده‌شدن و ماندن.'
-          )}
-        </p>
-      </section>
-
-      <section className="landscape reveal">
-        {content.about_image_url ? (
-          <img
-            src={content.about_image_url}
-            alt={pageText(
-              'landscape_alt',
-              'NURANICO cinematic landscape',
-              'تصویر سینمایی NURANICO'
-            )}
-            loading="lazy"
-          />
-        ) : null}
-
-        <div className="landscape-copy">
-          <span className="latin" lang="en">NURANICO / 05</span>
-
-          <strong>
-            {pageText('keep_line_1', 'KEEP', 'ادامه بده')}
-            <br />
-            {pageText('keep_line_2', 'LOOKING.', 'به دیدن.')}
-          </strong>
-        </div>
-      </section>
-
-      <section
-        id="contact"
-        className="section contact reveal"
-      >
-        <div>
-          <p className="eyebrow">
-            06 / {pageText(
-              'contact_eyebrow',
-              "LET'S TALK",
-              'تماس با ما'
-            )}
-          </p>
-
-          <h2>
-            {lang === 'fa'
-              ? content.contact_title_fa ||
-                t.contactFallback
-              : content.contact_title_en ||
-                t.contactFallback}
-          </h2>
-
-          <p>{t.contactSub}</p>
-
-          <Link
-            className="primary-button"
-            href={content.start_project_url || '/contact'}
-          >
-            <span>{t.cta}</span>
-            <b aria-hidden="true"><ArrowUpRight /></b>
-          </Link>
-        </div>
-
-        <div className="contact-mark">
-          N
-        </div>
-      </section>
-
       <footer className="footer">
         <div>
           <a
@@ -1662,7 +1577,7 @@ export default function HomePage() {
 
           <a href="#work">{t.navWork}</a>
           <a href="#about">{t.navAbout}</a>
-          <a href="#contact">{t.navContact}</a>
+          <a href="/contact">{t.navContact}</a>
         </div>
       </footer>
     </main>

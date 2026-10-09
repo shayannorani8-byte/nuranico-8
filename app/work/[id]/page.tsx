@@ -641,22 +641,12 @@ export default function ProjectPage() {
         </section>
       )}
 
-      {gallery.length > 1 || (video && gallery.length > 0) ? (
-        <section className="project-gallery">
-          {gallery.map((image, index) => (
-            <figure key={image} className={index % 3 === 0 ? 'wide' : ''}>
-              <img src={image} alt={`${title} ${text(
-                'gallery_label',
-                'gallery',
-                'گالری'
-              )} ${index + 1}`} loading="lazy" />
-            </figure>
-          ))}
-        </section>
-      ) : null}
-
-      {galleryVideos.length > 0 && <section className="project-gallery-videos" aria-label={text('video_gallery', 'Video gallery', 'گالری ویدیو')}>
-        {galleryVideos.map(url => <VideoPlayer key={url} src={url} />)}
+      {(gallery.length > 1 || galleryVideos.length > 0 || (video && gallery.length > 0)) && <section className="project-gallery" aria-label={text('gallery_label','Gallery','گالری')}>
+        {Array.from(new Set([
+          ...attachedMedia.map(item => item.file_url),
+          ...(project.gallery_urls || []),
+          ...(video ? gallery : []),
+        ])).filter(url => url !== effectiveVideoUrl).map((url,index) => isVideoAsset({file_url:url}) ? <figure key={url} className="wide"><VideoPlayer src={url} /></figure> : <figure key={url} className={index % 3 === 0 ? 'wide' : ''}><img src={url} alt={`${title} ${index + 1}`} loading="lazy" /></figure>)}
       </section>}
 
       <section className="project-end">

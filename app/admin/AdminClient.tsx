@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import './admin-ui.css';
+import MediaPicker, { type MediaAsset } from './MediaPicker';
 import { isVideoAsset } from '../../lib/media';
 
 type Section =
@@ -31,19 +32,6 @@ type Project = {
   featured: boolean | null;
   published: boolean | null;
   sort_order: number | null;
-};
-
-type MediaAsset = {
-  id: number;
-  name: string;
-  file_url: string;
-  file_path: string | null;
-  file_type: string | null;
-  mime_type: string | null;
-  file_size: number | null;
-  alt_text_fa: string | null;
-  alt_text_en: string | null;
-  created_at: string | null;
 };
 
 type FontAsset = {
@@ -213,7 +201,7 @@ function fieldLanguage(label: string, value: unknown) {
 }
 
 const destinations = [
-  ['home', 'Home'],
+  ['home', 'Show on homepage'],
   ['work', 'Work'],
   ['film', 'Film & Teasers'],
   ['photography', 'Photography'],
@@ -392,11 +380,30 @@ function EmptyState({ text }: { text: string }) {
   return <div className="empty">{text}</div>;
 }
 
+function textGroup(key: string) {
+  if (/^(nav_|menu_|footer_|instagram|start_project)/.test(key)) return 'Navigation & footer';
+  if (/^(hero_|scroll_|slide_)/.test(key)) return 'Hero';
+  if (/^(work_|projects?_|gallery_|photo_|video_|bts_|film_|content_|filter_|card_|view_|previous_projects|next_projects|loading_projects|no_bts)/.test(key)) return 'Projects & galleries';
+  if (/^(about_|team_)/.test(key)) return 'About';
+  if (/^(brands?_|clients?_|previous_clients|next_clients)/.test(key)) return 'Brands';
+  if (/^(services?_|film_teasers_)/.test(key)) return 'Services';
+  if (/^(contact_|form_|email_|phone_)/.test(key)) return 'Contact';
+  return 'Labels & controls';
+}
+
 export default function AdminPage() {
   const [section, setSection] = useState<Section>('dashboard');
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [pageTextFilter, setPageTextFilter] = useState('home');
-  const [projectMediaSearch, setProjectMediaSearch] = useState('');
+  const [pageTextSearch, setPageTextSearch] = useState('');
+  const [dirtyTexts, setDirtyTexts] = useState<number[]>([]);
+  const [mediaPage, setMediaPage] = useState(0);
+  const [labelIds, setLabelIds] = useState<number[]>([]);
+  const [brandLabel, setBrandLabel] = useState('');
+  const [projectLabel, setProjectLabel] = useState('');
+  const [assetDestinations, setAssetDestinations] = useState<string[]>([]);
+  const [assetPublication, setAssetPublication] = useState('keep');
+  const [assetHome, setAssetHome] = useState('keep');
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -666,6 +673,21 @@ export default function AdminPage() {
     }
   }
 
+  async function saveMediaLabels() {
+    setSaving(true); setError('');
+    try {
+      const result = await api<{ rows:MediaAsset[] }>('media-labels','POST',{ids:labelIds, brand_name:brandLabel.trim() || undefined, project_name:projectLabel.trim() || undefined, destinations:assetDestinations.length ? assetDestinations : undefined, published:assetPublication === 'keep' ? undefined : assetPublication === 'published', show_on_home:assetHome === 'keep' ? undefined : assetHome === 'show'});
+      setMedia(current => current.map(item => result.rows.find(row => row.id === item.id) || item));
+      setLabelIds([]); setBrandLabel(''); setProjectLabel(''); setAssetDestinations([]); setAssetPublication('keep'); setAssetHome('keep'); flash('Media labels and placement saved.');
+    } catch(e) {setError(e instanceof Error ? e.message : 'Could not save labels.');} finally {setSaving(false);}
+  }
+
+  const visibleTexts = pageTexts.filter(row => !(row.page === 'home' && /^(statement_|landscape_|keep_line_|contact_)/.test(row.text_key)));
+  function editText(id:number, field:'value_en'|'value_fa', value:string) {
+    setPageTexts(current => current.map(row => row.id === id ? {...row,[field]:value} : row));
+    setDirtyTexts(current => current.includes(id) ? current : [...current,id]);
+  }
+
   async function savePageTexts() {
     setSaving(true);
     setError('');
@@ -674,7 +696,7 @@ export default function AdminPage() {
       const result = await api<{ rows: PageText[] }>(
         'page-texts',
         'POST',
-        { rows: pageTexts }
+        { rows: pageTexts.filter(row => dirtyTexts.includes(row.id)) }
       );
 
       setPageTexts(
@@ -689,6 +711,7 @@ export default function AdminPage() {
         })
       );
 
+      setDirtyTexts([]);
       flash('Page texts saved.');
     } catch (e) {
       setError(
@@ -786,7 +809,7 @@ export default function AdminPage() {
   const filteredMedia = useMemo(() => {
     const q = mediaSearch.trim().toLowerCase();
     return media.filter(m => {
-      const matchesQ = !q || [m.name, m.file_type, m.mime_type].some(v => (v || '').toLowerCase().includes(q));
+      const matchesQ = !q || [m.name, m.brand_name, m.project_name, m.alt_text_en, m.alt_text_fa, m.file_type, m.mime_type].some(v => (v || '').toLowerCase().includes(q));
       const matchesType = mediaFilter === 'all' || (mediaFilter === 'video' ? isVideoAsset(m) : !isVideoAsset(m));
       return matchesQ && matchesType;
     });
@@ -794,8 +817,6 @@ export default function AdminPage() {
 
   const activeSection = navigationItems.find(item => item.id === section)!;
   const publishedProjects = projects.filter(project => project.published).length;
-  const mediaOptions = media.filter(item => !projectMediaSearch.trim() ||
-    (item.name || '').toLowerCase().includes(projectMediaSearch.trim().toLowerCase()));
 
   function navigateTo(next: Section) {
     setSection(next);
@@ -875,96 +896,7 @@ export default function AdminPage() {
               }
             />
 
-            <div className="panel">
-              <h2>Selected BTS Media</h2>
-
-              <p style={{ opacity: .65, marginBottom: 20 }}>
-                Selected: {btsMediaIds.length} file{btsMediaIds.length === 1 ? '' : 's'}
-              </p>
-
-              <div className="media-picker">
-                {media.map(item => {
-                  const selected = btsMediaIds.includes(item.id);
-                  const isVideo = isVideoAsset(item);
-
-                  return (
-                    <label
-                      key={`bts-${item.id}`}
-                      className={
-                        selected
-                          ? 'media-pick selected'
-                          : 'media-pick'
-                      }
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selected}
-                        onChange={() =>
-                          setBtsMediaIds(current =>
-                            selected
-                              ? current.filter(id => id !== item.id)
-                              : [...current, item.id]
-                          )
-                        }
-                      />
-
-                      <span>
-                        {isVideo ? 'VIDEO' : 'PHOTO'} · {item.name}
-                      </span>
-                    </label>
-                  );
-                })}
-
-                {!media.length && (
-                  <EmptyState text="Upload media first." />
-                )}
-              </div>
-            </div>
-
-            {btsMediaIds.length > 0 && (
-              <div className="panel" style={{ marginTop: 24 }}>
-                <h2>Preview</h2>
-
-                <div className="media-grid">
-                  {btsMediaIds.map(id => {
-                    const item = media.find(mediaItem => mediaItem.id === id);
-
-                    if (!item) return null;
-
-                    const isVideo = isVideoAsset(item);
-
-                    return (
-                      <article
-                        className="media-card"
-                        key={`bts-preview-${item.id}`}
-                      >
-                        <div className="preview">
-                          {isVideo ? (
-                            <video
-                              src={item.file_url}
-                              controls
-                              preload="metadata"
-                            />
-                          ) : (
-                            <img
-                              src={item.file_url}
-                              alt={item.alt_text_en || item.name}
-                            />
-                          )}
-                        </div>
-
-                        <div className="media-meta">
-                          <b>{item.name}</b>
-                          <span>
-                            {isVideo ? 'VIDEO' : 'PHOTO'}
-                          </span>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+            <div className="panel"><MediaPicker title="Behind the scenes gallery" media={media} ids={btsMediaIds} onChange={setBtsMediaIds} multiple upload={<MediaUploader onDone={async uploaded => {await refreshMedia(); if(uploaded?.length) setBtsMediaIds(current => Array.from(new Set([...current,...uploaded.map(item => item.id)])));}} onError={setError} />} /></div>
           </>
         )}
 
@@ -976,7 +908,6 @@ export default function AdminPage() {
               action={<button className="primary" onClick={() => {
                 setDestMap(current => ({ ...current, 0: [] }));
                 setProjectMediaMap(current => ({ ...current, 0: [] }));
-                setProjectMediaSearch('');
                 setEditingProject({
                 id: 0, title_fa: '', title_en: '', description_fa: '', description_en: '',
                 category: 'Content', cover_url: '', media_url: '', media_type: 'image',
@@ -1030,7 +961,7 @@ export default function AdminPage() {
                           featured: e.target.checked
                         })}
                       />
-                      Featured
+                      Use as hero fallback
                     </label>
                   </div>
                 </div>
@@ -1051,233 +982,15 @@ export default function AdminPage() {
                 </div>
 
                 <div className="editor-block">
-                  <h3>Project Media</h3>
-                  <label className="field"><span>Find media for this project</span><input placeholder="Search the media library…" aria-label="Search project media" value={projectMediaSearch} onChange={event => setProjectMediaSearch(event.target.value)} /></label>
-                  <p style={{ opacity: .65, marginBottom: 18 }}>
-                    Choose cover, main media, optional video preview and gallery files independently.
-                  </p>
-
-                  <div style={{ marginBottom: 28 }}>
-                    <h3>1. Cover Image</h3>
-                    <p style={{ opacity: .6 }}>
-                      Used as the project thumbnail and video poster.
-                    </p>
-
-                    <div className="media-picker">
-                      {mediaOptions
-                        .filter(item => !isVideoAsset(item))
-                        .map(item => {
-                          const selected = editingProject.cover_url === item.file_url;
-
-                          return (
-                            <label
-                              className={selected ? 'media-pick selected' : 'media-pick'}
-                              key={`cover-${item.id}`}
-                            >
-                              <input
-                                type="radio"
-                                name="project-cover"
-                                checked={selected}
-                                onChange={() =>
-                                  setEditingProject({
-                                    ...editingProject,
-                                    cover_url: item.file_url,
-                                  })
-                                }
-                              />
-                              IMAGE · {item.name}
-                            </label>
-                          );
-                        })}
-                    </div>
-
-                    {editingProject.cover_url && (
-                      <button
-                        type="button"
-                        className="ghost"
-                        style={{ marginTop: 10 }}
-                        onClick={() =>
-                          setEditingProject({
-                            ...editingProject,
-                            cover_url: '',
-                          })
-                        }
-                      >
-                        Clear cover
-                      </button>
-                    )}
-                  </div>
-
-                  <div style={{ marginBottom: 28 }}>
-                    <h3>2. Main Media</h3>
-                    <p style={{ opacity: .6 }}>
-                      The main photo or video shown inside the project.
-                    </p>
-
-                    <div className="media-picker">
-                      {mediaOptions.map(item => {
-                        const selected = editingProject.media_url === item.file_url;
-                        const isVideo = isVideoAsset(item);
-
-                        return (
-                          <label
-                            className={selected ? 'media-pick selected' : 'media-pick'}
-                            key={`main-${item.id}`}
-                          >
-                            <input
-                              type="radio"
-                              name="project-main-media"
-                              checked={selected}
-                              onChange={() =>
-                                setEditingProject({
-                                  ...editingProject,
-                                  media_url: item.file_url,
-                                  media_type: isVideo ? 'video' : 'image',
-                                })
-                              }
-                            />
-                            {isVideo ? 'VIDEO' : 'IMAGE'} · {item.name}
-                          </label>
-                        );
-                      })}
-                    </div>
-
-                    {editingProject.media_url && (
-                      <button
-                        type="button"
-                        className="ghost"
-                        style={{ marginTop: 10 }}
-                        onClick={() =>
-                          setEditingProject({
-                            ...editingProject,
-                            media_url: '',
-                            media_type: 'image',
-                          })
-                        }
-                      >
-                        Clear main media
-                      </button>
-                    )}
-                  </div>
-
-                  <div style={{ marginBottom: 28 }}>
-                    <h3>3. Video Preview</h3>
-                    <p style={{ opacity: .6 }}>
-                      Optional short video preview for cards / homepage / hero.
-                    </p>
-
-                    <div className="checks" style={{ marginBottom: 12 }}>
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={!!editingProject.preview_enabled}
-                          onChange={e =>
-                            setEditingProject({
-                              ...editingProject,
-                              preview_enabled: e.target.checked,
-                            })
-                          }
-                        />
-                        Enable video preview
-                      </label>
-                    </div>
-
-                    <div className="media-picker">
-                      {mediaOptions
-                        .filter(item => isVideoAsset(item))
-                        .map(item => {
-                          const selected = editingProject.preview_url === item.file_url;
-
-                          return (
-                            <label
-                              className={selected ? 'media-pick selected' : 'media-pick'}
-                              key={`preview-${item.id}`}
-                            >
-                              <input
-                                type="radio"
-                                name="project-preview"
-                                checked={selected}
-                                onChange={() =>
-                                  setEditingProject({
-                                    ...editingProject,
-                                    preview_url: item.file_url,
-                                    preview_type: 'video',
-                                  })
-                                }
-                              />
-                              VIDEO · {item.name}
-                            </label>
-                          );
-                        })}
-                    </div>
-
-                    {editingProject.preview_url && (
-                      <button
-                        type="button"
-                        className="ghost"
-                        style={{ marginTop: 10 }}
-                        onClick={() =>
-                          setEditingProject({
-                            ...editingProject,
-                            preview_url: '',
-                            preview_type: 'video',
-                            preview_enabled: false,
-                          })
-                        }
-                      >
-                        Clear preview
-                      </button>
-                    )}
-                  </div>
-
-                  <div>
-                    <h3>4. Project Gallery</h3>
-                    <p style={{ opacity: .6 }}>
-                      Select any number of uploaded images or videos for this project.
-                    </p>
-
-                    <div className="media-picker">
-                      {mediaOptions.map(item => {
-                        const currentIds =
-                          projectMediaMap[editingProject.id] || [];
-
-                        const selected = currentIds.includes(item.id);
-
-                        return (
-                          <label
-                            className={selected ? 'media-pick selected' : 'media-pick'}
-                            key={`gallery-${item.id}`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selected}
-                              onChange={() =>
-                                setProjectMediaMap(current => {
-                                  const ids =
-                                    current[editingProject.id] || [];
-
-                                  return {
-                                    ...current,
-                                    [editingProject.id]: selected
-                                      ? ids.filter(id => id !== item.id)
-                                      : [...ids, item.id],
-                                  };
-                                })
-                              }
-                            />
-
-                            {isVideoAsset(item)
-                              ? 'VIDEO'
-                              : 'IMAGE'} · {item.name}
-                          </label>
-                        );
-                      })}
-
-                      {!media.length && (
-                        <EmptyState text="Upload media first." />
-                      )}
-                    </div>
-                  </div>
+                  <h3>Project media</h3>
+                  <p className="hint">Cover → main photo or video → gallery. Every destination supports photos and videos.</p>
+                  <MediaPicker title="Cover image" kind="image" media={media} ids={media.filter(item => item.file_url === editingProject.cover_url).map(item => item.id)} onChange={ids => setEditingProject({...editingProject, cover_url: media.find(item => item.id === ids[0])?.file_url || ''})} upload={<MediaUploader onDone={refreshMedia} onError={setError} />} />
+                  <MediaPicker title="Main photo or video" media={media} ids={media.filter(item => item.file_url === editingProject.media_url).map(item => item.id)} onChange={ids => {const item = media.find(item => item.id === ids[0]); setEditingProject({...editingProject, media_url: item?.file_url || '', media_type: item && isVideoAsset(item) ? 'video' : 'image'});}} upload={<MediaUploader onDone={refreshMedia} onError={setError} />} />
+                  <MediaPicker title="Project gallery" media={media} ids={projectMediaMap[editingProject.id] || []} onChange={ids => setProjectMediaMap(current => ({...current, [editingProject.id]: ids}))} multiple upload={<MediaUploader onDone={async uploaded => {await refreshMedia(); if(uploaded?.length) setProjectMediaMap(current => ({...current,[editingProject.id]:Array.from(new Set([...(current[editingProject.id] || []),...uploaded.map(item => item.id)]))}));}} onError={setError} />} />
+                  <details className="content-group"><summary>Optional video preview</summary><div className="content-group-body">
+                    <Toggle label="Enable video preview on cards" value={!!editingProject.preview_enabled} onChange={value => setEditingProject({...editingProject, preview_enabled:value})} />
+                    <MediaPicker title="Video preview" kind="video" media={media} ids={media.filter(item => item.file_url === editingProject.preview_url).map(item => item.id)} onChange={ids => setEditingProject({...editingProject, preview_url:media.find(item => item.id === ids[0])?.file_url || '', preview_type:'video', preview_enabled:!!ids.length})} />
+                  </div></details>
                 </div>
 
                 <div className="editor-actions">
@@ -1300,6 +1013,11 @@ export default function AdminPage() {
                     <span>{project.category} · {project.published ? 'Published' : 'Draft'} · {project.featured ? 'Featured' : 'Standard'}</span>
                     <small>{(destMap[project.id] || []).join(' · ') || 'No destinations'}</small>
                   </div>
+                  <label className="asset-bulk-check"><input type="checkbox" disabled={saving || !project.published} checked={(destMap[project.id] || []).includes('home')} onChange={async e => {
+                    const checked = e.target.checked; const current = destMap[project.id] || [];
+                    const next = checked ? [...current,'home'] : current.filter(value => value !== 'home');
+                    setSaving(true); try {await api('project-home','POST',{id:project.id,show:checked}); setDestMap(map => ({...map,[project.id]:next})); flash('Homepage selection saved.');} catch(error) {setError(error instanceof Error ? error.message : 'Could not save selection.');} finally {setSaving(false);}
+                  }} /> Show on homepage</label>
                   <button className="ghost" onClick={() => setEditingProject(project)}>Edit</button>
                 </article>
               ))}
@@ -1310,25 +1028,37 @@ export default function AdminPage() {
 
         {section === 'media' && (
           <>
-            <SectionHeader title="Media Library" description="Upload images and videos once and reuse them across the site." action={<MediaUploader onDone={refreshMedia} onError={setError} />} />
+            <SectionHeader title="Media Library" description="Upload images and videos once and reuse them across the site." action={<MediaUploader onDone={async uploaded => {await refreshMedia(); setLabelIds(uploaded?.map(item => item.id) || []);}} onError={setError} />} />
             <div className="toolbar">
-              <input aria-label="Search media" placeholder="Search media…" value={mediaSearch} onChange={e => setMediaSearch(e.target.value)} />
-              <select aria-label="Filter media type" value={mediaFilter} onChange={e => setMediaFilter(e.target.value)}>
+              <input aria-label="Search media" placeholder="Search media…" value={mediaSearch} onChange={e => {setMediaSearch(e.target.value); setMediaPage(0);}} />
+              <select aria-label="Filter media type" value={mediaFilter} onChange={e => {setMediaFilter(e.target.value); setMediaPage(0);}}>
                 <option value="all">All</option>
                 <option value="image">Images</option>
                 <option value="video">Videos</option>
               </select>
             </div>
+            <div className="asset-label-panel panel">
+              <h3>Label selected files <span className="hint">({labelIds.length})</span></h3>
+              <div className="grid2"><label className="field"><span>Brand name</span><input list="brand-labels" value={brandLabel} onChange={e => setBrandLabel(e.target.value)} placeholder="Choose or type a brand" /></label><label className="field"><span>Project name</span><input list="project-labels" value={projectLabel} onChange={e => setProjectLabel(e.target.value)} placeholder="Choose or type a project" /></label></div>
+              <datalist id="brand-labels">{Array.from(new Set([...brands.map(item => item.name), ...media.map(item => item.brand_name).filter(Boolean)])).map(name => <option value={name!} key={name} />)}</datalist>
+              <datalist id="project-labels">{Array.from(new Set([...projects.map(item => item.title_en || item.title_fa), ...media.map(item => item.project_name).filter(Boolean)])).map(name => <option value={name!} key={name} />)}</datalist>
+              <details className="content-group"><summary>Placement & homepage selection</summary><div className="content-group-body"><div className="checks">{[['film','Film & teasers'],['photography','Photography'],['content','Content'],['bts','Behind the scenes']].map(([key,label]) => <label key={key}><input type="checkbox" checked={assetDestinations.includes(key)} onChange={e => setAssetDestinations(current => e.target.checked ? [...current,key] : current.filter(value => value !== key))} /> {label}</label>)}</div><div className="grid2"><label className="field"><span>Publication</span><select value={assetPublication} onChange={e => setAssetPublication(e.target.value)}><option value="keep">Keep current</option><option value="published">Published</option><option value="draft">Draft</option></select></label><label className="field"><span>Homepage</span><select value={assetHome} onChange={e => setAssetHome(e.target.value)}><option value="keep">Keep current</option><option value="show">Show in selected work</option><option value="hide">Gallery only</option></select></label></div><p className="hint">Chosen sections replace the previous placement. Homepage files must be published and have a section.</p></div></details>
+              <div className="asset-tools"><button className="primary" disabled={saving || !labelIds.length || (!brandLabel.trim() && !projectLabel.trim() && !assetDestinations.length && assetPublication === 'keep' && assetHome === 'keep')} onClick={saveMediaLabels}>Apply to selected</button><button className="ghost" disabled={!labelIds.length} onClick={() => setLabelIds([])}>Clear selection</button><button className="ghost" onClick={() => setLabelIds(current => Array.from(new Set([...current, ...filteredMedia.map(item => item.id)])))}>Select matching files</button></div>
+              <p className="hint">Apply names or placement to one file or a batch. Empty names preserve existing labels. Photos and videos can share any section.</p>
+            </div>
             <div className="media-grid">
-              {filteredMedia.map(item => (
+              {filteredMedia.slice(Math.min(mediaPage, Math.max(0, Math.ceil(filteredMedia.length / 24) - 1)) * 24, (Math.min(mediaPage, Math.max(0, Math.ceil(filteredMedia.length / 24) - 1)) + 1) * 24).map(item => (
                 <article className="media-card" key={item.id}>
                   <div className="preview">
-                    {item.mime_type?.startsWith('video')
+                    {isVideoAsset(item)
                       ? <video src={item.file_url} controls preload="metadata" />
                       : <img src={item.file_url} alt={item.alt_text_en || item.name} />}
                   </div>
                   <div className="media-meta">
-                    <b>{item.name}</b>
+                    <label className="asset-bulk-check"><input type="checkbox" checked={labelIds.includes(item.id)} onChange={e => setLabelIds(current => e.target.checked ? [...current,item.id] : current.filter(id => id !== item.id))} /> <b dir="auto">{item.name}</b></label>
+                    <small dir="auto">{[item.brand_name, item.project_name].filter(Boolean).join(' · ') || 'No brand / project label'}</small>
+                    <small>{(item.destinations || []).join(' · ') || 'Unassigned'} · {item.published ? 'Published' : 'Draft'}</small>
+                    <label className="asset-bulk-check"><input type="checkbox" checked={!!item.show_on_home} disabled={saving || !item.published || !item.destinations?.length} onChange={async e => {const checked = e.target.checked; setSaving(true); try {const result = await api<{rows:MediaAsset[]}>('media-labels','POST',{ids:[item.id],show_on_home:checked}); setMedia(current => current.map(asset => result.rows.find(row => row.id === asset.id) || asset)); flash('Homepage selection saved.');} catch(error) {setError(error instanceof Error ? error.message : 'Could not save selection.');} finally {setSaving(false);}}} /> Show on homepage</label>
                     <span>{item.file_type || 'file'} · {item.file_size ? `${Math.round(item.file_size / 1024)} KB` : '—'}</span>
                     <div className="media-actions">
                       <button className="ghost" onClick={() => navigator.clipboard?.writeText(item.file_url)}>Copy URL</button>
@@ -1338,6 +1068,7 @@ export default function AdminPage() {
                 </article>
               ))}
             </div>
+            <div className="asset-pagination"><button className="ghost" disabled={mediaPage === 0} onClick={() => setMediaPage(page => page - 1)}>Previous</button><span>{filteredMedia.length} files · page {Math.min(mediaPage + 1, Math.max(1, Math.ceil(filteredMedia.length / 24)))} / {Math.max(1, Math.ceil(filteredMedia.length / 24))}</span><button className="ghost" disabled={(mediaPage + 1) * 24 >= filteredMedia.length} onClick={() => setMediaPage(page => page + 1)}>Next</button></div>
             {!filteredMedia.length && <EmptyState text="No media uploaded yet." />}
           </>
         )}
@@ -1422,7 +1153,7 @@ export default function AdminPage() {
           <>
             <SectionHeader title="Content" description="Homepage, About, Contact and SEO text." action={<button className="primary" disabled={saving} onClick={saveContent}>{saving ? 'Saving…' : 'Save content'}</button>} />
             <div className="editor">
-              <details className="content-group" open><summary>Hero</summary><div className="content-group-body"><div className="grid2"><Input label="Hero title — English" value={content.hero_title_en} onChange={v => setContent({...content,hero_title_en:v})}/><Input label="Hero title — فارسی" value={content.hero_title_fa} onChange={v => setContent({...content,hero_title_fa:v})}/><Textarea label="Hero description — English" value={content.hero_description_en} onChange={v => setContent({...content,hero_description_en:v})}/><Textarea label="Hero description — فارسی" value={content.hero_description_fa} onChange={v => setContent({...content,hero_description_fa:v})}/><Input label="Hero button — English" value={content.hero_button_en} onChange={v => setContent({...content,hero_button_en:v})}/><Input label="Hero button — فارسی" value={content.hero_button_fa} onChange={v => setContent({...content,hero_button_fa:v})}/></div>
+              <details className="content-group"><summary>Hero</summary><div className="content-group-body"><div className="grid2"><Input label="Hero title — English" value={content.hero_title_en} onChange={v => setContent({...content,hero_title_en:v})}/><Input label="Hero title — فارسی" value={content.hero_title_fa} onChange={v => setContent({...content,hero_title_fa:v})}/><Textarea label="Hero description — English" value={content.hero_description_en} onChange={v => setContent({...content,hero_description_en:v})}/><Textarea label="Hero description — فارسی" value={content.hero_description_fa} onChange={v => setContent({...content,hero_description_fa:v})}/><Input label="Hero button — English" value={content.hero_button_en} onChange={v => setContent({...content,hero_button_en:v})}/><Input label="Hero button — فارسی" value={content.hero_button_fa} onChange={v => setContent({...content,hero_button_fa:v})}/></div>
               </div></details><details className="content-group"><summary>About</summary><div className="content-group-body">
               <div className="grid2">
                 <Input
@@ -1450,58 +1181,7 @@ export default function AdminPage() {
                 />
               </div>
 
-              <div className="about-media-editor">
-                <label className="field">
-                  <span>About image — Media Library</span>
-
-                  <select
-                    className="field-select"
-                    value={content.about_image_url || ''}
-                    onChange={e =>
-                      setContent({
-                        ...content,
-                        about_image_url: e.target.value
-                      })
-                    }
-                  >
-                    <option value="">No image selected</option>
-
-                    {media
-                      .filter(item => item.mime_type?.startsWith('image/'))
-                      .map(item => (
-                        <option key={item.id} value={item.file_url}>
-                          {item.name}
-                        </option>
-                      ))}
-                  </select>
-                </label>
-
-                {content.about_image_url ? (
-                  <div className="about-media-preview">
-                    <img
-                      src={content.about_image_url}
-                      alt="About preview"
-                    />
-
-                    <button
-                      type="button"
-                      className="danger"
-                      onClick={() =>
-                        setContent({
-                          ...content,
-                          about_image_url: ''
-                        })
-                      }
-                    >
-                      Remove image
-                    </button>
-                  </div>
-                ) : (
-                  <p className="hint">
-                    Upload an image in Media Library, then select it here.
-                  </p>
-                )}
-              </div>
+              <MediaPicker title="About image" kind="image" media={media} ids={media.filter(item => item.file_url === content.about_image_url).map(item => item.id)} onChange={ids => setContent({...content,about_image_url:media.find(item => item.id === ids[0])?.file_url || ''})} upload={<MediaUploader onDone={refreshMedia} onError={setError} />} />
               </div></details><details className="content-group"><summary>Contact</summary><div className="content-group-body"><div className="grid2"><Input label="Contact title — English" value={content.contact_title_en} onChange={v => setContent({...content,contact_title_en:v})}/><Input label="Contact title — فارسی" value={content.contact_title_fa} onChange={v => setContent({...content,contact_title_fa:v})}/><Input label="Email" value={content.contact_email} onChange={v => setContent({...content,contact_email:v})}/><Input label="Phone" value={content.contact_phone} onChange={v => setContent({...content,contact_phone:v})}/><Input label="NURANICO Instagram URL" value={content.contact_instagram} onChange={v => setContent({...content,contact_instagram:v})}/><Input label="Shayan Instagram URL" value={content.personal_instagram} onChange={v => setContent({...content,personal_instagram:v})}/><Input label="Start Project URL" value={content.start_project_url || ''} onChange={v => setContent({...content,start_project_url:v})} placeholder="/contact or https://..."/></div>
               </div></details><details className="content-group"><summary>SEO</summary><div className="content-group-body"><div className="grid2"><Input label="SEO title — English" value={content.seo_title_en} onChange={v => setContent({...content,seo_title_en:v})}/><Input label="SEO title — فارسی" value={content.seo_title_fa} onChange={v => setContent({...content,seo_title_fa:v})}/><Textarea label="SEO description — English" value={content.seo_description_en} onChange={v => setContent({...content,seo_description_en:v})}/><Textarea label="SEO description — فارسی" value={content.seo_description_fa} onChange={v => setContent({...content,seo_description_fa:v})}/></div>
               </div></details>
@@ -1518,106 +1198,20 @@ export default function AdminPage() {
 
                 <button
                   className="primary"
-                  disabled={saving || pageTexts.length === 0}
+                  disabled={saving || !dirtyTexts.length}
                   onClick={savePageTexts}
                 >
                   {saving ? 'Saving…' : 'Save page texts'}
                 </button>
               </div>
 
-              <label className="field page-text-filter"><span>Choose a page</span><select value={pageTextFilter} onChange={event => setPageTextFilter(event.target.value)}><option value="all">All pages</option>{Array.from(new Set(pageTexts.map(item => item.page))).map(page => <option key={page} value={page}>{page.replace(/-/g, ' ')}</option>)}</select></label>
-              {pageTexts.length === 0 ? (
-                <EmptyState text="No page texts found in CMS." />
-              ) : (
-                Array.from(new Set(pageTexts.map(item => item.page))).filter(page => pageTextFilter === 'all' || page === pageTextFilter).map(page => {
-                  const rows = pageTexts
-                    .filter(item => item.page === page)
-                    .sort((a, b) => {
-                      const orderCompare =
-                        (a.sort_order || 0) - (b.sort_order || 0);
+              <div className="asset-tools"><label className="field page-text-filter"><span>Choose a page</span><select value={pageTextFilter} onChange={event => setPageTextFilter(event.target.value)}><option value="all">All pages</option>{Array.from(new Set(visibleTexts.map(item => item.page))).map(page => <option key={page} value={page}>{page.replace(/-/g, ' ')}</option>)}</select></label><label className="field"><span>Find text</span><input placeholder="Search labels, English or Persian…" value={pageTextSearch} onChange={e => setPageTextSearch(e.target.value)} /></label></div>
+              <p className="hint">{dirtyTexts.length} unsaved changes. Open a group, then a text to edit.</p>
+              {Array.from(new Set(visibleTexts.map(item => item.page))).filter(page => pageTextFilter === 'all' || page === pageTextFilter).map(page => {
+                const rows = visibleTexts.filter(item => item.page === page && [item.label,item.text_key,item.value_en,item.value_fa].join(' ').toLowerCase().includes(pageTextSearch.trim().toLowerCase())).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0) || a.id - b.id);
+                return <section key={page} className="text-page"><h3>{page.replace(/-/g,' ')}</h3>{Array.from(new Set(rows.map(row => textGroup(row.text_key)))).map(group => <details className="content-group" key={group} open={!!pageTextSearch}><summary>{group} <span className="hint">{rows.filter(row => textGroup(row.text_key) === group).length} texts</span></summary><div className="content-group-body">{rows.filter(row => textGroup(row.text_key) === group).map(row => <details className="text-entry" key={row.id}><summary><span>{row.label || row.text_key}</span>{dirtyTexts.includes(row.id) && <small>Edited</small>}<p dir="auto">{row.value_en || row.value_fa || 'Empty'}</p></summary><div className="grid2"><Textarea label="English" value={row.value_en} onChange={value => editText(row.id,'value_en',value)} /><Textarea label="فارسی" value={row.value_fa} onChange={value => editText(row.id,'value_fa',value)} /></div></details>)}</div></details>)}{!rows.length && <EmptyState text="No matching text." />}</section>;
+              })}
 
-                      return orderCompare !== 0
-                        ? orderCompare
-                        : a.id - b.id;
-                    });
-
-                  return (
-                    <div
-                      key={page}
-                      style={{
-                        marginTop: 28,
-                        paddingTop: 24,
-                        borderTop: '1px solid var(--border, #333)'
-                      }}
-                    >
-                      <h2
-                        style={{
-                          textTransform: 'capitalize',
-                          marginBottom: 18
-                        }}
-                      >
-                        {page.replace(/-/g, ' ')}
-                      </h2>
-
-                      <div style={{ display: 'grid', gap: 22 }}>
-                        {rows.map(row => (
-                          <div
-                            key={row.id}
-                            style={{
-                              padding: 18,
-                              border: '1px solid var(--border, #333)',
-                              borderRadius: 12
-                            }}
-                          >
-                            <div style={{ marginBottom: 14 }}>
-                              <strong>
-                                {row.label || row.text_key}
-                              </strong>
-
-                              <div
-                                className="hint"
-                                style={{ marginTop: 4 }}
-                              >
-                                {row.text_key}
-                              </div>
-                            </div>
-
-                            <div className="grid2">
-                              <Textarea
-                                label="English"
-                                value={row.value_en}
-                                onChange={value =>
-                                  setPageTexts(current =>
-                                    current.map(item =>
-                                      item.id === row.id
-                                        ? { ...item, value_en: value }
-                                        : item
-                                    )
-                                  )
-                                }
-                              />
-
-                              <Textarea
-                                label="فارسی"
-                                value={row.value_fa}
-                                onChange={value =>
-                                  setPageTexts(current =>
-                                    current.map(item =>
-                                      item.id === row.id
-                                        ? { ...item, value_fa: value }
-                                        : item
-                                    )
-                                  )
-                                }
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
             </div>
           </>
         )}
@@ -1661,12 +1255,6 @@ export default function AdminPage() {
                   ['brands_text', 'Brands text'],
                   ['brands_muted', 'Brands muted text'],
                   ['brands_hover', 'Brands card hover'],
-
-                  ['contact_bg', 'Contact background'],
-                  ['contact_text', 'Contact text'],
-                  ['contact_muted', 'Contact muted text'],
-                  ['contact_button', 'Contact button'],
-                  ['contact_button_text', 'Contact button text'],
                 ] as const).map(([key, label]) => (
                   <label className="color-field" key={key}>
                     <span>{label}</span>
@@ -1955,6 +1543,7 @@ function FontUploader({
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState('');
 
   async function upload(file: File | undefined) {
     if (!file) return;
@@ -2126,6 +1715,7 @@ function LogoUploader({
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState('');
 
   async function upload(file: File | undefined) {
     if (!file) return;
@@ -2292,15 +1882,18 @@ function LogoUploader({
 }
 
 
-function MediaUploader({ onDone, onError }: { onDone: () => Promise<void>; onError: (s: string) => void }) {
+function MediaUploader({ onDone, onError }: { onDone: (uploaded?: MediaAsset[]) => Promise<void>; onError: (s: string) => void }) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState('');
 
   async function upload(files: FileList | null) {
     if (!files?.length) return;
     setBusy(true);
+    const uploaded: MediaAsset[] = [];
     try {
-      for (const file of Array.from(files)) {
+      for (const [index,file] of Array.from(files).entries()) {
+        setProgress(`Uploading ${index + 1} / ${files.length}…`);
         if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
           throw new Error(`${file.name}: only images and videos are supported.`);
         }
@@ -2333,11 +1926,12 @@ function MediaUploader({ onDone, onError }: { onDone: () => Promise<void>; onErr
         });
         const completeData = await complete.json();
         if (!complete.ok) throw new Error(completeData.error || `${file.name}: database save failed.`);
+        if (completeData.row) uploaded.push(completeData.row);
       }
-      await onDone();
     } catch (e) {
       onError(e instanceof Error ? e.message : 'Upload failed.');
     } finally {
+      if (uploaded.length) { try { await onDone(uploaded); } catch { onError('Files uploaded. Refresh the library to see them.'); } }
       setBusy(false);
       if (input.current) input.current.value = '';
     }
@@ -2346,7 +1940,7 @@ function MediaUploader({ onDone, onError }: { onDone: () => Promise<void>; onErr
   return (
     <label className={busy ? 'upload disabled' : 'upload'}>
       <input ref={input} type="file" accept="image/*,video/*" multiple disabled={busy} onChange={e => upload(e.target.files)} />
-      {busy ? 'Uploading…' : '+ Upload media'}
+      {busy ? progress || 'Uploading…' : '+ Upload media'}
     </label>
   );
 }

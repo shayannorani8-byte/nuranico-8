@@ -9,6 +9,17 @@ function parseResource(request: NextRequest) {
   return { resource, id: params.get('id') ? Number(params.get('id')) : null };
 }
 
+// Supabase caps a response at 1,000 rows; keep larger libraries searchable.
+async function readMedia(db: ReturnType<typeof getAdminSupabase>) {
+  const data: Record<string,any>[] = [];
+  for (let start = 0; ; start += 1000) {
+    const result = await db.from('media_assets').select('*').order('created_at',{ascending:false}).order('id',{ascending:false}).range(start,start + 999);
+    if (result.error) return {data:[],error:result.error};
+    data.push(...(result.data || []));
+    if ((result.data || []).length < 1000) return {data,error:null};
+  }
+}
+
 const projectFields = [
   'title_fa',
   'title_en',
@@ -155,7 +166,7 @@ export async function GET(request: NextRequest) {
         pageTexts,
       ] = await Promise.all([
         db.from('portfolio').select('*').order('sort_order', { ascending: true }).order('id', { ascending: true }),
-        db.from('media_assets').select('*').order('created_at', { ascending: false }),
+        readMedia(db),
         db.from('hero_slides').select('*').order('sort_order', { ascending: true }).order('id', { ascending: true }),
         db.from('brands').select('*').order('sort_order', { ascending: true }).order('id', { ascending: true }),
         db.from('services').select('*').order('sort_order', { ascending: true }).order('id', { ascending: true }),
@@ -216,7 +227,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (resource === 'media') {
-      const result = await db.from('media_assets').select('*').order('created_at', { ascending: false });
+      const result = await readMedia(db);
       if (result.error) throw result.error;
       return NextResponse.json({ rows: result.data || [] });
     }
@@ -247,6 +258,50 @@ export async function POST(request: NextRequest) {
     const { resource } = parseResource(request);
     const body = await request.json();
     const db = getAdminSupabase();
+
+    if (resource === 'project-home') {
+      const id = Number(body.id);
+      if (!Number.isSafeInteger(id) || id <= 0 || typeof body.show !== 'boolean') throw new Error('Invalid project selection.');
+      const project = await db.from('portfolio').select('id,published').eq('id',id).single();
+      if (project.error) throw project.error;
+      if (body.show && !project.data.published) throw new Error('Publish the project first.');
+      const existing = await db.from('project_destinations').select('project_id').eq('project_id',id).eq('destination','home');
+      if (existing.error) throw existing.error;
+      if (body.show && !existing.data?.length) {
+        const result = await db.from('project_destinations').insert({project_id:id,destination:'home'});
+        if (result.error) throw result.error;
+      } else if (!body.show) {
+        const result = await db.from('project_destinations').delete().eq('project_id',id).eq('destination','home');
+        if (result.error) throw result.error;
+      }
+      return NextResponse.json({ok:true});
+    }
+
+    if (resource === 'media-labels') {
+      const ids = Array.isArray(body.ids) ? Array.from(new Set(body.ids.map(Number))) : [];
+      if (!ids.length || ids.some(id => !Number.isSafeInteger(id) || Number(id) <= 0)) throw new Error('Choose valid media files.');
+      const payload: Record<string,unknown> = {};
+      for (const key of ['brand_name','project_name']) {
+        if (typeof body[key] === 'string') {
+          if (body[key].length > 200) throw new Error('Labels must be 200 characters or fewer.');
+          payload[key] = body[key].trim();
+        }
+      }
+      if (Array.isArray(body.destinations)) {
+        if (body.destinations.some((value:unknown) => !['film','photography','content','bts'].includes(String(value)))) throw new Error('Invalid section.');
+        payload.destinations = Array.from(new Set(body.destinations));
+      }
+      for (const key of ['published','show_on_home']) if (typeof body[key] === 'boolean') payload[key] = body[key];
+      if (!Object.keys(payload).length) throw new Error('Enter labels or placement.');
+      if (payload.show_on_home === true) {
+        const existing = await db.from('media_assets').select('id,destinations,published').in('id',ids);
+        if (existing.error) throw existing.error;
+        if ((existing.data || []).some(row => !(payload.published ?? row.published) || !(payload.destinations as string[] ?? row.destinations)?.length)) throw new Error('Publish the files and choose a section before showing them on the homepage.');
+      }
+      const result = await db.from('media_assets').update(payload).in('id',ids).select('*');
+      if (result.error) throw result.error;
+      return NextResponse.json({rows:result.data || []});
+    }
 
     if (resource === 'page-texts') {
       const rows = Array.isArray(body.rows) ? body.rows : [];

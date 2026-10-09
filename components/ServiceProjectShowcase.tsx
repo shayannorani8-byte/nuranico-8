@@ -8,6 +8,8 @@ import { usePageTexts } from '../lib/usePageTexts';
 
 type ProjectItem = {
   id: number;
+  href?: string;
+  brand_name?: string | null;
   title_en?: string;
   title_fa?: string;
   cover_url?: string | null;
@@ -125,7 +127,7 @@ export default function ServiceProjectShowcase({
 
             return (
               <Link
-                href={`/work/${item.id}`}
+                href={item.href || `/work/${item.id}`}
                 className="library-card"
                 key={item.id}
               >
@@ -137,11 +139,11 @@ export default function ServiceProjectShowcase({
                       loading="lazy"
                     />
                   ) : (
-                    <div className="library-placeholder" />
+                    <video src={item.media_url || undefined} preload="metadata" muted playsInline />
                   )}
                 </div>
 
-                <h3>{projectTitle}</h3>
+                <h3>{projectTitle}</h3>{item.brand_name && <p className="asset-brand-caption" dir="auto">{item.brand_name}</p>}
               </Link>
             );
           })}
