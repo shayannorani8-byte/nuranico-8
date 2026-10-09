@@ -108,3 +108,14 @@
 @media(prefers-reduced-motion:reduce){
  .home-motion.motion-ready .brands :is(.brand-card img,.section-head h2){animation:none !important;clip-path:none !important;scale:none !important;translate:none !important;opacity:1 !important;}
 }
+
+/* About follows the same reveal rhythm with a centered image curtain. */
+.home-motion.motion-ready .about.in-view .about-image { overflow:hidden; }
+.home-motion.motion-ready .about.in-view .about-image img { animation:about-image-curtain 1.2s cubic-bezier(.2,.7,.2,1) both; }
+.home-motion.motion-ready .about.in-view .about-copy h2 { animation:work-title-uncover .9s cubic-bezier(.2,.7,.2,1) both;animation-delay:.15s; }
+.home-motion.motion-ready .about.in-view .about-copy p { animation:about-copy-arrive .9s cubic-bezier(.2,.7,.2,1) both;animation-delay:.3s; }
+@keyframes about-image-curtain { from{clip-path:inset(0 50%);scale:1.06}to{clip-path:inset(0);scale:1} }
+@keyframes about-copy-arrive { from{opacity:0;translate:0 18px}to{opacity:1;translate:0 0} }
+@media(prefers-reduced-motion:reduce){
+ .home-motion.motion-ready .about :is(.about-image img,.about-copy h2,.about-copy p){animation:none !important;clip-path:none !important;scale:none !important;translate:none !important;opacity:1 !important;}
+}
