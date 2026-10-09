@@ -1,4 +1,5 @@
 'use client';
+import MediaCountBadge from '../components/MediaCountBadge';
 import SiteHeader from '../components/SiteHeader';
 
 
@@ -86,6 +87,7 @@ type Content = {
 };
 
 type PortfolioItem = {
+  media_count?:number;
   id: number;
   title_fa: string;
   title_en?: string;
@@ -801,14 +803,14 @@ export default function HomePage() {
 
           <a
             className="primary-button"
-            href="#work"
+            href="/contact"
           >
             <span>
               {lang === 'fa'
                 ? content.hero_button_fa ||
-                  'دیدن پروژه‌ها'
+                  'شروع پروژه'
                 : content.hero_button_en ||
-                  'Explore work'}
+                  'Start a project'}
             </span>
             <b aria-hidden="true"><ArrowUpRight /></b>
           </a>
@@ -1165,13 +1167,13 @@ export default function HomePage() {
 
                 return (
                   <Link
-                    className={`project-card card-${
+                    className={`project-card ${item.media_count && item.media_count > 1 ? 'has-gallery' : ''} card-${
                       index % 3
                     }`}
                     href={href}
                     key={item.id}
                   >
-                    <div className="project-media">
+                    <div className="project-media"><MediaCountBadge count={item.media_count} lang={lang} />
                       {item.cover_url ? (
                         <img
                           src={item.cover_url}

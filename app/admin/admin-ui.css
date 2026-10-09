@@ -279,3 +279,13 @@
 .admin.admin .settings-save-bar button { padding:10px 8px;font-size:12px; }
 .admin.admin .settings-editor .font-section-head { flex-wrap:wrap;gap:16px; }
 }
+.admin.admin .admin-language-toggle { flex-shrink:0;min-width:40px;min-height:40px;padding:8px;border-radius:9px;border:1px solid #354255;background:#17202d;color:#c1d3f5;font-size:12px; }
+.admin.admin .admin-topbar .admin-site-link { margin-inline-start:auto; }
+.admin.admin[lang='fa'] { font-family:Vazirmatn,sans-serif !important; }
+.admin.admin[lang='fa'] :is(h1,h2,h3,h4,p,span,a,button,label,input,textarea,select,summary,b,strong,small) { font-family:Vazirmatn,sans-serif !important;letter-spacing:0 !important; }
+.admin.admin[dir='rtl'] .sidebar { border-right:0;border-left:1px solid #252c37; }
+.admin.admin[dir='rtl'] .sidebar nav button { text-align:right; }
+.admin.admin[dir='rtl'] .sidebar nav button small { margin-left:0;margin-right:auto; }
+.admin.admin[dir='rtl'] .settings-editor summary small { margin-left:0;margin-right:auto; }
+.admin.admin[dir='rtl'] .field input[dir='ltr'],.admin.admin[dir='rtl'] .field textarea[dir='ltr'] { text-align:left; }
+@media(max-width:700px){.admin.admin[dir='rtl'] .sidebar { inset:0 0 0 auto;transform:translateX(100%); }.admin.admin[dir='rtl'].menu-open .sidebar { transform:none; }.admin.admin .admin-topbar { gap:8px; }.admin.admin .admin-site-link { padding:8px;font-size:11px; }}

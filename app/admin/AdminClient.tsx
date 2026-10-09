@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import './admin-ui.css';
+import { AdminLocaleProvider, useAdminLocale } from './AdminLocale';
 import MediaPicker, { type MediaAsset } from './MediaPicker';
 import { isVideoAsset } from '../../lib/media';
 
@@ -322,10 +323,11 @@ function Input({
   type?: string;
   placeholder?: string;
 }) {
+  const {t} = useAdminLocale();
   return (
     <label className="field">
-      <span>{label}</span>
-      <input lang={fieldLanguage(label, value)} dir={fieldLanguage(label, value) === 'fa' ? 'rtl' : 'ltr'} type={type} step={type === 'number' ? 'any' : undefined} value={value ?? ''} placeholder={placeholder} onChange={e => onChange(e.target.value)} />
+      <span>{t(label)}</span>
+      <input lang={fieldLanguage(label, value)} dir={fieldLanguage(label, value) === 'fa' ? 'rtl' : 'ltr'} type={type} step={type === 'number' ? 'any' : undefined} value={value ?? ''} placeholder={t(placeholder)} onChange={e => onChange(e.target.value)} />
     </label>
   );
 }
@@ -341,19 +343,21 @@ function Textarea({
   onChange: (v: string) => void;
   rows?: number;
 }) {
+  const {t} = useAdminLocale();
   return (
     <label className="field">
-      <span>{label}</span>
+      <span>{t(label)}</span>
       <textarea lang={fieldLanguage(label, value)} dir={fieldLanguage(label, value) === 'fa' ? 'rtl' : 'ltr'} rows={rows} value={value ?? ''} onChange={e => onChange(e.target.value)} />
     </label>
   );
 }
 
 function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+  const {t} = useAdminLocale();
   return (
     <label className="toggle">
       <input type="checkbox" checked={value} onChange={e => onChange(e.target.checked)} />
-      <span>{label}</span>
+      <span>{t(label)}</span>
     </label>
   );
 }
@@ -367,11 +371,12 @@ function SectionHeader({
   description?: string;
   action?: React.ReactNode;
 }) {
+  const {t} = useAdminLocale();
   return (
     <div className="section-header">
       <div>
-        <h1>{title}</h1>
-        {description && <p>{description}</p>}
+        <h1>{t(title)}</h1>
+        {description && <p>{t(description)}</p>}
       </div>
       {action}
     </div>
@@ -379,7 +384,8 @@ function SectionHeader({
 }
 
 function EmptyState({ text }: { text: string }) {
-  return <div className="empty">{text}</div>;
+  const {t} = useAdminLocale();
+  return <div className="empty">{t(text)}</div>;
 }
 
 function textGroup(key: string) {
@@ -393,7 +399,10 @@ function textGroup(key: string) {
   return 'Labels & controls';
 }
 
-export default function AdminPage() {
+export default function AdminPage() {return <AdminLocaleProvider><AdminWorkspace /></AdminLocaleProvider>;}
+
+function AdminWorkspace() {
+  const {lang,t,toggle} = useAdminLocale();
   const [section, setSection] = useState<Section>('dashboard');
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [pageTextFilter, setPageTextFilter] = useState('home');
@@ -590,7 +599,7 @@ export default function AdminPage() {
   }
 
   async function deleteProject(id: number) {
-    if (!window.confirm('Delete this project and its links?')) return;
+    if (!window.confirm(t('Delete this project and its links?'))) return;
     setSaving(true);
     try {
       await api(`projects&id=${id}`, 'DELETE');
@@ -622,7 +631,7 @@ export default function AdminPage() {
   }
 
   async function deleteHero(id: number) {
-    if (!confirm('Delete this hero slide?')) return;
+    if (!confirm(t('Delete this hero slide?'))) return;
     try {
       await api(`hero&id=${id}`, 'DELETE');
       setHero(h => h.filter(x => x.id !== id));
@@ -650,7 +659,7 @@ export default function AdminPage() {
   }
 
   async function deleteBrand(id: number) {
-    if (!confirm('Delete this brand?')) return;
+    if (!confirm(t('Delete this brand?'))) return;
     try {
       await api(`brands&id=${id}`, 'DELETE');
       setBrands(b => b.filter(x => x.id !== id));
@@ -678,7 +687,7 @@ export default function AdminPage() {
   }
 
   async function deleteService(id: number) {
-    if (!confirm('Delete this service?')) return;
+    if (!confirm(t('Delete this service?'))) return;
     try {
       await api(`services&id=${id}`, 'DELETE');
       setServices(s => s.filter(x => x.id !== id));
@@ -887,68 +896,68 @@ export default function AdminPage() {
   }
 
   return (
-    <main className={`admin${navigationOpen ? ' menu-open' : ''}`} lang="en" dir="ltr">
+    <main className={`admin${navigationOpen ? ' menu-open' : ''}`} lang={lang} dir={lang === 'fa' ? 'rtl' : 'ltr'}>
       <style>{styles}</style>
-      <button className="admin-nav-backdrop" aria-label="Close navigation" onClick={() => setNavigationOpen(false)} />
-      <aside className="sidebar" id="admin-sidebar" aria-label="Admin navigation">
+      <button className="admin-nav-backdrop" aria-label={t("Close navigation")} onClick={() => setNavigationOpen(false)} />
+      <aside className="sidebar" id="admin-sidebar" aria-label={t("Admin navigation")}>
         <a className="admin-brand" href="/" target="_blank" rel="noreferrer">
           <span className="admin-brand-symbol">N<span>®</span></span>
-          <span><strong>NURANICO</strong><small>Studio workspace</small></span>
+          <span><strong>NURANICO</strong><small>{t("Studio workspace")}</small></span>
         </a>
         <nav>
-          {navigation.map(group => <div className="nav-group" key={group.group}>
-            <p className="nav-group-label">{group.group}</p>
+          {navigation.map(group => <div className="nav-group" key={t(group.group)}>
+            <p className="nav-group-label">{t(group.group)}</p>
             {group.items.map(item => <button key={item.id} type="button" aria-current={section === item.id ? 'page' : undefined} className={section === item.id ? 'nav-active' : ''} onClick={() => navigateTo(item.id)}>
-              <SectionIcon path={item.icon} /><span>{item.label}</span>
+              <SectionIcon path={item.icon} /><span>{t(item.label)}</span>
               {item.id === 'projects' && <small>{projects.length}</small>}
               {item.id === 'media' && <small>{media.length}</small>}
             </button>)}
           </div>)}
         </nav>
-        <div className="sidebar-footer"><span>Website management</span><button className="logout" onClick={logout}>Log out <span aria-hidden="true">↗</span></button></div>
+        <div className="sidebar-footer"><span>{t("Website management")}</span><button className="logout" onClick={logout}>{t("Log out")}<span aria-hidden="true">↗</span></button></div>
       </aside>
-      <section className="workspace" aria-label={activeSection.label}>
+      <section className="workspace" aria-label={t(activeSection.label)}>
         <header className="admin-topbar">
-          <div className="admin-breadcrumb"><button className="admin-menu-toggle" aria-label="Toggle navigation" aria-controls="admin-sidebar" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(!navigationOpen)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button><span>Workspace</span><span aria-hidden="true">/</span><strong>{activeSection.label}</strong></div>
-          <a className="admin-site-link" href="/" target="_blank" rel="noreferrer">View website <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12" /></svg></a>
+          <div className="admin-breadcrumb"><button className="admin-menu-toggle" aria-label={t("Toggle navigation")} aria-controls="admin-sidebar" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(!navigationOpen)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button><span>{t("Workspace")}</span><span aria-hidden="true">/</span><strong>{t(activeSection.label)}</strong></div>
+          <button className="admin-language-toggle" type="button" onClick={toggle} aria-label={lang === 'fa' ? 'Switch admin to English' : 'تغییر زبان پنل به فارسی'}>{lang === 'fa' ? 'EN' : 'FA'}</button><a className="admin-site-link" href="/" target="_blank" rel="noreferrer">{t("View website")}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12" /></svg></a>
         </header>
         <div className="workspace-content">
-        {(message || error) && <div role={error ? 'alert' : 'status'} className={error ? 'notice error' : 'notice'}>{error || message}</div>}
-        {loading ? <div className="admin-loading-state" role="status"><span className="admin-loader" />Loading your workspace…</div> : loadFailed ? <div className="panel"><h2>Your workspace could not be loaded.</h2><p>Try again to load your existing content before editing.</p><button className="primary" onClick={() => void loadAll()}>Try again</button></div> : <>
+        {(message || error) && <div role={error ? 'alert' : 'status'} className={error ? 'notice error' : 'notice'}>{t(error || message)}</div>}
+        {loading ? <div className="admin-loading-state" role="status"><span className="admin-loader" />{t("Loading your workspace…")}</div> : loadFailed ? <div className="panel"><h2>{t("Your workspace could not be loaded.")}</h2><p>{t("Try again to load your existing content before editing.")}</p><button className="primary" onClick={() => void loadAll()}>{t("Try again")}</button></div> : <>
         {section === 'dashboard' && (
           <>
-            <div className="dashboard-intro"><span className="admin-eyebrow">NURANICO / CONTENT STUDIO</span><SectionHeader title="Make your next update." description="Projects, media and every detail of your website, in one workspace." /></div>
+            <div className="dashboard-intro"><span className="admin-eyebrow">NURANICO / CONTENT STUDIO</span><SectionHeader title={t("Make your next update.")} description="Projects, media and every detail of your website, in one workspace." /></div>
             <div className="stats">
               {([
-                ['projects', 'Projects', projects.length, `${publishedProjects} published · ${projects.length - publishedProjects} drafts`],
-                ['media', 'Media files', media.length, 'Your reusable asset library'],
-                ['hero', 'Hero slides', hero.length, 'Homepage introductions'],
-                ['brands', 'Brands', brands.length, 'The people you work with'],
-                ['services', 'Services', services.length, 'What your studio offers'],
+                ['projects', t("Projects"), projects.length, `${publishedProjects} ${t('Published')} · ${projects.length - publishedProjects} ${t('Draft')}`],
+                ['media', t("Media files"), media.length, t("Your reusable asset library")],
+                ['hero', t("Hero slides"), hero.length, t("Homepage introductions")],
+                ['brands', t("Brands"), brands.length, t("The people you work with")],
+                ['services', t("Services"), services.length, t("What your studio offers")],
               ] as [Section, string, number, string][]).map(([id, label, value, detail]) => (
-                <button className="stat" key={id} onClick={() => navigateTo(id)}><span>{label}<span aria-hidden="true">↗</span></span><b>{value}</b><small>{detail}</small></button>
+                <button className="stat" key={id} onClick={() => navigateTo(id)}><span>{t(label)}<span aria-hidden="true">↗</span></span><b>{value}</b><small>{t(detail)}</small></button>
               ))}
             </div>
-            <div className="dashboard-section-head"><h2>A place for every update</h2><p>Choose where you want to start.</p></div>
+            <div className="dashboard-section-head"><h2>{t("A place for every update")}</h2><p>{t("Choose where you want to start.")}</p></div>
             <div className="quick-actions">
               {([
-                ['projects', '01', 'Create a project', 'Name the project, upload its media and behind-the-scenes, then publish.'],
-                ['media', '02', 'Find existing files', 'Search your library and reuse photos and videos in a project.'],
-                ['content', '03', 'Refine your pages', 'Keep English and Persian copy, contact details and SEO in sync.'],
-              ] as [Section, string, string, string][]).map(([id, number, title, description]) => <button key={id} onClick={() => navigateTo(id)}><span className="quick-number">{number}</span><h3>{title}</h3><p>{description}</p><span className="quick-link">Open {navigationItems.find(item => item.id === id)?.label.toLowerCase()} <span aria-hidden="true">→</span></span></button>)}
+                ['projects', '01', t("Create a project"), t("Name the project, upload its media and behind-the-scenes, then publish.")],
+                ['media', '02', t("Find existing files"), t("Search your library and reuse photos and videos in a project.")],
+                ['content', '03', t("Refine your pages"), t("Keep English and Persian copy, contact details and SEO in sync.")],
+              ] as [Section, string, string, string][]).map(([id, number, title, description]) => <button key={id} onClick={() => navigateTo(id)}><span className="quick-number">{number}</span><h3>{t(title)}</h3><p>{t(description)}</p><span className="quick-link">{t('Open')} {t(navigationItems.find(item => item.id === id)?.label)} <span aria-hidden="true">→</span></span></button>)}
             </div>
-            <div className="panel dashboard-workflow"><div><h2>One project. Multiple destinations.</h2><p>Attach your media once and choose where each project appears.</p></div><div className="chips">{destinations.filter(([key]) => !['work','featured'].includes(key)).map(([, label]) => <span key={label}>{label}</span>)}</div></div>
+            <div className="panel dashboard-workflow"><div><h2>{t("One project. Multiple destinations.")}</h2><p>{t("Attach your media once and choose where each project appears.")}</p></div><div className="chips">{destinations.filter(([key]) => !['work','featured'].includes(key)).map(([, label]) => <span key={label}>{t(label)}</span>)}</div></div>
           </>
         )}
 
         {section === 'bts' && <>
-          <SectionHeader title="Behind the Scenes" description="Behind-the-scenes files belong to their projects. Open a project to upload, arrange and publish them." />
-          <div className="panel"><h3>Project galleries</h3><div className="list">{projects.filter(project => project.bts_media_ids?.length || (destMap[project.id] || []).includes('bts')).map(project => <article className="row-card" key={project.id}><div className="row-content"><b>{project.title_en || project.title_fa || 'Untitled project'}</b><div className="sub">{project.bts_media_ids?.length ?? (projectMediaMap[project.id] || []).length} files · {project.published ? 'Published' : 'Draft'}</div></div><button className="ghost" onClick={() => {projectEditorSession.current++;openProject(project);setProjectStep(1);navigateTo('projects');}}>Open project</button></article>)}</div><button className="ghost" onClick={() => navigateTo('projects')}>Go to projects</button></div>
-          <details className="content-group"><summary>Independent gallery · {btsMediaIds.length} files</summary><div className="content-group-body"><MediaUploader onDone={async uploaded => {await refreshMedia();if(uploaded?.length) setBtsMediaIds(current => Array.from(new Set([...current,...uploaded.map(item => item.id)])));}} onError={setError} />
-          <div className="workflow-status"><span>{btsMediaIds.length} files in this gallery</span><b>{btsMediaIds.join(',') === btsSavedIds.join(',') ? 'Published version' : 'Unpublished changes'}</b></div>
-          <div className="panel"><p className="hint">For project behind-the-scenes, open the project → Media → Behind the scenes.</p><MediaPicker title="Choose & arrange media" media={media} ids={btsMediaIds} onChange={setBtsMediaIds} multiple />
-            {btsMediaIds.some(id => !btsSavedIds.includes(id)) && <details className="content-group"><summary>Name new files (optional)</summary><div className="content-group-body"><p className="hint">Applies only to the newly added files in this gallery.</p><div className="grid2"><Input label="Brand name" value={btsBrandName} onChange={setBtsBrandName} /><Input label="Project name" value={btsProjectName} onChange={setBtsProjectName} /></div></div></details>}
-            <div className="workflow-publish"><p>Changes appear online after publishing.</p><button className="primary" disabled={saving || btsMediaIds.join(',') === btsSavedIds.join(',')} onClick={saveBts}>{saving ? 'Publishing…' : 'Publish gallery'}</button></div>
+          <SectionHeader title={t("Behind the Scenes")} description="Behind-the-scenes files belong to their projects. Open a project to upload, arrange and publish them." />
+          <div className="panel"><h3>{t("Project galleries")}</h3><div className="list">{projects.filter(project => project.bts_media_ids?.length || (destMap[project.id] || []).includes('bts')).map(project => <article className="row-card" key={project.id}><div className="row-content"><b>{(lang === 'fa' ? project.title_fa || project.title_en : project.title_en || project.title_fa) || t("Untitled project")}</b><div className="sub">{project.bts_media_ids?.length ?? (projectMediaMap[project.id] || []).length} {t("files ·")}{project.published ? t("Published") : t("Draft")}</div></div><button className="ghost" onClick={() => {projectEditorSession.current++;openProject(project);setProjectStep(1);navigateTo('projects');}}>{t("Open project")}</button></article>)}</div><button className="ghost" onClick={() => navigateTo('projects')}>{t("Go to projects")}</button></div>
+          <details className="content-group"><summary>{t("Independent gallery ·")}{btsMediaIds.length} {t("files")}</summary><div className="content-group-body"><MediaUploader onDone={async uploaded => {await refreshMedia();if(uploaded?.length) setBtsMediaIds(current => Array.from(new Set([...current,...uploaded.map(item => item.id)])));}} onError={setError} />
+          <div className="workflow-status"><span>{btsMediaIds.length} {t("files in this gallery")}</span><b>{btsMediaIds.join(',') === btsSavedIds.join(',') ? t("Published version") : t("Unpublished changes")}</b></div>
+          <div className="panel"><p className="hint">{t("For project behind-the-scenes, open the project → Media → Behind the scenes.")}</p><MediaPicker title={t("Choose & arrange media")} media={media} ids={btsMediaIds} onChange={setBtsMediaIds} multiple />
+            {btsMediaIds.some(id => !btsSavedIds.includes(id)) && <details className="content-group"><summary>{t("Name new files (optional)")}</summary><div className="content-group-body"><p className="hint">{t("Applies only to the newly added files in this gallery.")}</p><div className="grid2"><Input label="Brand name" value={btsBrandName} onChange={setBtsBrandName} /><Input label="Project name" value={btsProjectName} onChange={setBtsProjectName} /></div></div></details>}
+            <div className="workflow-publish"><p>{t("Changes appear online after publishing.")}</p><button className="primary" disabled={saving || btsMediaIds.join(',') === btsSavedIds.join(',')} onClick={saveBts}>{saving ? t("Publishing…") : t("Publish gallery")}</button></div>
           </div>
           </div></details>
         </>}
@@ -956,7 +965,7 @@ export default function AdminPage() {
         {section === 'projects' && (
           <>
             <SectionHeader
-              title="Projects"
+              title={t("Projects")}
               description="Portfolio projects, destinations, media and publication."
               action={<button className="primary" disabled={!!editingProject} onClick={() => {
                 projectEditorSession.current++;
@@ -968,44 +977,44 @@ export default function AdminPage() {
                 category: 'Content', cover_url: '', media_url: '', media_type: 'image',
                 preview_url: '', preview_type: 'video', preview_enabled: false,
                 featured: false, published: false, sort_order: projects.length,
-              }); }}>+ New project</button>}
+              }); }}>{t("+ New project")}</button>}
             />
             <div className="toolbar">
-              <input hidden={!!editingProject} aria-label="Search projects" placeholder="Search projects…" value={projectSearch} onChange={e => setProjectSearch(e.target.value)} />
+              <input hidden={!!editingProject} aria-label={t("Search projects")} placeholder={t("Search projects…")} value={projectSearch} onChange={e => setProjectSearch(e.target.value)} />
             </div>
 
             {editingProject && (
               <div className="editor">
                 <div className="editor-top">
-                  <h2>{editingProject.id ? 'Edit project' : 'New project'}</h2>
-                  <button className="ghost" onClick={() => {projectEditorSession.current++;setEditingProject(null);}}>Close</button>
+                  <h2>{editingProject.id ? t("Edit project") : t("New project")}</h2>
+                  <button className="ghost" onClick={() => {projectEditorSession.current++;setEditingProject(null);}}>{t("Close")}</button>
                 </div>
 
-                <nav className="workflow-steps" aria-label="Project setup">{['Name','Media','Publish'].map((label,index) => <button type="button" key={label} aria-current={projectStep === index ? 'step' : undefined} className={projectStep === index ? 'active' : ''} onClick={() => {setError('');setProjectStep(index);}}><span>{index + 1}</span>{label}</button>)}</nav>
+                <nav className="workflow-steps" aria-label={t("Project setup")}>{[t("Name"),t("Media"),t("Publish")].map((label,index) => <button type="button" key={label} aria-current={projectStep === index ? 'step' : undefined} className={projectStep === index ? 'active' : ''} onClick={() => {setError('');setProjectStep(index);}}><span>{index + 1}</span>{t(label)}</button>)}</nav>
                 {projectStep === 0 && <div className="workflow-body">
                   <div className="grid2"><Input label="Project name — English" value={editingProject.title_en || ''} onChange={v => setEditingProject({...editingProject,title_en:v})} /><Input label="نام پروژه — فارسی" value={editingProject.title_fa} onChange={v => setEditingProject({...editingProject,title_fa:v})} /></div>
-                  <Input label="Brand (optional)" value={editingProject.brand_name || ''} onChange={v => setEditingProject({...editingProject,brand_name:v})} /><p className="hint">The project name appears on its card, project page and behind-the-scenes files.</p>
-                  <details className="content-group"><summary>Description (optional)</summary><div className="content-group-body grid2"><Textarea label="Description — English" value={editingProject.description_en} onChange={v => setEditingProject({...editingProject,description_en:v})} /><Textarea label="توضیحات — فارسی" value={editingProject.description_fa} onChange={v => setEditingProject({...editingProject,description_fa:v})} /></div></details>
+                  <Input label="Brand (optional)" value={editingProject.brand_name || ''} onChange={v => setEditingProject({...editingProject,brand_name:v})} /><p className="hint">{t("The project name appears on its card, project page and behind-the-scenes files.")}</p>
+                  <details className="content-group"><summary>{t("Description (optional)")}</summary><div className="content-group-body grid2"><Textarea label="Description — English" value={editingProject.description_en} onChange={v => setEditingProject({...editingProject,description_en:v})} /><Textarea label="توضیحات — فارسی" value={editingProject.description_fa} onChange={v => setEditingProject({...editingProject,description_fa:v})} /></div></details>
                 </div>}
                 {projectStep === 1 && <div className="workflow-body">
-                  <div className="workflow-section-head"><div><h3>Photos & videos</h3><p className="hint">New uploads join this gallery. The first file becomes the main media if none is set.</p></div><MediaUploader onDone={uploaded => uploadProjectFiles(uploaded,currentEditorSession)} onError={setError} /></div>
-                  <MediaPicker title="Main photo or video" media={media} ids={media.filter(item => item.file_url === editingProject.media_url).map(item => item.id)} onChange={ids => {const item = media.find(item => item.id === ids[0]);setEditingProject({...editingProject,media_url:item?.file_url || '',media_type:item && isVideoAsset(item) ? 'video' : 'image',...(!editingProject.preview_url || editingProject.preview_url === editingProject.media_url ? {preview_url:item && isVideoAsset(item) ? item.file_url : '',preview_enabled:!!item && isVideoAsset(item),preview_type:'video'} : {})});}} />
-                  <MediaPicker title="Gallery & order" media={media} ids={projectMediaMap[editingProject.id] || []} onChange={ids => setProjectMediaMap(current => ({...current,[editingProject.id]:ids}))} multiple />
-                  <MediaPicker title="Cover image" kind="image" media={media} ids={media.filter(item => item.file_url === editingProject.cover_url).map(item => item.id)} onChange={ids => setEditingProject({...editingProject,cover_url:media.find(item => item.id === ids[0])?.file_url || ''})} />
-                  <details className="content-group"><summary>Behind the scenes · {(editingProject.bts_media_ids || []).length} files</summary><div className="content-group-body"><p className="hint">Photos and videos here appear under this project and on the Behind the scenes page when the project is published.</p><MediaUploader onDone={uploaded => uploadProjectFiles(uploaded,currentEditorSession,true)} onError={setError} /><MediaPicker title="Project behind the scenes" media={media} ids={editingProject.bts_media_ids || []} onChange={ids => setEditingProject({...editingProject,bts_media_ids:ids})} multiple /></div></details>
-                  <details className="content-group"><summary>Video preview & external links (optional)</summary><div className="content-group-body"><Toggle label="Enable card video preview" value={!!editingProject.preview_enabled} onChange={value => setEditingProject({...editingProject,preview_enabled:value})} /><MediaPicker title="Video preview" kind="video" media={media} ids={media.filter(item => item.file_url === editingProject.preview_url).map(item => item.id)} onChange={ids => setEditingProject({...editingProject,preview_url:media.find(item => item.id === ids[0])?.file_url || '',preview_type:'video',preview_enabled:!!ids.length})} /><div className="grid2"><Input label="Cover URL" value={editingProject.cover_url || ''} onChange={v => setEditingProject({...editingProject,cover_url:v})} /><Input label="Main media URL" value={editingProject.media_url || ''} onChange={v => setEditingProject({...editingProject,media_url:v})} /></div></div></details>
+                  <div className="workflow-section-head"><div><h3>{t("Photos & videos")}</h3><p className="hint">{t("New uploads join this gallery. The first file becomes the main media if none is set.")}</p></div><MediaUploader onDone={uploaded => uploadProjectFiles(uploaded,currentEditorSession)} onError={setError} /></div>
+                  <MediaPicker title={t("Main photo or video")} media={media} ids={media.filter(item => item.file_url === editingProject.media_url).map(item => item.id)} onChange={ids => {const item = media.find(item => item.id === ids[0]);setEditingProject({...editingProject,media_url:item?.file_url || '',media_type:item && isVideoAsset(item) ? 'video' : 'image',...(!editingProject.preview_url || editingProject.preview_url === editingProject.media_url ? {preview_url:item && isVideoAsset(item) ? item.file_url : '',preview_enabled:!!item && isVideoAsset(item),preview_type:'video'} : {})});}} />
+                  <MediaPicker title={t("Gallery & order")} media={media} ids={projectMediaMap[editingProject.id] || []} onChange={ids => setProjectMediaMap(current => ({...current,[editingProject.id]:ids}))} multiple />
+                  <MediaPicker title={t("Cover image")} kind="image" media={media} ids={media.filter(item => item.file_url === editingProject.cover_url).map(item => item.id)} onChange={ids => setEditingProject({...editingProject,cover_url:media.find(item => item.id === ids[0])?.file_url || ''})} />
+                  <details className="content-group"><summary>{t("Behind the scenes ·")}{(editingProject.bts_media_ids || []).length} {t("files")}</summary><div className="content-group-body"><p className="hint">{t("Photos and videos here appear under this project and on the Behind the scenes page when the project is published.")}</p><MediaUploader onDone={uploaded => uploadProjectFiles(uploaded,currentEditorSession,true)} onError={setError} /><MediaPicker title={t("Project behind the scenes")} media={media} ids={editingProject.bts_media_ids || []} onChange={ids => setEditingProject({...editingProject,bts_media_ids:ids})} multiple /></div></details>
+                  <details className="content-group"><summary>{t("Video preview & external links (optional)")}</summary><div className="content-group-body"><Toggle label="Enable card video preview" value={!!editingProject.preview_enabled} onChange={value => setEditingProject({...editingProject,preview_enabled:value})} /><MediaPicker title={t("Video preview")} kind="video" media={media} ids={media.filter(item => item.file_url === editingProject.preview_url).map(item => item.id)} onChange={ids => setEditingProject({...editingProject,preview_url:media.find(item => item.id === ids[0])?.file_url || '',preview_type:'video',preview_enabled:!!ids.length})} /><div className="grid2"><Input label="Cover URL" value={editingProject.cover_url || ''} onChange={v => setEditingProject({...editingProject,cover_url:v})} /><Input label="Main media URL" value={editingProject.media_url || ''} onChange={v => setEditingProject({...editingProject,media_url:v})} /></div></div></details>
                 </div>}
                 {projectStep === 2 && <div className="workflow-body">
-                  <div className="workflow-review"><h3>{editingProject.title_en || editingProject.title_fa || 'Add a project name'}</h3><p>{editingProject.published ? 'Currently published' : 'Currently a draft'} · {(projectMediaMap[editingProject.id] || []).length} gallery files · {(editingProject.bts_media_ids || []).length} behind-the-scenes files</p></div>
-                  <h3>Where should it appear?</h3><div className="checks">{destinations.filter(([key]) => !['home','featured','work','bts'].includes(key)).map(([key,label]) => {const checked=(destMap[editingProject.id] || []).includes(key);return <label key={key}><input type="checkbox" checked={checked} onChange={() => setDestMap(map => ({...map,[editingProject.id]:checked ? (map[editingProject.id] || []).filter(value => value !== key) : [...(map[editingProject.id] || []),key]}))} />{label}</label>;})}</div>
-                  <label className="workflow-home"><input type="checkbox" checked={(destMap[editingProject.id] || []).includes('home')} onChange={e => setDestMap(map => ({...map,[editingProject.id]:e.target.checked ? Array.from(new Set([...(map[editingProject.id] || []),'home'])) : (map[editingProject.id] || []).filter(value => value !== 'home')}))} /><span><b>Main on homepage</b><small>Show this project first in its sections. All still includes every published project.</small></span></label>
-                  <details className="content-group"><summary>Advanced display settings</summary><div className="content-group-body grid2"><Input label="Display order" type="number" value={editingProject.sort_order ?? 0} onChange={v => setEditingProject({...editingProject,sort_order:Number(v) || 0})} /><Toggle label="Use as hero fallback" value={!!editingProject.featured} onChange={value => setEditingProject({...editingProject,featured:value})} /></div></details>
+                  <div className="workflow-review"><h3>{editingProject.title_en || editingProject.title_fa || t("Add a project name")}</h3><p>{editingProject.published ? t("Currently published") : t("Currently a draft")} · {(projectMediaMap[editingProject.id] || []).length} {t("gallery files ·")}{(editingProject.bts_media_ids || []).length} {t("behind-the-scenes files")}</p></div>
+                  <h3>{t("Where should it appear?")}</h3><div className="checks">{destinations.filter(([key]) => !['home','featured','work','bts'].includes(key)).map(([key,label]) => {const checked=(destMap[editingProject.id] || []).includes(key);return <label key={key}><input type="checkbox" checked={checked} onChange={() => setDestMap(map => ({...map,[editingProject.id]:checked ? (map[editingProject.id] || []).filter(value => value !== key) : [...(map[editingProject.id] || []),key]}))} />{t(label)}</label>;})}</div>
+                  <label className="workflow-home"><input type="checkbox" checked={(destMap[editingProject.id] || []).includes('home')} onChange={e => setDestMap(map => ({...map,[editingProject.id]:e.target.checked ? Array.from(new Set([...(map[editingProject.id] || []),'home'])) : (map[editingProject.id] || []).filter(value => value !== 'home')}))} /><span><b>{t("Main on homepage")}</b><small>{t("Show this project first in its sections. All still includes every published project.")}</small></span></label>
+                  <details className="content-group"><summary>{t("Advanced display settings")}</summary><div className="content-group-body grid2"><Input label="Display order" type="number" value={editingProject.sort_order ?? 0} onChange={v => setEditingProject({...editingProject,sort_order:Number(v) || 0})} /><Toggle label="Use as hero fallback" value={!!editingProject.featured} onChange={value => setEditingProject({...editingProject,featured:value})} /></div></details>
                 </div>}
                 <div className="workflow-actions">
-                  <button className="ghost" onClick={() => projectStep ? setProjectStep(projectStep - 1) : (projectEditorSession.current++,setEditingProject(null))}>{projectStep ? 'Back' : 'Cancel'}</button>
-                  <div className="workflow-action-end">{(!editingProject.published || projectStep === 2) && <button className="ghost" disabled={saving} onClick={() => saveProject(false)}>{editingProject.published ? 'Unpublish' : 'Save draft'}</button>}{projectStep < 2 ? <button className="primary" onClick={() => setProjectStep(projectStep + 1)}>Next</button> : <button className="primary" disabled={saving} onClick={() => saveProject(true)}>{saving ? 'Publishing…' : editingProject.published ? 'Save & publish' : 'Publish project'}</button>}</div>
+                  <button className="ghost" onClick={() => projectStep ? setProjectStep(projectStep - 1) : (projectEditorSession.current++,setEditingProject(null))}>{projectStep ? t("Back") : t("Cancel")}</button>
+                  <div className="workflow-action-end">{(!editingProject.published || projectStep === 2) && <button className="ghost" disabled={saving} onClick={() => saveProject(false)}>{editingProject.published ? t("Unpublish") : t("Save draft")}</button>}{projectStep < 2 ? <button className="primary" onClick={() => setProjectStep(projectStep + 1)}>{t("Next")}</button> : <button className="primary" disabled={saving} onClick={() => saveProject(true)}>{saving ? t("Publishing…") : editingProject.published ? t("Save & publish") : t("Publish project")}</button>}</div>
                 </div>
-                {editingProject.id > 0 && <details className="content-group"><summary>Delete project</summary><div className="content-group-body"><button className="danger" disabled={saving} onClick={() => deleteProject(editingProject.id)}>Delete project</button></div></details>}
+                {editingProject.id > 0 && <details className="content-group"><summary>{t("Delete project")}</summary><div className="content-group-body"><button className="danger" disabled={saving} onClick={() => deleteProject(editingProject.id)}>{t("Delete project")}</button></div></details>}
 
               </div>
             )}
@@ -1014,19 +1023,19 @@ export default function AdminPage() {
               {filteredProjects.map(project => (
                 <article className="row-card project-list-card" key={project.id}>
                   <div className="thumb">
-                    {project.cover_url ? <img src={project.cover_url} alt="" /> : <span>NO COVER</span>}
+                    {project.cover_url ? <img src={project.cover_url} alt="" /> : <span>{t("NO COVER")}</span>}
                   </div>
                   <div className="row-main">
-                    <b>{project.title_en || project.title_fa || 'Untitled project'}</b>
-                    <span>{project.category} · {project.published ? 'Published' : 'Draft'} · {project.featured ? 'Featured' : 'Standard'}</span>
-                    <small>{(destMap[project.id] || []).join(' · ') || 'No destinations'}</small>
+                    <b>{(lang === 'fa' ? project.title_fa || project.title_en : project.title_en || project.title_fa) || t("Untitled project")}</b>
+                    <span>{t(project.category)} · {project.published ? t("Published") : t("Draft")} · {project.featured ? t("Featured") : t("Standard")}</span>
+                    <small>{(destMap[project.id] || []).map(key => t(destinations.find(([value]) => value === key)?.[1] || key)).join(' · ') || t("No destinations")}</small>
                   </div>
                   <div className="project-list-actions"><label className="asset-bulk-check"><input type="checkbox" disabled={saving || !project.published} checked={(destMap[project.id] || []).includes('home')} onChange={async e => {
                     const checked = e.target.checked; const current = destMap[project.id] || [];
                     const next = checked ? [...current,'home'] : current.filter(value => value !== 'home');
                     setSaving(true); try {await api('project-home','POST',{id:project.id,show:checked}); setDestMap(map => ({...map,[project.id]:next})); flash('Homepage selection saved.');} catch(error) {setError(error instanceof Error ? error.message : 'Could not save selection.');} finally {setSaving(false);}
-                  }} /> Main on homepage</label>
-                  <button className="ghost" onClick={() => {projectEditorSession.current++;setProjectStep(0);openProject(project);}}>Edit</button></div>
+                  }} /> {t("Main on homepage")}</label>
+                  <button className="ghost" onClick={() => {projectEditorSession.current++;setProjectStep(0);openProject(project);}}>{t("Edit")}</button></div>
                 </article>
               ))}
               {!filteredProjects.length && <EmptyState text="No projects yet." />}
@@ -1036,25 +1045,25 @@ export default function AdminPage() {
 
         {section === 'media' && (
           <>
-            <SectionHeader title="Media Library" description="Upload images and videos once and reuse them across the site." action={<MediaUploader onDone={async uploaded => {await refreshMedia(); clearMediaSelection(); setLabelIds(uploaded?.map(item => item.id) || []);}} onError={setError} />} />
+            <SectionHeader title={t("Media Library")} description="Upload images and videos once and reuse them across the site." action={<MediaUploader onDone={async uploaded => {await refreshMedia(); clearMediaSelection(); setLabelIds(uploaded?.map(item => item.id) || []);}} onError={setError} />} />
             <div className="toolbar">
-              <input aria-label="Search media" placeholder="Search media…" value={mediaSearch} onChange={e => {setMediaSearch(e.target.value); setMediaPage(0);}} />
-              <select aria-label="Filter media type" value={mediaFilter} onChange={e => {setMediaFilter(e.target.value); setMediaPage(0);}}>
-                <option value="all">All</option>
-                <option value="image">Images</option>
-                <option value="video">Videos</option>
+              <input aria-label={t("Search media")} placeholder={t("Search media…")} value={mediaSearch} onChange={e => {setMediaSearch(e.target.value); setMediaPage(0);}} />
+              <select aria-label={t("Filter media type")} value={mediaFilter} onChange={e => {setMediaFilter(e.target.value); setMediaPage(0);}}>
+                <option value="all">{t("All")}</option>
+                <option value="image">{t("Images")}</option>
+                <option value="video">{t("Videos")}</option>
               </select>
             </div>
-            {!labelIds.length && <p className="hint">For a new project, upload from Projects. Use this library to find and reuse files; select files here for standalone publication.</p>}
+            {!labelIds.length && <p className="hint">{t("For a new project, upload from Projects. Use this library to find and reuse files; select files here for standalone publication.")}</p>}
             {!!labelIds.length && <div className="asset-label-panel panel">
-              <div className="workflow-section-head"><h3>{labelIds.length} selected file{labelIds.length === 1 ? '' : 's'}</h3><button className="ghost" onClick={clearMediaSelection}>Cancel selection</button></div>
-              <h4>1 · Name (optional)</h4><div className="grid2"><label className="field"><span>Brand name</span><input list="brand-labels" value={brandLabel} onChange={e => setBrandLabel(e.target.value)} placeholder="Choose or type a brand" /></label><label className="field"><span>Project name</span><input list="project-labels" value={projectLabel} onChange={e => setProjectLabel(e.target.value)} placeholder="Choose or type a project" /></label></div>
+              <div className="workflow-section-head"><h3>{labelIds.length} {t("selected file")}{labelIds.length === 1 || lang === 'fa' ? '' : 's'}</h3><button className="ghost" onClick={clearMediaSelection}>{t("Cancel selection")}</button></div>
+              <h4>{t("1 · Name (optional)")}</h4><div className="grid2"><label className="field"><span>{t("Brand name")}</span><input list="brand-labels" value={brandLabel} onChange={e => setBrandLabel(e.target.value)} placeholder={t("Choose or type a brand")} /></label><label className="field"><span>{t("Project name")}</span><input list="project-labels" value={projectLabel} onChange={e => setProjectLabel(e.target.value)} placeholder={t("Choose or type a project")} /></label></div>
               <datalist id="brand-labels">{Array.from(new Set([...brands.map(item => item.name),...media.map(item => item.brand_name).filter(Boolean)])).map(name => <option value={name!} key={name} />)}</datalist><datalist id="project-labels">{Array.from(new Set([...projects.map(item => item.title_en || item.title_fa),...media.map(item => item.project_name).filter(Boolean)])).map(name => <option value={name!} key={name} />)}</datalist>
-              <h4>2 · Choose sections</h4><div className="checks">{[['film','Film & teasers'],['photography','Photography'],['content','Content'],['bts','Behind the scenes']].map(([key,label]) => <label key={key}><input type="checkbox" checked={assetDestinations.includes(key)} onChange={e => setAssetDestinations(current => e.target.checked ? [...current,key] : current.filter(value => value !== key))} />{label}</label>)}</div>
-              <details className="content-group"><summary>Homepage priority & other options</summary><div className="content-group-body"><label className="field"><span>Homepage priority</span><select value={assetHome} onChange={e => setAssetHome(e.target.value)}><option value="keep">Keep current</option><option value="show">Main in homepage sections</option><option value="hide">Standard gallery entry</option></select></label><p className="hint">Chosen sections replace the previous placement. Empty names preserve existing labels.</p><button className="ghost" disabled={saving} onClick={() => saveMediaLabels('keep')}>Save names & placement only</button></div></details>
-              <div className="workflow-publish"><div><h4>3 · Publish</h4><p>Publish files directly into their sections, or keep them in the library for a project.</p></div><div className="workflow-action-end"><button className="ghost" disabled={saving} onClick={() => saveMediaLabels('draft')}>Keep in library</button><button className="primary" disabled={saving} onClick={() => saveMediaLabels('publish')}>{saving ? 'Saving…' : 'Publish files'}</button></div></div>
+              <h4>{t("2 · Choose sections")}</h4><div className="checks">{[['film',t("Film & teasers")],['photography',t("Photography")],['content',t("Content")],['bts',t("Behind the scenes")]].map(([key,label]) => <label key={key}><input type="checkbox" checked={assetDestinations.includes(key)} onChange={e => setAssetDestinations(current => e.target.checked ? [...current,key] : current.filter(value => value !== key))} />{label}</label>)}</div>
+              <details className="content-group"><summary>{t("Homepage priority & other options")}</summary><div className="content-group-body"><label className="field"><span>Homepage priority</span><select value={assetHome} onChange={e => setAssetHome(e.target.value)}><option value="keep">{t("Keep current")}</option><option value="show">{t("Main in homepage sections")}</option><option value="hide">{t("Standard gallery entry")}</option></select></label><p className="hint">{t("Chosen sections replace the previous placement. Empty names preserve existing labels.")}</p><button className="ghost" disabled={saving} onClick={() => saveMediaLabels('keep')}>{t("Save names & placement only")}</button></div></details>
+              <div className="workflow-publish"><div><h4>{t("3 · Publish")}</h4><p>{t("Publish files directly into their sections, or keep them in the library for a project.")}</p></div><div className="workflow-action-end"><button className="ghost" disabled={saving} onClick={() => saveMediaLabels('draft')}>{t("Keep in library")}</button><button className="primary" disabled={saving} onClick={() => saveMediaLabels('publish')}>{saving ? t("Saving…") : t("Publish files")}</button></div></div>
             </div>}
-            <div className="asset-tools media-selection-tools"><span className="hint">{filteredMedia.length} matching files</span><button className="ghost" onClick={() => setLabelIds(current => Array.from(new Set([...current,...filteredMedia.map(item => item.id)])))}>Select matching</button></div>
+            <div className="asset-tools media-selection-tools"><span className="hint">{filteredMedia.length} {t("matching files")}</span><button className="ghost" onClick={() => setLabelIds(current => Array.from(new Set([...current,...filteredMedia.map(item => item.id)])))}>{t("Select matching")}</button></div>
             <div className="media-grid">
               {filteredMedia.slice(Math.min(mediaPage, Math.max(0, Math.ceil(filteredMedia.length / 24) - 1)) * 24, (Math.min(mediaPage, Math.max(0, Math.ceil(filteredMedia.length / 24) - 1)) + 1) * 24).map(item => (
                 <article className="media-card" key={item.id}>
@@ -1065,52 +1074,52 @@ export default function AdminPage() {
                   </div>
                   <div className="media-meta">
                     <label className="asset-bulk-check"><input type="checkbox" checked={labelIds.includes(item.id)} onChange={e => setLabelIds(current => e.target.checked ? [...current,item.id] : current.filter(id => id !== item.id))} /> <b dir="auto">{item.name}</b></label>
-                    <small dir="auto">{[item.brand_name, item.project_name].filter(Boolean).join(' · ') || projects.filter(project => (projectMediaMap[project.id] || []).includes(item.id) || (project.bts_media_ids || []).includes(item.id) || [project.cover_url,project.media_url,project.preview_url].includes(item.file_url)).map(project => project.title_en || project.title_fa || 'Untitled project').join(' · ') || 'Library file'}</small>
-                    <small>{(item.destinations || []).join(' · ') || 'Unassigned'} · {item.published ? 'Published in galleries' : 'Library / project use'}</small>
-                    {item.show_on_home && <small>Main on homepage</small>}
+                    <small dir="auto">{[item.brand_name, item.project_name].filter(Boolean).join(' · ') || projects.filter(project => (projectMediaMap[project.id] || []).includes(item.id) || (project.bts_media_ids || []).includes(item.id) || [project.cover_url,project.media_url,project.preview_url].includes(item.file_url)).map(project => (lang === 'fa' ? project.title_fa || project.title_en : project.title_en || project.title_fa) || t("Untitled project")).join(' · ') || t("Library file")}</small>
+                    <small>{(item.destinations || []).join(' · ') || t("Unassigned")} · {item.published ? t("Published in galleries") : t("Library / project use")}</small>
+                    {item.show_on_home && <small>{t("Main on homepage")}</small>}
                     <span>{item.file_type || 'file'} · {item.file_size ? `${Math.round(item.file_size / 1024)} KB` : '—'}</span>
-                    <button className="ghost" onClick={() => manageMedia(item)}>Name & publish</button>
-                    <details className="file-actions"><summary>More</summary><div className="media-actions">
-                      <button className="ghost" onClick={() => navigator.clipboard?.writeText(item.file_url)}>Copy URL</button>
-                      <button className="danger" onClick={() => deleteMedia(item)}>Delete</button>
+                    <button className="ghost" onClick={() => manageMedia(item)}>{t("Name & publish")}</button>
+                    <details className="file-actions"><summary>{t("More")}</summary><div className="media-actions">
+                      <button className="ghost" onClick={() => navigator.clipboard?.writeText(item.file_url)}>{t("Copy URL")}</button>
+                      <button className="danger" onClick={() => deleteMedia(item)}>{t("Delete")}</button>
                     </div></details>
                   </div>
                 </article>
               ))}
             </div>
-            <div className="asset-pagination"><button className="ghost" disabled={mediaPage === 0} onClick={() => setMediaPage(page => page - 1)}>Previous</button><span>{filteredMedia.length} files · page {Math.min(mediaPage + 1, Math.max(1, Math.ceil(filteredMedia.length / 24)))} / {Math.max(1, Math.ceil(filteredMedia.length / 24))}</span><button className="ghost" disabled={(mediaPage + 1) * 24 >= filteredMedia.length} onClick={() => setMediaPage(page => page + 1)}>Next</button></div>
+            <div className="asset-pagination"><button className="ghost" disabled={mediaPage === 0} onClick={() => setMediaPage(page => page - 1)}>{t("Previous")}</button><span>{filteredMedia.length} {t("files · page")}{Math.min(mediaPage + 1, Math.max(1, Math.ceil(filteredMedia.length / 24)))} / {Math.max(1, Math.ceil(filteredMedia.length / 24))}</span><button className="ghost" disabled={(mediaPage + 1) * 24 >= filteredMedia.length} onClick={() => setMediaPage(page => page + 1)}>{t("Next")}</button></div>
             {!filteredMedia.length && <EmptyState text="No media uploaded yet." />}
           </>
         )}
 
         {section === 'hero' && (
           <>
-            <SectionHeader title="Hero Slides" description="Manage the homepage hero carousel." action={<button className="primary" onClick={() => setEditingHero({
+            <SectionHeader title={t("Hero Slides")} description="Manage the homepage hero carousel." action={<button className="primary" onClick={() => setEditingHero({
               id: 0, title_fa: '', title_en: '', description_fa: '', description_en: '',
               media_url: '', media_type: 'image', button_text_fa: '', button_text_en: '',
               button_url: '', sort_order: hero.length, published: false,
-            })}>+ New slide</button>} />
+            })}>{t("+ New slide")}</button>} />
             {editingHero && (
               <div className="editor">
-                <div className="editor-top"><h2>{editingHero.id ? 'Edit slide' : 'New slide'}</h2><button className="ghost" onClick={() => setEditingHero(null)}>Close</button></div>
+                <div className="editor-top"><h2>{editingHero.id ? t("Edit slide") : t("New slide")}</h2><button className="ghost" onClick={() => setEditingHero(null)}>{t("Close")}</button></div>
                 <div className="grid2">
                   <Input label="Title — English" value={editingHero.title_en || ''} onChange={v => setEditingHero({...editingHero, title_en: v})} />
                   <Input label="عنوان — فارسی" value={editingHero.title_fa || ''} onChange={v => setEditingHero({...editingHero, title_fa: v})} />
                   <Textarea label="Description — English" value={editingHero.description_en} onChange={v => setEditingHero({...editingHero, description_en: v})} />
                   <Textarea label="توضیحات — فارسی" value={editingHero.description_fa} onChange={v => setEditingHero({...editingHero, description_fa: v})} />
                   <Input label="Media URL" value={editingHero.media_url || ''} onChange={v => setEditingHero({...editingHero, media_url: v})} />
-                  <select className="field-select" value={editingHero.media_type} onChange={e => setEditingHero({...editingHero, media_type: e.target.value})}><option value="image">Image</option><option value="video">Video</option></select>
+                  <select className="field-select" value={editingHero.media_type} onChange={e => setEditingHero({...editingHero, media_type: e.target.value})}><option value="image">Image</option><option value="video">{t("Video")}</option></select>
                   <Input label="Button — English" value={editingHero.button_text_en || ''} onChange={v => setEditingHero({...editingHero, button_text_en: v})} />
                   <Input label="Button — فارسی" value={editingHero.button_text_fa || ''} onChange={v => setEditingHero({...editingHero, button_text_fa: v})} />
                   <Input label="Button URL" value={editingHero.button_url || ''} onChange={v => setEditingHero({...editingHero, button_url: v})} />
                   <Input label="Sort order" type="number" value={editingHero.sort_order} onChange={v => setEditingHero({...editingHero, sort_order: Number(v) || 0})} />
                 </div>
                 <Toggle label="Published" value={editingHero.published} onChange={v => setEditingHero({...editingHero, published: v})} />
-                <div className="editor-actions"><button className="danger" onClick={() => editingHero.id && deleteHero(editingHero.id)}>Delete</button><div /><button className="ghost" onClick={() => setEditingHero(null)}>Cancel</button><button className="primary" disabled={saving} onClick={saveHero}>{saving ? 'Saving…' : 'Save slide'}</button></div>
+                <div className="editor-actions"><button className="danger" onClick={() => editingHero.id && deleteHero(editingHero.id)}>{t("Delete")}</button><div /><button className="ghost" onClick={() => setEditingHero(null)}>{t("Cancel")}</button><button className="primary" disabled={saving} onClick={saveHero}>{saving ? t("Saving…") : t("Save slide")}</button></div>
               </div>
             )}
             <div className="list">
-              {hero.map(item => <article className="row-card" key={item.id}><div className="row-main"><b>{item.title_en || item.title_fa || 'Untitled slide'}</b><span>{item.media_type} · {item.published ? 'Published' : 'Draft'} · #{item.sort_order}</span></div><button className="ghost" onClick={() => setEditingHero(item)}>Edit</button></article>)}
+              {hero.map(item => <article className="row-card" key={item.id}><div className="row-main"><b>{item.title_en || item.title_fa || t("Untitled slide")}</b><span>{item.media_type} · {item.published ? t("Published") : t("Draft")} · #{item.sort_order}</span></div><button className="ghost" onClick={() => setEditingHero(item)}>{t("Edit")}</button></article>)}
               {!hero.length && <EmptyState text="No hero slides." />}
             </div>
           </>
@@ -1118,7 +1127,7 @@ export default function AdminPage() {
 
         {section === 'brands' && (
           <>
-            <SectionHeader title="Brands" description="Client logos and links." action={<button className="primary" onClick={() => {
+            <SectionHeader title={t("Brands")} description="Client logos and links." action={<button className="primary" onClick={() => {
               const usedSlots = new Set(
                 brands
                   .map(item => item.sort_order)
@@ -1135,36 +1144,36 @@ export default function AdminPage() {
                 published: true,
                 sort_order: firstFreeSlot
               });
-            }}>+ New brand</button>} />
+            }}>{t("+ New brand")}</button>} />
             {editingBrand && <div className="editor">
-              <div className="editor-top"><h2>{editingBrand.id ? 'Edit brand' : 'New brand'}</h2><button className="ghost" onClick={() => setEditingBrand(null)}>Close</button></div>
+              <div className="editor-top"><h2>{editingBrand.id ? t("Edit brand") : t("New brand")}</h2><button className="ghost" onClick={() => setEditingBrand(null)}>{t("Close")}</button></div>
               <div className="grid2"><Input label="Name" value={editingBrand.name} onChange={v => setEditingBrand({...editingBrand,name:v})}/><Input label="Logo URL" value={editingBrand.logo_url || ''} onChange={v => setEditingBrand({...editingBrand,logo_url:v})}/><Input label="Website URL" value={editingBrand.website_url || ''} onChange={v => setEditingBrand({...editingBrand,website_url:v})}/><Input label="Sort order" type="number" value={editingBrand.sort_order ?? 0} onChange={v => setEditingBrand({...editingBrand,sort_order:Number(v)||0})}/></div>
               <Toggle label="Published" value={!!editingBrand.published} onChange={v => setEditingBrand({...editingBrand,published:v})}/>
-              <div className="editor-actions">{editingBrand.id > 0 && <button className="danger" onClick={() => deleteBrand(editingBrand.id)}>Delete</button>}<div/><button className="ghost" onClick={() => setEditingBrand(null)}>Cancel</button><button className="primary" onClick={saveBrand}>Save brand</button></div>
+              <div className="editor-actions">{editingBrand.id > 0 && <button className="danger" onClick={() => deleteBrand(editingBrand.id)}>{t("Delete")}</button>}<div/><button className="ghost" onClick={() => setEditingBrand(null)}>{t("Cancel")}</button><button className="primary" onClick={saveBrand}>{t("Save brand")}</button></div>
             </div>}
-            <div className="list">{brands.map(item => <article className="row-card" key={item.id}><div className="thumb">{item.logo_url ? <img src={item.logo_url} alt="" /> : <span>LOGO</span>}</div><div className="row-main"><b>{item.name}</b><span>{item.published ? 'Published' : 'Draft'}</span></div><button className="ghost" onClick={() => setEditingBrand(item)}>Edit</button></article>)}{!brands.length && <EmptyState text="No brands."/>}</div>
+            <div className="list">{brands.map(item => <article className="row-card" key={item.id}><div className="thumb">{item.logo_url ? <img src={item.logo_url} alt="" /> : <span>LOGO</span>}</div><div className="row-main"><b>{item.name}</b><span>{item.published ? t("Published") : t("Draft")}</span></div><button className="ghost" onClick={() => setEditingBrand(item)}>{t("Edit")}</button></article>)}{!brands.length && <EmptyState text="No brands."/>}</div>
           </>
         )}
 
         {section === 'services' && (
           <>
-            <SectionHeader title="Services" description="Services are stored in the CMS instead of local component state." action={<button className="primary" onClick={() => setEditingService({id:0,title_en:'',title_fa:'',description_en:'',description_fa:'',published:true,sort_order:services.length})}>+ New service</button>} />
+            <SectionHeader title={t("Services")} description="Services are stored in the CMS instead of local component state." action={<button className="primary" onClick={() => setEditingService({id:0,title_en:'',title_fa:'',description_en:'',description_fa:'',published:true,sort_order:services.length})}>{t("+ New service")}</button>} />
             {editingService && <div className="editor">
-              <div className="editor-top"><h2>{editingService.id ? 'Edit service' : 'New service'}</h2><button className="ghost" onClick={() => setEditingService(null)}>Close</button></div>
+              <div className="editor-top"><h2>{editingService.id ? t("Edit service") : t("New service")}</h2><button className="ghost" onClick={() => setEditingService(null)}>{t("Close")}</button></div>
               <div className="grid2"><Input label="Title — English" value={editingService.title_en} onChange={v => setEditingService({...editingService,title_en:v})}/><Input label="عنوان — فارسی" value={editingService.title_fa || ''} onChange={v => setEditingService({...editingService,title_fa:v})}/><Textarea label="Description — English" value={editingService.description_en} onChange={v => setEditingService({...editingService,description_en:v})}/><Textarea label="توضیحات — فارسی" value={editingService.description_fa} onChange={v => setEditingService({...editingService,description_fa:v})}/><Input label="Sort order" type="number" value={editingService.sort_order} onChange={v => setEditingService({...editingService,sort_order:Number(v)||0})}/></div>
               <Toggle label="Published" value={editingService.published} onChange={v => setEditingService({...editingService,published:v})}/>
-              <div className="editor-actions">{editingService.id > 0 && <button className="danger" onClick={() => deleteService(editingService.id)}>Delete</button>}<div/><button className="ghost" onClick={() => setEditingService(null)}>Cancel</button><button className="primary" onClick={saveService}>Save service</button></div>
+              <div className="editor-actions">{editingService.id > 0 && <button className="danger" onClick={() => deleteService(editingService.id)}>{t("Delete")}</button>}<div/><button className="ghost" onClick={() => setEditingService(null)}>{t("Cancel")}</button><button className="primary" onClick={saveService}>{t("Save service")}</button></div>
             </div>}
-            <div className="list">{services.map(item => <article className="row-card" key={item.id}><div className="row-main"><b>{item.title_en || item.title_fa}</b><span>{item.published ? 'Published' : 'Draft'} · #{item.sort_order}</span></div><button className="ghost" onClick={() => setEditingService(item)}>Edit</button></article>)}{!services.length && <EmptyState text="No services yet."/>}</div>
+            <div className="list">{services.map(item => <article className="row-card" key={item.id}><div className="row-main"><b>{item.title_en || item.title_fa}</b><span>{item.published ? t("Published") : t("Draft")} · #{item.sort_order}</span></div><button className="ghost" onClick={() => setEditingService(item)}>{t("Edit")}</button></article>)}{!services.length && <EmptyState text="No services yet."/>}</div>
           </>
         )}
 
         {section === 'content' && (
           <>
-            <SectionHeader title="Content" description="Homepage, About, Contact and SEO text." action={<button className="primary" disabled={saving} onClick={saveContent}>{saving ? 'Saving…' : 'Save content'}</button>} />
+            <SectionHeader title={t("Content")} description="Homepage, About, Contact and SEO text." action={<button className="primary" disabled={saving} onClick={saveContent}>{saving ? t("Saving…") : t("Save content")}</button>} />
             <div className="editor">
-              <details className="content-group"><summary>Hero</summary><div className="content-group-body"><div className="grid2"><Input label="Hero title — English" value={content.hero_title_en} onChange={v => setContent({...content,hero_title_en:v})}/><Input label="Hero title — فارسی" value={content.hero_title_fa} onChange={v => setContent({...content,hero_title_fa:v})}/><Textarea label="Hero description — English" value={content.hero_description_en} onChange={v => setContent({...content,hero_description_en:v})}/><Textarea label="Hero description — فارسی" value={content.hero_description_fa} onChange={v => setContent({...content,hero_description_fa:v})}/><Input label="Hero button — English" value={content.hero_button_en} onChange={v => setContent({...content,hero_button_en:v})}/><Input label="Hero button — فارسی" value={content.hero_button_fa} onChange={v => setContent({...content,hero_button_fa:v})}/></div>
-              </div></details><details className="content-group"><summary>About</summary><div className="content-group-body">
+              <details className="content-group"><summary>{t("Hero")}</summary><div className="content-group-body"><div className="grid2"><Input label="Hero title — English" value={content.hero_title_en} onChange={v => setContent({...content,hero_title_en:v})}/><Input label="Hero title — فارسی" value={content.hero_title_fa} onChange={v => setContent({...content,hero_title_fa:v})}/><Textarea label="Hero description — English" value={content.hero_description_en} onChange={v => setContent({...content,hero_description_en:v})}/><Textarea label="Hero description — فارسی" value={content.hero_description_fa} onChange={v => setContent({...content,hero_description_fa:v})}/><Input label="Hero button — English" value={content.hero_button_en} onChange={v => setContent({...content,hero_button_en:v})}/><Input label="Hero button — فارسی" value={content.hero_button_fa} onChange={v => setContent({...content,hero_button_fa:v})}/></div>
+              </div></details><details className="content-group"><summary>{t("About")}</summary><div className="content-group-body">
               <div className="grid2">
                 <Input
                   label="About title — English"
@@ -1191,19 +1200,18 @@ export default function AdminPage() {
                 />
               </div>
 
-              <MediaPicker title="About image" kind="image" media={media} ids={media.filter(item => item.file_url === content.about_image_url).map(item => item.id)} onChange={ids => setContent({...content,about_image_url:media.find(item => item.id === ids[0])?.file_url || ''})} upload={<MediaUploader onDone={refreshMedia} onError={setError} />} />
-              </div></details><details className="content-group"><summary>Contact</summary><div className="content-group-body"><div className="grid2"><Input label="Contact title — English" value={content.contact_title_en} onChange={v => setContent({...content,contact_title_en:v})}/><Input label="Contact title — فارسی" value={content.contact_title_fa} onChange={v => setContent({...content,contact_title_fa:v})}/><Input label="Email" value={content.contact_email} onChange={v => setContent({...content,contact_email:v})}/><Input label="Phone" value={content.contact_phone} onChange={v => setContent({...content,contact_phone:v})}/><Input label="NURANICO Instagram URL" value={content.contact_instagram} onChange={v => setContent({...content,contact_instagram:v})}/><Input label="Shayan Instagram URL" value={content.personal_instagram} onChange={v => setContent({...content,personal_instagram:v})}/><Input label="Start Project URL" value={content.start_project_url || ''} onChange={v => setContent({...content,start_project_url:v})} placeholder="/contact or https://..."/></div>
-              </div></details><details className="content-group"><summary>SEO</summary><div className="content-group-body"><div className="grid2"><Input label="SEO title — English" value={content.seo_title_en} onChange={v => setContent({...content,seo_title_en:v})}/><Input label="SEO title — فارسی" value={content.seo_title_fa} onChange={v => setContent({...content,seo_title_fa:v})}/><Textarea label="SEO description — English" value={content.seo_description_en} onChange={v => setContent({...content,seo_description_en:v})}/><Textarea label="SEO description — فارسی" value={content.seo_description_fa} onChange={v => setContent({...content,seo_description_fa:v})}/></div>
+              <MediaPicker title={t("About image")} kind="image" media={media} ids={media.filter(item => item.file_url === content.about_image_url).map(item => item.id)} onChange={ids => setContent({...content,about_image_url:media.find(item => item.id === ids[0])?.file_url || ''})} upload={<MediaUploader onDone={refreshMedia} onError={setError} />} />
+              </div></details><details className="content-group"><summary>{t("Contact")}</summary><div className="content-group-body"><div className="grid2"><Input label="Contact title — English" value={content.contact_title_en} onChange={v => setContent({...content,contact_title_en:v})}/><Input label="Contact title — فارسی" value={content.contact_title_fa} onChange={v => setContent({...content,contact_title_fa:v})}/><Input label="Email" value={content.contact_email} onChange={v => setContent({...content,contact_email:v})}/><Input label="Phone" value={content.contact_phone} onChange={v => setContent({...content,contact_phone:v})}/><Input label="NURANICO Instagram URL" value={content.contact_instagram} onChange={v => setContent({...content,contact_instagram:v})}/><Input label="Shayan Instagram URL" value={content.personal_instagram} onChange={v => setContent({...content,personal_instagram:v})}/><Input label="Start Project URL" value={content.start_project_url || ''} onChange={v => setContent({...content,start_project_url:v})} placeholder="/contact or https://..."/></div>
+              </div></details><details className="content-group"><summary>{t("SEO")}</summary><div className="content-group-body"><div className="grid2"><Input label="SEO title — English" value={content.seo_title_en} onChange={v => setContent({...content,seo_title_en:v})}/><Input label="SEO title — فارسی" value={content.seo_title_fa} onChange={v => setContent({...content,seo_title_fa:v})}/><Textarea label="SEO description — English" value={content.seo_description_en} onChange={v => setContent({...content,seo_description_en:v})}/><Textarea label="SEO description — فارسی" value={content.seo_description_fa} onChange={v => setContent({...content,seo_description_fa:v})}/></div>
               </div></details>
             </div>
 
             <div className="editor">
               <div className="editor-top">
                 <div>
-                  <h2>Page Texts</h2>
+                  <h2>{t("Page Texts")}</h2>
                   <p className="hint">
-                    Edit reusable English and Persian text used across individual pages.
-                  </p>
+                    {t("Edit reusable English and Persian text used across individual pages.")}</p>
                 </div>
 
                 <button
@@ -1211,15 +1219,15 @@ export default function AdminPage() {
                   disabled={saving || !dirtyTexts.length}
                   onClick={savePageTexts}
                 >
-                  {saving ? 'Saving…' : 'Save page texts'}
+                  {saving ? t("Saving…") : t("Save page texts")}
                 </button>
               </div>
 
-              <div className="asset-tools"><label className="field page-text-filter"><span>Choose a page</span><select value={pageTextFilter} onChange={event => setPageTextFilter(event.target.value)}><option value="all">All pages</option>{Array.from(new Set(visibleTexts.map(item => item.page))).map(page => <option key={page} value={page}>{page.replace(/-/g, ' ')}</option>)}</select></label><label className="field"><span>Find text</span><input placeholder="Search labels, English or Persian…" value={pageTextSearch} onChange={e => setPageTextSearch(e.target.value)} /></label></div>
-              <p className="hint">{dirtyTexts.length} unsaved changes. Open a group, then a text to edit.</p>
+              <div className="asset-tools"><label className="field page-text-filter"><span>{t("Choose a page")}</span><select value={pageTextFilter} onChange={event => setPageTextFilter(event.target.value)}><option value="all">{t("All pages")}</option>{Array.from(new Set(visibleTexts.map(item => item.page))).map(page => <option key={page} value={page}>{t(page.replace(/-/g, ' '))}</option>)}</select></label><label className="field"><span>{t("Find text")}</span><input placeholder={t("Search labels, English or Persian…")} value={pageTextSearch} onChange={e => setPageTextSearch(e.target.value)} /></label></div>
+              <p className="hint">{dirtyTexts.length} {t("unsaved changes. Open a group, then a text to edit.")}</p>
               {Array.from(new Set(visibleTexts.map(item => item.page))).filter(page => pageTextFilter === 'all' || page === pageTextFilter).map(page => {
                 const rows = visibleTexts.filter(item => item.page === page && [item.label,item.text_key,item.value_en,item.value_fa].join(' ').toLowerCase().includes(pageTextSearch.trim().toLowerCase())).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0) || a.id - b.id);
-                return <section key={page} className="text-page"><h3>{page.replace(/-/g,' ')}</h3>{Array.from(new Set(rows.map(row => textGroup(row.text_key)))).map(group => <details className="content-group" key={group} open={!!pageTextSearch}><summary>{group} <span className="hint">{rows.filter(row => textGroup(row.text_key) === group).length} texts</span></summary><div className="content-group-body">{rows.filter(row => textGroup(row.text_key) === group).map(row => <details className="text-entry" key={row.id}><summary><span>{row.label || row.text_key}</span>{dirtyTexts.includes(row.id) && <small>Edited</small>}<p dir="auto">{row.value_en || row.value_fa || 'Empty'}</p></summary><div className="grid2"><Textarea label="English" value={row.value_en} onChange={value => editText(row.id,'value_en',value)} /><Textarea label="فارسی" value={row.value_fa} onChange={value => editText(row.id,'value_fa',value)} /></div></details>)}</div></details>)}{!rows.length && <EmptyState text="No matching text." />}</section>;
+                return <section key={page} className="text-page"><h3>{t(page.replace(/-/g,' '))}</h3>{Array.from(new Set(rows.map(row => textGroup(row.text_key)))).map(group => <details className="content-group" key={group} open={!!pageTextSearch}><summary>{t(group)} <span className="hint">{rows.filter(row => textGroup(row.text_key) === group).length} {t("texts")}</span></summary><div className="content-group-body">{rows.filter(row => textGroup(row.text_key) === group).map(row => <details className="text-entry" key={row.id}><summary><span>{row.label || row.text_key}</span>{dirtyTexts.includes(row.id) && <small>{t("Edited")}</small>}<p dir="auto">{row.value_en || row.value_fa || t("Empty")}</p></summary><div className="grid2"><Textarea label="English" value={row.value_en} onChange={value => editText(row.id,'value_en',value)} /><Textarea label="فارسی" value={row.value_fa} onChange={value => editText(row.id,'value_fa',value)} /></div></details>)}</div></details>)}{!rows.length && <EmptyState text="No matching text." />}</section>;
               })}
 
             </div>
@@ -1227,25 +1235,25 @@ export default function AdminPage() {
         )}
 
         {section === 'settings' && <>
-          <SectionHeader title="Settings" description="Logo, colors and typography, organized by purpose." />
-          <nav className="settings-tabs" aria-label="Settings categories">{[['identity','Logo'],['colors','Colors'],['typography','Typography'],['fonts','Font library']].map(([key,label]) => <button type="button" key={key} aria-pressed={settingsTab === key} className={settingsTab === key ? 'active' : ''} onClick={() => setSettingsTab(key)}>{label}</button>)}</nav>
+          <SectionHeader title={t("Settings")} description="Logo, colors and typography, organized by purpose." />
+          <nav className="settings-tabs" aria-label={t("Settings categories")}>{[['identity',t("Logo")],['colors',t("Colors")],['typography',t("Typography")],['fonts',t("Font library")]].map(([key,label]) => <button type="button" key={key} aria-pressed={settingsTab === key} className={settingsTab === key ? 'active' : ''} onClick={() => setSettingsTab(key)}>{label}</button>)}</nav>
           <div className="editor settings-editor">
-            {settingsTab === 'identity' && <section aria-labelledby="settings-logo-title"><h2 id="settings-logo-title">Website logo</h2><p className="hint">Upload your logo or replace the current one.</p><LogoUploader value={settings.logo_url} onChange={url => setSettings({...settings,logo_url:url})} onError={setError} /></section>}
-            {settingsTab === 'colors' && <section aria-labelledby="settings-colors-title"><h2 id="settings-colors-title">Website colors</h2><p className="hint">Choose the area you want to adjust.</p>{([
-              ['Backgrounds & text', [['bg_color','Main background'],['surface_color','About background'],['card_bg','Cards background'],['text_color','Main text'],['heading_color','Headings'],['muted_color','Secondary text'],['tag_color','Labels'],['border_color','Borders']]],
-              ['Navigation & logo', [['nav_bg','Navigation background'],['nav_text','Navigation text'],['nav_active','Active navigation'],['logo_color','Logo color']]],
-              ['Buttons & links', [['button_color','Button background'],['button_text','Button text'],['button_hover','Button hover'],['link_color','Links']]],
-              ['Brands section', [['brands_bg','Background'],['brands_text','Text'],['brands_muted','Secondary text'],['brands_hover','Card hover']]],
-              ['Footer', [['footer_bg','Background'],['footer_text','Text']]],
-            ] as [string,[keyof Settings,string][]][]).map(([title,fields],index) => <details key={title} className="content-group" open={index === 0}><summary>{title}<small>{fields.length} colors</small></summary><div className="content-group-body color-grid">{fields.map(([key,label]) => <label className="color-field" key={key}><span>{label}</span><input type="color" aria-label={`${title}: ${label}`} value={String(settings[key] || '#000000')} onChange={e => setSettings({...settings,[key]:e.target.value})} /><code>{settings[key]}</code></label>)}</div></details>)}</section>}
-            {settingsTab === 'typography' && <section aria-labelledby="settings-type-title"><h2 id="settings-type-title">Typography</h2><p className="hint">Choose fonts for each language. Heavy heading fonts use a regular companion for body text.</p>
-              <div className="settings-languages">{(['en','fa'] as const).map(language => <section className="settings-language" key={language}><h3>{language === 'en' ? 'English' : 'فارسی'}</h3><label className="field"><span>{language === 'en' ? 'English font' : 'فونت فارسی'}</span><select className="field-select" value={settings[`font_${language}`]} onChange={e => setSettings({...settings,[`font_${language}`]:e.target.value})}>{Array.from(new Set([...(language === 'en' ? ['DM Sans','Space Grotesk'] : ['Yekan Bakh']),settings[`font_${language}`],...fonts.map(font => font.family_name)])).map(family => <option key={family} value={family}>{family}</option>)}</select></label>
-                <details className="content-group"><summary>{language === 'en' ? 'Sizes & spacing' : 'اندازه و فاصله‌ها'}</summary><div className="content-group-body grid2">{([['heading_size','Heading size (px)'],['body_size','Body size (px)'],['small_size','Small text (px)'],['line_height','Line height'],['letter_spacing','Letter spacing (px)']] as const).map(([field,label]) => {const key=`${field}_${language}` as keyof Settings;return <Input key={key} label={label} type="number" value={settings[key] as number} onChange={value => setSettings({...settings,[key]:Number(value)||0})} />;})}</div></details>
+            {settingsTab === 'identity' && <section aria-labelledby="settings-logo-title"><h2 id="settings-logo-title">{t("Website logo")}</h2><p className="hint">{t("Upload your logo or replace the current one.")}</p><LogoUploader value={settings.logo_url} onChange={url => setSettings({...settings,logo_url:url})} onError={setError} /></section>}
+            {settingsTab === 'colors' && <section aria-labelledby="settings-colors-title"><h2 id="settings-colors-title">{t("Website colors")}</h2><p className="hint">{t("Choose the area you want to adjust.")}</p>{([
+              [t("Backgrounds & text"), [['bg_color',t("Main background")],['surface_color',t("About background")],['card_bg',t("Cards background")],['text_color',t("Main text")],['heading_color',t("Headings")],['muted_color',t("Secondary text")],['tag_color',t("Labels")],['border_color',t("Borders")]]],
+              [t("Navigation & logo"), [['nav_bg',t("Navigation background")],['nav_text',t("Navigation text")],['nav_active',t("Active navigation")],['logo_color',t("Logo color")]]],
+              [t("Buttons & links"), [['button_color',t("Button background")],['button_text',t("Button text")],['button_hover',t("Button hover")],['link_color',t("Links")]]],
+              [t("Brands section"), [['brands_bg',t("Background")],['brands_text',t("Text")],['brands_muted',t("Secondary text")],['brands_hover',t("Card hover")]]],
+              [t("Footer"), [['footer_bg',t("Background")],['footer_text',t("Text")]]],
+            ] as [string,[keyof Settings,string][]][]).map(([title,fields],index) => <details key={title} className="content-group" open={index === 0}><summary>{t(title)}<small>{fields.length} {t("colors")}</small></summary><div className="content-group-body color-grid">{fields.map(([key,label]) => <label className="color-field" key={key}><span>{t(label)}</span><input type="color" aria-label={`${title}: ${label}`} value={String(settings[key] || '#000000')} onChange={e => setSettings({...settings,[key]:e.target.value})} /><code>{settings[key]}</code></label>)}</div></details>)}</section>}
+            {settingsTab === 'typography' && <section aria-labelledby="settings-type-title"><h2 id="settings-type-title">{t("Typography")}</h2><p className="hint">{t("Choose fonts for each language. Heavy heading fonts use a regular companion for body text.")}</p>
+              <div className="settings-languages">{(['en','fa'] as const).map(language => <section className="settings-language" key={language}><h3>{language === 'en' ? t("English") : 'فارسی'}</h3><label className="field"><span>{language === 'en' ? t("English font") : 'فونت فارسی'}</span><select className="field-select" value={settings[`font_${language}`]} onChange={e => setSettings({...settings,[`font_${language}`]:e.target.value})}>{Array.from(new Set([...(language === 'en' ? ['DM Sans','Space Grotesk'] : ['Yekan Bakh']),settings[`font_${language}`],...fonts.map(font => font.family_name)])).map(family => <option key={family} value={family}>{family}</option>)}</select></label>
+                <details className="content-group"><summary>{language === 'en' ? t("Sizes & spacing") : 'اندازه و فاصله‌ها'}</summary><div className="content-group-body grid2">{([['heading_size',t("Heading size (px)")],['body_size',t("Body size (px)")],['small_size',t("Small text (px)")],['line_height',t("Line height")],['letter_spacing',t("Letter spacing (px)")]] as const).filter(([field]) => language !== 'fa' || field !== 'letter_spacing').map(([field,label]) => {const key=`${field}_${language}` as keyof Settings;return <Input key={key} label={label} type="number" value={settings[key] as number} onChange={value => setSettings({...settings,[key]:Number(value)||0})} />;})}</div></details>
               </section>)}</div>
-              <details className="content-group"><summary>Font weights</summary><div className="content-group-body"><p className="hint">Shared defaults for both languages. A heading font with its own Black or ExtraBold weight keeps that weight.</p><div className="grid2">{(['heading_weight','body_weight'] as const).map(key => <label className="field" key={key}><span>{key === 'heading_weight' ? 'Heading weight' : 'Body weight'}</span><select className="field-select" value={settings[key]} onChange={e => setSettings({...settings,[key]:Number(e.target.value)})}>{Array.from(new Set([100,200,300,400,500,600,700,800,900,settings[key]])).sort((a,b)=>a-b).map(weight => <option value={weight} key={weight}>{({100:'Thin',200:'ExtraLight',300:'Light',400:'Regular',500:'Medium',600:'SemiBold',700:'Bold',800:'ExtraBold',900:'Black'} as Record<number,string>)[weight] || 'Custom'} · {weight}</option>)}</select></label>)}</div></div></details>
+              <details className="content-group"><summary>{t("Font weights")}</summary><div className="content-group-body"><p className="hint">{t("Shared defaults for both languages. A heading font with its own Black or ExtraBold weight keeps that weight.")}</p><div className="grid2">{(['heading_weight','body_weight'] as const).map(key => <label className="field" key={key}><span>{key === 'heading_weight' ? t("Heading weight") : t("Body weight")}</span><select className="field-select" value={settings[key]} onChange={e => setSettings({...settings,[key]:Number(e.target.value)})}>{Array.from(new Set([100,200,300,400,500,600,700,800,900,settings[key]])).sort((a,b)=>a-b).map(weight => <option value={weight} key={weight}>{({100:t("Thin"),200:t("ExtraLight"),300:t("Light"),400:t("Regular"),500:t("Medium"),600:t("SemiBold"),700:t("Bold"),800:t("ExtraBold"),900:t("Black")} as Record<number,string>)[weight] || t("Custom")} · {weight}</option>)}</select></label>)}</div></div></details>
             </section>}
-            {settingsTab === 'fonts' && <section aria-labelledby="settings-fonts-title"><div className="font-section-head"><div><h2 id="settings-fonts-title">Font library</h2><p className="hint">Upload fonts and manage their weights by family.</p></div><FontUploader onUploaded={font => {setFonts(current => [font,...current.filter(item => item.id !== font.id)]);flash('Font uploaded.');}} onError={setError} /></div><input className="settings-font-search" aria-label="Search fonts" placeholder="Search font family or file…" value={fontSearch} onChange={e => setFontSearch(e.target.value)} />
-              {Array.from(new Set(fonts.filter(font => [font.family_name,font.name].join(' ').toLowerCase().includes(fontSearch.trim().toLowerCase())).map(font => font.family_name))).map(family => <details className="content-group settings-font-family" key={family}><summary>{family}<small>{fonts.filter(font => font.family_name === family).length} files</small></summary><div className="content-group-body"><div className="font-actions"><button className="ghost" disabled={settings.font_en === family} onClick={() => setSettings({...settings,font_en:family})}>{settings.font_en === family ? 'Selected for English' : 'Use for English'}</button><button className="ghost" disabled={settings.font_fa === family} onClick={() => setSettings({...settings,font_fa:family})}>{settings.font_fa === family ? 'Selected for Persian' : 'Use for Persian'}</button></div><div className="font-library">{fonts.filter(font => font.family_name === family).sort((a,b)=>a.font_weight-b.font_weight).map(font => (
+            {settingsTab === 'fonts' && <section aria-labelledby="settings-fonts-title"><div className="font-section-head"><div><h2 id="settings-fonts-title">{t("Font library")}</h2><p className="hint">{t("Upload fonts and manage their weights by family.")}</p></div><FontUploader onUploaded={font => {setFonts(current => [font,...current.filter(item => item.id !== font.id)]);flash('Font uploaded.');}} onError={setError} /></div><input className="settings-font-search" aria-label={t("Search fonts")} placeholder={t("Search font family or file…")} value={fontSearch} onChange={e => setFontSearch(e.target.value)} />
+              {Array.from(new Set(fonts.filter(font => [font.family_name,font.name].join(' ').toLowerCase().includes(fontSearch.trim().toLowerCase())).map(font => font.family_name))).map(family => <details className="content-group settings-font-family" key={family}><summary>{family}<small>{fonts.filter(font => font.family_name === family).length} {t("files")}</small></summary><div className="content-group-body"><div className="font-actions"><button className="ghost" disabled={settings.font_en === family} onClick={() => setSettings({...settings,font_en:family})}>{settings.font_en === family ? t("Selected for English") : t("Use for English")}</button><button className="ghost" disabled={settings.font_fa === family} onClick={() => setSettings({...settings,font_fa:family})}>{settings.font_fa === family ? t("Selected for Persian") : t("Use for Persian")}</button></div><div className="font-library">{fonts.filter(font => font.family_name === family).sort((a,b)=>a.font_weight-b.font_weight).map(font => (
                   <article
                     className="font-card"
                     key={font.id}
@@ -1273,8 +1281,7 @@ export default function AdminPage() {
                         type="button"
                         onClick={() => deleteFont(font)}
                       >
-                        Delete
-                      </button>
+                        {t("Delete")}</button>
                     </div>
 
                     <div
@@ -1300,7 +1307,7 @@ export default function AdminPage() {
               {!!fonts.length && !fonts.some(font => [font.family_name,font.name].join(' ').toLowerCase().includes(fontSearch.trim().toLowerCase())) && <EmptyState text="No matching fonts." />}
             </section>}
           </div>
-          <div className="settings-save-bar"><span role="status">{settingsDirty ? 'Unsaved changes' : 'All settings saved'}</span><div><button className="ghost" disabled={!settingsDirty || saving} onClick={() => {if(savedSettings) setSettings({...savedSettings});setError('');}}>Discard changes</button><button className="primary" disabled={!settingsDirty || saving} onClick={saveSettings}>{saving ? 'Saving…' : 'Save settings'}</button></div></div>
+          <div className="settings-save-bar"><span role="status">{settingsDirty ? t("Unsaved changes") : t("All settings saved")}</span><div><button className="ghost" disabled={!settingsDirty || saving} onClick={() => {if(savedSettings) setSettings({...savedSettings});setError('');}}>{t("Discard changes")}</button><button className="primary" disabled={!settingsDirty || saving} onClick={saveSettings}>{saving ? t("Saving…") : t("Save settings")}</button></div></div>
         </>}
 
         </>}
@@ -1317,6 +1324,7 @@ function FontUploader({
   onUploaded: (font: FontAsset) => void;
   onError: (s: string) => void;
 }) {
+  const {t} = useAdminLocale();
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
@@ -1340,14 +1348,14 @@ function FontUploader({
       .trim();
 
     const familyName = window.prompt(
-      'Font family name:',
+      t('Font family name:'),
       suggestedFamily || 'Custom Font'
     );
 
     if (!familyName?.trim()) return;
 
     const weightText = window.prompt(
-      'Font weight (100–900):',
+      t('Font weight (100–900):'),
       '400'
     );
 
@@ -1473,7 +1481,7 @@ function FontUploader({
         disabled={busy}
         onClick={() => input.current?.click()}
       >
-        {busy ? 'Uploading…' : '+ Upload Font'}
+        {busy ? t("Uploading…") : t("+ Upload Font")}
       </button>
     </>
   );
@@ -1489,6 +1497,7 @@ function LogoUploader({
   onChange: (url: string) => void;
   onError: (s: string) => void;
 }) {
+  const {t} = useAdminLocale();
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
@@ -1600,12 +1609,12 @@ function LogoUploader({
         {value ? (
           <img
             src={value}
-            alt="Site logo preview"
+            alt={t("Site logo preview")}
           />
         ) : (
           <div className="logo-admin-placeholder">
             <strong>NURANICO</strong>
-            <span>No custom logo</span>
+            <span>{t("No custom logo")}</span>
           </div>
         )}
       </div>
@@ -1618,10 +1627,10 @@ function LogoUploader({
           onClick={() => input.current?.click()}
         >
           {busy
-            ? 'Uploading…'
+            ? t("Uploading…")
             : value
-              ? 'Replace logo'
-              : '+ Upload logo'}
+              ? t("Replace logo")
+              : t("+ Upload logo")}
         </button>
 
         {value ? (
@@ -1631,18 +1640,17 @@ function LogoUploader({
             disabled={busy}
             onClick={() => onChange('')}
           >
-            Remove
-          </button>
+            {t("Remove")}</button>
         ) : null}
       </div>
 
       <div className="logo-admin-url">
-        <label>Logo URL</label>
+        <label>{t("Logo URL")}</label>
 
         <input
           type="text"
           value={value}
-          placeholder="Upload a logo or paste image URL"
+          placeholder={t("Upload a logo or paste image URL")}
           onChange={e =>
             onChange(e.target.value)
           }
@@ -1650,15 +1658,14 @@ function LogoUploader({
       </div>
 
       <small className="logo-admin-help">
-        PNG, JPG, WEBP or SVG. Transparent PNG/SVG is recommended.
-        Save Settings after uploading.
-      </small>
+        {t("PNG, JPG, WEBP or SVG. Transparent PNG/SVG is recommended. Save Settings after uploading.")}</small>
     </div>
   );
 }
 
 
 function MediaUploader({ onDone, onError }: { onDone: (uploaded?: MediaAsset[]) => Promise<void>; onError: (s: string) => void }) {
+  const {t} = useAdminLocale();
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
@@ -1716,7 +1723,7 @@ function MediaUploader({ onDone, onError }: { onDone: (uploaded?: MediaAsset[]) 
   return (
     <label className={busy ? 'upload disabled' : 'upload'}>
       <input ref={input} type="file" accept="image/*,video/*" multiple disabled={busy} onChange={e => upload(e.target.files)} />
-      {busy ? progress || 'Uploading…' : '+ Upload photos / videos'}
+      {busy ? progress || t("Uploading…") : t("+ Upload photos / videos")}
     </label>
   );
 }

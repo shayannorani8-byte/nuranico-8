@@ -1,5 +1,6 @@
 'use client';
 
+import MediaCountBadge from '../../components/MediaCountBadge';
 import SiteHeader from '../../components/SiteHeader';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -9,6 +10,7 @@ import { localizedValue, isVideoAsset } from '../../lib/media';
 import { usePageTexts } from '../../lib/usePageTexts';
 
 type Item = {
+  media_count?:number;
   id: number;
   href?: string;
   brand_name?: string | null;
@@ -96,10 +98,10 @@ export default function WorkPage() {
             return (
               <Link
                 href={item.href || `/work/${item.id}`}
-                className="work-clean-item"
+                className={`work-clean-item ${item.media_count && item.media_count > 1 ? 'has-gallery' : ''}`}
                 key={item.id}
               >
-                <div className="work-clean-media">
+                <div className="work-clean-media"><MediaCountBadge count={item.media_count} lang={lang} />
                   {image ? (
                     <img
                       src={image}

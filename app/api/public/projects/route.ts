@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       description_en:asset.brand_name || '', description_fa:asset.brand_name || '',
       media_url:asset.file_url, media_type:isVideoAsset(asset) ? 'video' : 'image', cover_url:isVideoAsset(asset) ? null : asset.file_url,
       preview_url:isVideoAsset(asset) ? asset.file_url : null, preview_enabled:isVideoAsset(asset), preview_type:'video',
-      category:isVideoAsset(asset) ? 'video' : 'photo', destinations:asset.destinations,
+      media_count:1, category:isVideoAsset(asset) ? 'video' : 'photo', destinations:asset.destinations,
     }));
 
     const [links, projects] = await Promise.all([
@@ -48,6 +48,17 @@ export async function GET(request: NextRequest) {
     ]);
     if (links.error) throw links.error;
     if (projects.error) throw projects.error;
+    const projectIds = (projects.data || []).map(project => project.id);
+    const attached: {project_id:number;media_asset_id:number}[] = [];
+    if(projectIds.length) {for(let start=0;;start+=1000) {const result=await db.from('project_media').select('project_id,media_asset_id').in('project_id',projectIds).order('project_id').order('sort_order').order('media_asset_id').range(start,start+999);if(result.error) throw result.error;attached.push(...(result.data || []));if((result.data || []).length<1000) break;}}
+    const assetIds = Array.from(new Set([...attached.map(link=>link.media_asset_id),...(projects.data || []).flatMap(project=>project.bts_media_ids || [])]));
+    const urls = new Map<number,string>();
+    for(let start=0;start<assetIds.length;start+=200) {const result=await db.from('media_assets').select('id,file_url').in('id',assetIds.slice(start,start+200));if(result.error) throw result.error;for(const asset of result.data || []) urls.set(asset.id,asset.file_url);}
+    function mediaCount(project:{id:number;media_url?:string | null;bts_media_ids?:number[] | null;cover_url?:string | null}) {
+      const files=new Set<string>();if(project.media_url) files.add(project.media_url);
+      for(const id of [...attached.filter(link=>link.project_id===project.id).map(link=>link.media_asset_id),...(project.bts_media_ids || [])]) {const url=urls.get(id);if(url)files.add(url);}
+      if(!files.size && project.cover_url)files.add(project.cover_url);return files.size;
+    }
     const sections = new Map<number,string[]>();
     for (const link of links.data || []) sections.set(link.project_id,[...(sections.get(link.project_id) || []),link.destination]);
     const projectItems = (projects.data || []).filter(project => {
@@ -57,7 +68,7 @@ export async function GET(request: NextRequest) {
       const fallback = isVideoAsset(project) ? 'film' : /photograph|photo/i.test(project.category || '') ? 'photography' : /content/i.test(project.category || '') ? 'content' : 'work';
       const matches = destination === 'all' || destination === 'work' || assigned.includes(destination) || (!explicit.length && destination === fallback);
       return matches && (!homeOnly || assigned.includes('home'));
-    }).map(project => ({...project,show_on_home:(sections.get(project.id) || []).includes('home')}));
+    }).map(project => ({...project,media_count:mediaCount(project),show_on_home:(sections.get(project.id) || []).includes('home')}));
 
     return NextResponse.json(
       { items: [...projectItems, ...assetItems].sort((a,b) => Number(!!b.show_on_home) - Number(!!a.show_on_home)) },

@@ -1,4 +1,6 @@
 'use client';
+import ProjectGallery from '../../../components/ProjectGallery';
+import ArrowUpRight from '../../../components/ArrowUpRight';
 import SiteHeader from '../../../components/SiteHeader';
 
 
@@ -647,15 +649,9 @@ export default function ProjectPage() {
         </section>
       )}
 
-      {(gallery.length > 1 || galleryVideos.length > 0 || (video && gallery.length > 0)) && <section className="project-gallery" aria-label={text('gallery_label','Gallery','گالری')}>
-        {Array.from(new Set([
-          ...attachedMedia.map(item => item.file_url),
-          ...(project.gallery_urls || []),
-          ...(video ? gallery : []),
-        ])).filter(url => url !== effectiveVideoUrl).map((url,index) => isVideoAsset({file_url:url}) ? <figure key={url} className="wide"><VideoPlayer src={url} /></figure> : <figure key={url} className={index % 3 === 0 ? 'wide' : ''}><img src={url} alt={`${title} ${index + 1}`} loading="lazy" /></figure>)}
-      </section>}
+      {(gallery.length > 1 || galleryVideos.length > 0 || (video && gallery.length > 0)) && <ProjectGallery title={text('gallery_label','Gallery','گالری')} lang={lang} renderVideo={url => <VideoPlayer src={url} />} items={Array.from(new Set([...attachedMedia.map(item => item.file_url),...(project.gallery_urls || []),...(video ? gallery : [])])).filter(url => url !== effectiveVideoUrl).map((url,index) => ({url,video:isVideoAsset({file_url:url}),label:`${title} ${index+1}`}))} />}
+      {behindScenes.length > 0 && <><h2 className="project-bts-title">{lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'}</h2><ProjectGallery title={lang === 'fa' ? 'پشت صحنه پروژه' : 'Project behind the scenes'} lang={lang} renderVideo={url => <VideoPlayer src={url} />} items={behindScenes.map((item,index) => ({url:item.file_url,video:isVideoAsset(item),label:`${title} — ${lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'} ${index+1}`}))} /></>}
 
-      {behindScenes.length > 0 && <><h2 className="project-bts-title">{lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'}</h2><section className="project-gallery" aria-label={lang === 'fa' ? 'پشت صحنه پروژه' : 'Project behind the scenes'}>{behindScenes.map((item,index) => isVideoAsset(item) ? <figure key={item.id} className="wide"><VideoPlayer src={item.file_url} /></figure> : <figure key={item.id}><img src={item.file_url} alt={`${title} — ${lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'} ${index + 1}`} loading="lazy" /></figure>)}</section></>}
       <section className="project-end">
         <Link href="/work">
           {text(
@@ -663,7 +659,7 @@ export default function ProjectPage() {
             'Explore more work',
             'مشاهده پروژه‌های بیشتر'
           )}{' '}
-          <b>↗</b>
+          <span className="project-more-icon"><ArrowUpRight /></span>
         </Link>
       </section>
 

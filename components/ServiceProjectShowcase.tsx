@@ -1,5 +1,6 @@
 'use client';
 
+import MediaCountBadge from './MediaCountBadge';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ContentStatus from './ContentStatus';
@@ -7,6 +8,7 @@ import { localizedValue, isVideoAsset } from '../lib/media';
 import { usePageTexts } from '../lib/usePageTexts';
 
 type ProjectItem = {
+  media_count?:number;
   id: number;
   href?: string;
   brand_name?: string | null;
@@ -128,10 +130,10 @@ export default function ServiceProjectShowcase({
             return (
               <Link
                 href={item.href || `/work/${item.id}`}
-                className="library-card"
+                className={`library-card ${item.media_count && item.media_count > 1 ? 'has-gallery' : ''}`}
                 key={item.id}
               >
-                <div className="library-poster">
+                <div className="library-poster"><MediaCountBadge count={item.media_count} lang={lang} />
                   {image ? (
                     <img
                       src={image}

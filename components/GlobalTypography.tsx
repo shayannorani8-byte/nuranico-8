@@ -148,7 +148,7 @@ export default function GlobalTypography({ settings, fonts }: {
         --cms-body-size: ${settings.body_size_fa ?? settings.body_size ?? 16}px;
         --cms-small-size: ${settings.small_size_fa ?? settings.small_size ?? 11}px;
         --cms-line-height: ${Math.max(settings.line_height_fa ?? 1.5, 1.3)};
-        --cms-letter-spacing: ${settings.letter_spacing_fa ?? settings.letter_spacing ?? 0}px;
+        --cms-letter-spacing: 0px;
       }
 
       /*
