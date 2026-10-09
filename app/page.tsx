@@ -200,6 +200,7 @@ export default function HomePage() {
   const [content, setContent] = useState<Content>(initialData.content as Content);
   const [heroPortfolio, setHeroPortfolio] = useState<PortfolioItem[]>([]);
   const [managedHero,setManagedHero]=useState<PortfolioItem[]>([]);
+  const [failedHeroImages,setFailedHeroImages]=useState<string[]>([]);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [filmPortfolio, setFilmPortfolio] = useState<PortfolioItem[]>([]);
   const [photoPortfolio, setPhotoPortfolio] = useState<PortfolioItem[]>([]);
@@ -289,12 +290,14 @@ export default function HomePage() {
   }, [loading]);
 
   const heroSlides = useMemo(() => {
-    if(managedHero.length)return managedHero;
-    const featured = heroPortfolio.filter((item) => item.featured);
-    const source = featured.length ? featured : heroPortfolio;
+    const availableManaged=managedHero.filter(item=>!failedHeroImages.includes(item.cover_url || ''));
+    if(availableManaged.length)return availableManaged;
+    const availableProjects=heroPortfolio.filter(item=>!failedHeroImages.includes(item.cover_url || ''));
+    const featured = availableProjects.filter((item) => item.featured);
+    const source = featured.length ? featured : availableProjects;
 
     return source.slice(0, 3);
-  }, [heroPortfolio,managedHero]);
+  }, [heroPortfolio,managedHero,failedHeroImages]);
 
   useEffect(() => {
     if (!heroSlides.length) return;
@@ -762,6 +765,7 @@ export default function HomePage() {
                     : 'none',
                 }}
               >
+                {slide.cover_url && <img src={slide.cover_url} alt="" aria-hidden="true" style={{position:'absolute',width:1,height:1,opacity:0,pointerEvents:'none'}} onError={()=>setFailedHeroImages(current=>current.includes(slide.cover_url!) ? current : [...current,slide.cover_url!])} />}
                 {hasVideoPreview(slide) &&
                 slide.preview_url ? (
                   <PreviewVideo
