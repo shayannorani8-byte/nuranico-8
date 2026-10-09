@@ -145,7 +145,7 @@ export default function BehindTheScenesPage() {
             </span>
           )}
         </span>
-        {(item.brand_name || item.project_name) && <span className="bts-caption" dir="auto">{[item.brand_name,item.project_name].filter(Boolean).join(" · ")}</span>}
+        {(item.brand_name || item.project_name) && <span className="bts-caption" dir="auto">{[item.brand_name,item.project_name ? localizedValue(lang,item.alt_text_en,item.alt_text_fa,item.project_name) : null].filter(Boolean).join(" · ")}</span>}
       </button>
     );
   };

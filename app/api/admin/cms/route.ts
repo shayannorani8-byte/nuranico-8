@@ -21,6 +21,8 @@ async function readMedia(db: ReturnType<typeof getAdminSupabase>) {
 }
 
 const projectFields = [
+  'brand_name',
+  'bts_media_ids',
   'title_fa',
   'title_en',
   'description_fa',
@@ -417,6 +419,11 @@ export async function POST(request: NextRequest) {
       const raw = body.row || {};
       const payload = pick(raw, projectFields);
       const id = Number(raw.id || 0);
+      if (payload.bts_media_ids != null) {
+        if (!Array.isArray(payload.bts_media_ids) || payload.bts_media_ids.some((value:unknown) => !Number.isSafeInteger(value) || Number(value) <= 0)) return NextResponse.json({error:'Invalid behind-the-scenes files.'},{status:400});
+        payload.bts_media_ids = Array.from(new Set(payload.bts_media_ids));
+        if (payload.bts_media_ids.length) {const assets = await db.from('media_assets').select('id').in('id',payload.bts_media_ids);if (assets.error) throw assets.error;if (assets.data?.length !== payload.bts_media_ids.length) return NextResponse.json({error:'A behind-the-scenes file no longer exists.'},{status:400});}
+      }
 
       const result = id > 0
         ? await db.from('portfolio').update(payload).eq('id', id).select().single()

@@ -201,3 +201,54 @@
 .admin.admin .text-entry summary p{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-size:12px;line-height:1.5;color:#9facc0;margin:5px 0 0;font-weight:400}
 .admin.admin .text-entry summary small{margin-left:12px;color:#bbceff}
 @media(max-width:600px){.admin.admin .asset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin.admin .asset-tools>input,.admin.admin .asset-tools>.field{width:100%;flex-basis:100%}.admin.admin .asset-pagination{font-size:11px}.admin.admin .asset-label-panel .grid2{grid-template-columns:1fr}}
+
+.admin.admin .project-list-actions{display:flex;align-items:center;gap:16px;flex-shrink:0}
+.admin.admin .project-list-actions .asset-bulk-check{min-height:42px;font-size:12px;cursor:pointer}
+.admin.admin .project-list-actions .ghost{min-height:42px;padding:9px 15px}
+@media(max-width:700px){
+  .admin.admin .project-list-card{display:grid;grid-template-columns:62px minmax(0,1fr);align-items:start}
+  .admin.admin .project-list-card .row-main b{white-space:normal;overflow-wrap:anywhere;font-size:14px;line-height:1.5}
+  .admin.admin .project-list-card .row-main span,.admin.admin .project-list-card .row-main small{line-height:1.6;overflow-wrap:anywhere}
+  .admin.admin .project-list-actions{grid-column:1 / -1;justify-content:space-between;width:100%;border-top:1px solid #303b49;padding-top:8px;gap:12px}
+  .admin.admin .project-list-actions .asset-bulk-check{flex:1;font-size:12px;line-height:1.5}
+}
+/* Shared upload → organize → publish workflow. */
+.admin.admin .workflow-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 24px}
+.admin.admin .workflow-steps button{display:flex;gap:9px;align-items:center;justify-content:center;padding:12px 8px;font-size:13px;min-height:46px;background:#101722;border:1px solid #354255;color:#a9b7ca;border-radius:10px}
+.admin.admin .workflow-steps button.active{color:#e8efff;background:#21334e;border-color:#8aabea}
+.admin.admin .workflow-steps button>span{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#ffffff0c;font-size:11px}
+.admin.admin .workflow-body{min-height:180px}
+.admin.admin .workflow-section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+.admin.admin .workflow-section-head h3{margin:0;font-size:16px}
+.admin.admin .workflow-section-head .hint{max-width:480px;margin:8px 0 0}
+.admin.admin .workflow-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;margin-top:24px;border-top:1px solid #303b49}
+.admin.admin .workflow-action-end{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.admin.admin .workflow-actions button,.admin.admin .workflow-publish button{min-height:44px}
+.admin.admin .workflow-home{display:flex;gap:12px;align-items:flex-start;border:1px solid #354255;padding:16px;border-radius:10px;margin:22px 0}
+.admin.admin .workflow-home input{width:18px;height:18px;flex-shrink:0;margin-top:3px}
+.admin.admin .workflow-home b{display:block;font-size:13px;font-weight:600}
+.admin.admin .workflow-home small{display:block;color:#97a9c3;line-height:1.6;font-size:12px;margin-top:6px}
+.admin.admin .workflow-review{border-bottom:1px solid #303b49;padding-bottom:16px;margin-bottom:20px}
+.admin.admin .workflow-review h3{margin:0;font-size:18px;overflow-wrap:anywhere}
+.admin.admin .workflow-review p,.admin.admin .workflow-publish p{font-size:12px;color:#97a9c3;line-height:1.6;margin:8px 0}
+.admin.admin .workflow-publish{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:24px;border-top:1px solid #303b49;padding-top:20px}
+.admin.admin .workflow-publish h4,.admin.admin .asset-label-panel h4{font-size:13px;font-weight:600;margin:20px 0 12px}
+.admin.admin .workflow-publish h4{margin-top:0}
+.admin.admin .workflow-status{display:flex;justify-content:space-between;gap:12px;margin-bottom:16px;font-size:12px;color:#97a9c3;line-height:1.5}
+.admin.admin .workflow-status b{font-weight:500;color:#c1d3f5}
+.admin.admin .media-selection-tools{justify-content:space-between;margin:18px 0}
+.admin.admin .file-actions{margin-top:8px;border-top:1px solid #303b49}
+.admin.admin .file-actions summary{font-size:12px;padding:10px 0;cursor:pointer;color:#97a9c3}
+.admin.admin .list[hidden],.admin.admin input[hidden]{display:none!important}
+@media(max-width:700px){
+  .admin.admin .workflow-section-head{align-items:flex-start;flex-wrap:wrap;gap:12px}
+  .admin.admin .workflow-section-head .upload{width:100%;text-align:center}
+  .admin.admin .workflow-actions{align-items:stretch;flex-wrap:wrap}
+  .admin.admin .workflow-action-end{flex:1;justify-content:flex-end;gap:8px}
+  .admin.admin .workflow-action-end button{padding:10px 12px;font-size:12px}
+  .admin.admin .workflow-publish{flex-direction:column;align-items:stretch}
+  .admin.admin .workflow-publish .workflow-action-end{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+  .admin.admin .workflow-publish .primary:only-child{width:100%}
+  .admin.admin .workflow-steps button{font-size:12px;gap:6px}
+  .admin.admin .workflow-status{flex-wrap:wrap}
+}

@@ -19,6 +19,8 @@ type AttachedMedia = {
 };
 
 type Project = {
+  brand_name?: string | null;
+  bts_media_ids?: number[] | null;
   id: number;
   title_fa: string;
   title_en?: string;
@@ -486,6 +488,7 @@ export default function ProjectPage() {
   const { lang, text } = usePageTexts('project');
   const [project, setProject] = useState<Project | null>(null);
   const [attachedMedia, setAttachedMedia] = useState<AttachedMedia[]>([]);
+  const [behindScenes,setBehindScenes] = useState<AttachedMedia[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState(false);
@@ -496,7 +499,7 @@ export default function ProjectPage() {
     setLoading(true);
     setError(false);
     setProject(null);
-    setAttachedMedia([]);
+    setAttachedMedia([]);setBehindScenes([]);
 
     async function load() {
       try {
@@ -512,10 +515,13 @@ export default function ProjectPage() {
         setProject(projectResult.data);
         if (!projectResult.data) return;
         const mediaIds = (linksResult.data || []).map(row => row.media_asset_id).filter((value): value is number => value != null);
-        if (mediaIds.length) {
-          const mediaResult = await supabase.from('media_assets').select('id,file_url,file_type,mime_type,name').in('id', mediaIds).abortSignal(AbortSignal.timeout(12000));
+        const btsIds:number[] = projectResult.data.bts_media_ids || [];
+        const allIds = Array.from(new Set([...mediaIds,...btsIds]));
+        if (allIds.length) {
+          const mediaResult = await supabase.from('media_assets').select('id,file_url,file_type,mime_type,name').in('id', allIds).abortSignal(AbortSignal.timeout(12000));
           if (mediaResult.error) throw mediaResult.error;
           const byId = new Map((mediaResult.data || []).map(item => [item.id, item]));
+          if (!cancelled) setBehindScenes(btsIds.flatMap(mediaId => {const item=byId.get(mediaId);return item ? [item] : [];}));
           if (!cancelled) setAttachedMedia(mediaIds.flatMap(mediaId => {
             const item = byId.get(mediaId);
             return item ? [item] : [];
@@ -617,7 +623,7 @@ export default function ProjectPage() {
                 : Math.abs(project.id)
             ).padStart(2, '0')}
           </p>
-          <h1>{title}</h1>
+          <h1>{title}</h1>{project.brand_name && <p dir="auto">{project.brand_name}</p>}
           {description ? <div className="project-description">{description}</div> : null}
         </div>
       </section>
@@ -649,6 +655,7 @@ export default function ProjectPage() {
         ])).filter(url => url !== effectiveVideoUrl).map((url,index) => isVideoAsset({file_url:url}) ? <figure key={url} className="wide"><VideoPlayer src={url} /></figure> : <figure key={url} className={index % 3 === 0 ? 'wide' : ''}><img src={url} alt={`${title} ${index + 1}`} loading="lazy" /></figure>)}
       </section>}
 
+      {behindScenes.length > 0 && <><h2 className="project-bts-title">{lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'}</h2><section className="project-gallery" aria-label={lang === 'fa' ? 'پشت صحنه پروژه' : 'Project behind the scenes'}>{behindScenes.map((item,index) => isVideoAsset(item) ? <figure key={item.id} className="wide"><VideoPlayer src={item.file_url} /></figure> : <figure key={item.id}><img src={item.file_url} alt={`${title} — ${lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'} ${index + 1}`} loading="lazy" /></figure>)}</section></>}
       <section className="project-end">
         <Link href="/work">
           {text(

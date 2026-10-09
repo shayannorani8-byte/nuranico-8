@@ -17,6 +17,8 @@ type Section =
   | 'settings';
 
 type Project = {
+  brand_name?: string | null;
+  bts_media_ids?: number[] | null;
   id: number;
   title_fa: string;
   title_en: string | null;
@@ -179,7 +181,7 @@ const navigation: { group: string; items: { id: Section; label: string; descript
   ] },
   { group: 'Website content', items: [
     { id: 'projects', label: 'Projects', description: 'Portfolio, galleries and publication', icon: 'M3 7h18v14H3zM8 7V3h8v4M3 12h18' },
-    { id: 'bts', label: 'Behind the scenes', description: 'Curate your behind-the-scenes gallery', icon: 'M3 6h18v15H3zM8 6l2-3h4l2 3M9 13a3 3 0 1 0 6 0 3 3 0 0 0-6 0' },
+    { id: 'bts', label: 'Behind the scenes', description: 'Project galleries and independent files', icon: 'M3 6h18v15H3zM8 6l2-3h4l2 3M9 13a3 3 0 1 0 6 0 3 3 0 0 0-6 0' },
     { id: 'hero', label: 'Hero slides', description: 'The first impression of your website', icon: 'M3 4h18v16H3zM3 15l5-5 4 4 3-3 6 6' },
     { id: 'brands', label: 'Brands', description: 'Clients, logos and links', icon: 'M12 3l9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8' },
     { id: 'services', label: 'Services', description: 'What your studio offers', icon: 'M4 5h16M4 12h16M4 19h16M8 3v4M16 10v4M10 17v4' },
@@ -402,7 +404,12 @@ export default function AdminPage() {
   const [brandLabel, setBrandLabel] = useState('');
   const [projectLabel, setProjectLabel] = useState('');
   const [assetDestinations, setAssetDestinations] = useState<string[]>([]);
-  const [assetPublication, setAssetPublication] = useState('keep');
+  const [projectStep, setProjectStep] = useState(0);
+  const projectEditorSession = useRef(0);
+  const currentEditorSession = projectEditorSession.current;
+  const [btsSavedIds, setBtsSavedIds] = useState<number[]>([]);
+  const [btsBrandName, setBtsBrandName] = useState('');
+  const [btsProjectName, setBtsProjectName] = useState('');
   const [assetHome, setAssetHome] = useState('keep');
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -480,6 +487,7 @@ export default function AdminPage() {
           .sort((a, b) => a.sort_order - b.sort_order)
           .map(item => item.media_asset_id)
       );
+      setBtsSavedIds((data.btsMedia || []).slice().sort((a,b) => a.sort_order - b.sort_order).map(item => item.media_asset_id));
       setContent({ ...emptyContent, ...(data.content || {}) });
       setPageTexts(
         (data.pageTexts || []).slice().sort((a, b) => {
@@ -510,6 +518,11 @@ export default function AdminPage() {
     setError('');
 
     try {
+      const added = btsMediaIds.filter(id => !btsSavedIds.includes(id));
+      if (added.length && (btsBrandName.trim() || btsProjectName.trim())) {
+        const labeled = await api<{rows:MediaAsset[]}>('media-labels','POST',{ids:added,brand_name:btsBrandName.trim() || undefined,project_name:btsProjectName.trim() || undefined});
+        setMedia(current => current.map(item => labeled.rows.find(row => row.id === item.id) || item));
+      }
       const result = await api<{
         rows: {
           id: number;
@@ -526,7 +539,9 @@ export default function AdminPage() {
           .map(item => item.media_asset_id)
       );
 
-      flash('Behind the Scenes saved.');
+      setBtsSavedIds((result.rows || []).slice().sort((a,b) => a.sort_order - b.sort_order).map(item => item.media_asset_id));
+      setBtsBrandName('');setBtsProjectName('');
+      flash('Behind the scenes gallery published.');
     } catch (e) {
       setError(
         e instanceof Error
@@ -538,12 +553,21 @@ export default function AdminPage() {
     }
   }
 
-  async function saveProject() {
+  function openProject(project:Project) {
+    const legacyIds = (destMap[project.id] || []).includes('bts') ? Array.from(new Set([...(projectMediaMap[project.id] || []),...media.filter(item => item.file_url === project.media_url || (!project.media_url && !(projectMediaMap[project.id] || []).length && item.file_url === project.cover_url)).map(item => item.id)])) : [];
+    setEditingProject({...project,bts_media_ids:project.bts_media_ids ?? (legacyIds.length ? legacyIds : null)});
+  }
+
+  async function saveProject(publish: boolean) {
     if (!editingProject) return;
+    setError('');
+    if (publish && !(editingProject.title_en?.trim() || editingProject.title_fa?.trim())) {setError('Add a project name before publishing.'); setProjectStep(0); return;}
+    if (publish && !(editingProject.media_url || editingProject.cover_url || projectMediaMap[editingProject.id]?.length)) {setError('Add a photo or video before publishing.'); setProjectStep(1); return;}
+
     setSaving(true);
     try {
       const saved = await api<{ row: Project; id: number }>('projects', 'POST', {
-        row: editingProject,
+        row: {...editingProject,published:publish,bts_media_ids:editingProject.bts_media_ids ?? null},
         destinations: destMap[editingProject.id] || [],
         mediaIds: projectMediaMap[editingProject.id] || [],
       });
@@ -553,7 +577,7 @@ export default function AdminPage() {
       setDestMap(current => ({ ...current, [saved.id]: current[editingProject.id] || [] }));
       setProjectMediaMap(current => ({ ...current, [saved.id]: current[editingProject.id] || [] }));
       setEditingProject(null);
-      flash('Project saved.');
+      flash(publish ? 'Project published.' : 'Project saved as a draft.');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Project could not be saved.');
     } finally {
@@ -673,13 +697,44 @@ export default function AdminPage() {
     }
   }
 
-  async function saveMediaLabels() {
-    setSaving(true); setError('');
+  useEffect(() => {
+    if (!labelIds.length) {setBrandLabel('');setProjectLabel('');setAssetDestinations([]);setAssetHome('keep');}
+  }, [labelIds.length]);
+
+  function clearMediaSelection() {
+    setLabelIds([]); setBrandLabel(''); setProjectLabel(''); setAssetDestinations([]); setAssetHome('keep');
+  }
+  function manageMedia(item:MediaAsset) {
+    setLabelIds([item.id]); setBrandLabel(item.brand_name || ''); setProjectLabel(item.project_name || ''); setAssetDestinations(item.destinations || []); setAssetHome(item.show_on_home ? 'show' : 'hide');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  async function saveMediaLabels(mode:'keep'|'publish'|'draft') {
+    setError('');
+    if (mode === 'publish' && labelIds.some(id => !(assetDestinations.length || media.find(item => item.id === id)?.destinations?.length))) {setError('Choose a section before publishing these files.'); return;}
+    setSaving(true);
     try {
-      const result = await api<{ rows:MediaAsset[] }>('media-labels','POST',{ids:labelIds, brand_name:brandLabel.trim() || undefined, project_name:projectLabel.trim() || undefined, destinations:assetDestinations.length ? assetDestinations : undefined, published:assetPublication === 'keep' ? undefined : assetPublication === 'published', show_on_home:assetHome === 'keep' ? undefined : assetHome === 'show'});
+      const result = await api<{rows:MediaAsset[]}>('media-labels','POST',{
+        ids:labelIds, brand_name:brandLabel.trim() || undefined, project_name:projectLabel.trim() || undefined,
+        destinations:assetDestinations.length ? assetDestinations : undefined,
+        published:mode === 'keep' ? undefined : mode === 'publish',
+        show_on_home:mode === 'draft' ? false : assetHome === 'keep' ? undefined : assetHome === 'show',
+      });
       setMedia(current => current.map(item => result.rows.find(row => row.id === item.id) || item));
-      setLabelIds([]); setBrandLabel(''); setProjectLabel(''); setAssetDestinations([]); setAssetPublication('keep'); setAssetHome('keep'); flash('Media labels and placement saved.');
-    } catch(e) {setError(e instanceof Error ? e.message : 'Could not save labels.');} finally {setSaving(false);}
+      clearMediaSelection(); flash(mode === 'publish' ? 'Files published in their sections.' : mode === 'draft' ? 'Files saved in the library as drafts.' : 'Names and placement saved.');
+    } catch(e) {setError(e instanceof Error ? e.message : 'Could not save files.');} finally {setSaving(false);}
+  }
+  async function uploadProjectFiles(uploaded:MediaAsset[] | undefined, session:number, behindScenes = false) {
+    await refreshMedia();
+    if (!uploaded?.length || !editingProject || session !== projectEditorSession.current) return;
+    const projectId = editingProject.id;
+    if (behindScenes) {setEditingProject(current => current?.id === projectId ? {...current,bts_media_ids:Array.from(new Set([...(current.bts_media_ids || []),...uploaded.map(item => item.id)]))} : current);return;}
+    setProjectMediaMap(current => ({...current,[projectId]:Array.from(new Set([...(current[projectId] || []),...uploaded.map(item => item.id)]))}));
+    setEditingProject(current => current?.id === projectId ? {...current,
+      media_url:current.media_url || uploaded[0].file_url,
+      media_type:current.media_url ? current.media_type : isVideoAsset(uploaded[0]) ? 'video' : 'image',
+      cover_url:current.cover_url || uploaded.find(item => !isVideoAsset(item))?.file_url || '',
+      ...(!current.media_url && !current.preview_url && isVideoAsset(uploaded[0]) ? {preview_url:uploaded[0].file_url,preview_enabled:true,preview_type:'video'} : {}),
+    } : current);
   }
 
   const visibleTexts = pageTexts.filter(row => !(row.page === 'home' && /^(statement_|landscape_|keep_line_|contact_)/.test(row.text_key)));
@@ -809,11 +864,11 @@ export default function AdminPage() {
   const filteredMedia = useMemo(() => {
     const q = mediaSearch.trim().toLowerCase();
     return media.filter(m => {
-      const matchesQ = !q || [m.name, m.brand_name, m.project_name, m.alt_text_en, m.alt_text_fa, m.file_type, m.mime_type].some(v => (v || '').toLowerCase().includes(q));
+      const matchesQ = !q || [m.name, m.brand_name, m.project_name, m.alt_text_en, m.alt_text_fa, m.file_type, m.mime_type, ...projects.filter(project => (project.bts_media_ids || []).includes(m.id) || (projectMediaMap[project.id] || []).includes(m.id) || [project.cover_url,project.media_url,project.preview_url].includes(m.file_url)).flatMap(project => [project.title_en,project.title_fa])].some(v => (v || '').toLowerCase().includes(q));
       const matchesType = mediaFilter === 'all' || (mediaFilter === 'video' ? isVideoAsset(m) : !isVideoAsset(m));
       return matchesQ && matchesType;
     });
-  }, [media, mediaSearch, mediaFilter]);
+  }, [media, mediaSearch, mediaFilter, projects, projectMediaMap]);
 
   const activeSection = navigationItems.find(item => item.id === section)!;
   const publishedProjects = projects.filter(project => project.published).length;
@@ -821,7 +876,7 @@ export default function AdminPage() {
   function navigateTo(next: Section) {
     setSection(next);
     setNavigationOpen(false);
-    setMessage('');
+    setMessage('');setError('');
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
@@ -871,140 +926,87 @@ export default function AdminPage() {
             <div className="dashboard-section-head"><h2>A place for every update</h2><p>Choose where you want to start.</p></div>
             <div className="quick-actions">
               {([
-                ['media', '01', 'Prepare your media', 'Upload photos and videos once, then reuse them across your projects.'],
-                ['projects', '02', 'Curate your work', 'Build galleries, choose destinations and control what is published.'],
+                ['projects', '01', 'Create a project', 'Name the project, upload its media and behind-the-scenes, then publish.'],
+                ['media', '02', 'Find existing files', 'Search your library and reuse photos and videos in a project.'],
                 ['content', '03', 'Refine your pages', 'Keep English and Persian copy, contact details and SEO in sync.'],
               ] as [Section, string, string, string][]).map(([id, number, title, description]) => <button key={id} onClick={() => navigateTo(id)}><span className="quick-number">{number}</span><h3>{title}</h3><p>{description}</p><span className="quick-link">Open {navigationItems.find(item => item.id === id)?.label.toLowerCase()} <span aria-hidden="true">→</span></span></button>)}
             </div>
-            <div className="panel dashboard-workflow"><div><h2>One project. Multiple destinations.</h2><p>Attach your media once and choose where each project appears.</p></div><div className="chips">{destinations.map(([, label]) => <span key={label}>{label}</span>)}</div></div>
+            <div className="panel dashboard-workflow"><div><h2>One project. Multiple destinations.</h2><p>Attach your media once and choose where each project appears.</p></div><div className="chips">{destinations.filter(([key]) => !['work','featured'].includes(key)).map(([, label]) => <span key={label}>{label}</span>)}</div></div>
           </>
         )}
 
-        {section === 'bts' && (
-          <>
-            <SectionHeader
-              title="Behind the Scenes"
-              description="Choose images and videos from the Media Library. These files appear in Film & Teasers and the full BTS gallery."
-              action={
-                <button
-                  className="primary"
-                  disabled={saving}
-                  onClick={saveBts}
-                >
-                  {saving ? 'Saving…' : 'Save BTS'}
-                </button>
-              }
-            />
-
-            <div className="panel"><MediaPicker title="Behind the scenes gallery" media={media} ids={btsMediaIds} onChange={setBtsMediaIds} multiple upload={<MediaUploader onDone={async uploaded => {await refreshMedia(); if(uploaded?.length) setBtsMediaIds(current => Array.from(new Set([...current,...uploaded.map(item => item.id)])));}} onError={setError} />} /></div>
-          </>
-        )}
+        {section === 'bts' && <>
+          <SectionHeader title="Behind the Scenes" description="Behind-the-scenes files belong to their projects. Open a project to upload, arrange and publish them." />
+          <div className="panel"><h3>Project galleries</h3><div className="list">{projects.filter(project => project.bts_media_ids?.length || (destMap[project.id] || []).includes('bts')).map(project => <article className="row-card" key={project.id}><div className="row-content"><b>{project.title_en || project.title_fa || 'Untitled project'}</b><div className="sub">{project.bts_media_ids?.length ?? (projectMediaMap[project.id] || []).length} files · {project.published ? 'Published' : 'Draft'}</div></div><button className="ghost" onClick={() => {projectEditorSession.current++;openProject(project);setProjectStep(1);navigateTo('projects');}}>Open project</button></article>)}</div><button className="ghost" onClick={() => navigateTo('projects')}>Go to projects</button></div>
+          <details className="content-group"><summary>Independent gallery · {btsMediaIds.length} files</summary><div className="content-group-body"><MediaUploader onDone={async uploaded => {await refreshMedia();if(uploaded?.length) setBtsMediaIds(current => Array.from(new Set([...current,...uploaded.map(item => item.id)])));}} onError={setError} />
+          <div className="workflow-status"><span>{btsMediaIds.length} files in this gallery</span><b>{btsMediaIds.join(',') === btsSavedIds.join(',') ? 'Published version' : 'Unpublished changes'}</b></div>
+          <div className="panel"><p className="hint">For project behind-the-scenes, open the project → Media → Behind the scenes.</p><MediaPicker title="Choose & arrange media" media={media} ids={btsMediaIds} onChange={setBtsMediaIds} multiple />
+            {btsMediaIds.some(id => !btsSavedIds.includes(id)) && <details className="content-group"><summary>Name new files (optional)</summary><div className="content-group-body"><p className="hint">Applies only to the newly added files in this gallery.</p><div className="grid2"><Input label="Brand name" value={btsBrandName} onChange={setBtsBrandName} /><Input label="Project name" value={btsProjectName} onChange={setBtsProjectName} /></div></div></details>}
+            <div className="workflow-publish"><p>Changes appear online after publishing.</p><button className="primary" disabled={saving || btsMediaIds.join(',') === btsSavedIds.join(',')} onClick={saveBts}>{saving ? 'Publishing…' : 'Publish gallery'}</button></div>
+          </div>
+          </div></details>
+        </>}
 
         {section === 'projects' && (
           <>
             <SectionHeader
               title="Projects"
               description="Portfolio projects, destinations, media and publication."
-              action={<button className="primary" onClick={() => {
+              action={<button className="primary" disabled={!!editingProject} onClick={() => {
+                projectEditorSession.current++;
+                setProjectStep(0);
                 setDestMap(current => ({ ...current, 0: [] }));
                 setProjectMediaMap(current => ({ ...current, 0: [] }));
                 setEditingProject({
-                id: 0, title_fa: '', title_en: '', description_fa: '', description_en: '',
+                id: 0, bts_media_ids: [], title_fa: '', title_en: '', description_fa: '', description_en: '',
                 category: 'Content', cover_url: '', media_url: '', media_type: 'image',
                 preview_url: '', preview_type: 'video', preview_enabled: false,
                 featured: false, published: false, sort_order: projects.length,
               }); }}>+ New project</button>}
             />
             <div className="toolbar">
-              <input aria-label="Search projects" placeholder="Search projects…" value={projectSearch} onChange={e => setProjectSearch(e.target.value)} />
+              <input hidden={!!editingProject} aria-label="Search projects" placeholder="Search projects…" value={projectSearch} onChange={e => setProjectSearch(e.target.value)} />
             </div>
 
             {editingProject && (
               <div className="editor">
                 <div className="editor-top">
                   <h2>{editingProject.id ? 'Edit project' : 'New project'}</h2>
-                  <button className="ghost" onClick={() => setEditingProject(null)}>Close</button>
+                  <button className="ghost" onClick={() => {projectEditorSession.current++;setEditingProject(null);}}>Close</button>
                 </div>
 
-                <div className="grid2">
-                  <Input label="Title — English" value={editingProject.title_en || ''} onChange={v => setEditingProject({...editingProject, title_en: v})} />
-                  <Input label="عنوان — فارسی" value={editingProject.title_fa} onChange={v => setEditingProject({...editingProject, title_fa: v})} />
-                  <Input label="Category" value={editingProject.category} onChange={v => setEditingProject({...editingProject, category: v})} />
-                  <Input label="Sort order" type="number" value={editingProject.sort_order ?? 0} onChange={v => setEditingProject({...editingProject, sort_order: Number(v) || 0})} />
-                  <Input label="Cover URL" value={editingProject.cover_url || ''} onChange={v => setEditingProject({...editingProject, cover_url: v})} />
-                  <Input label="Main media URL" value={editingProject.media_url || ''} onChange={v => setEditingProject({...editingProject, media_url: v})} />
-                  <Textarea label="Description — English" value={editingProject.description_en} onChange={v => setEditingProject({...editingProject, description_en: v})} />
-                  <Textarea label="توضیحات — فارسی" value={editingProject.description_fa} onChange={v => setEditingProject({...editingProject, description_fa: v})} />
+                <nav className="workflow-steps" aria-label="Project setup">{['Name','Media','Publish'].map((label,index) => <button type="button" key={label} aria-current={projectStep === index ? 'step' : undefined} className={projectStep === index ? 'active' : ''} onClick={() => {setError('');setProjectStep(index);}}><span>{index + 1}</span>{label}</button>)}</nav>
+                {projectStep === 0 && <div className="workflow-body">
+                  <div className="grid2"><Input label="Project name — English" value={editingProject.title_en || ''} onChange={v => setEditingProject({...editingProject,title_en:v})} /><Input label="نام پروژه — فارسی" value={editingProject.title_fa} onChange={v => setEditingProject({...editingProject,title_fa:v})} /></div>
+                  <Input label="Brand (optional)" value={editingProject.brand_name || ''} onChange={v => setEditingProject({...editingProject,brand_name:v})} /><p className="hint">The project name appears on its card, project page and behind-the-scenes files.</p>
+                  <details className="content-group"><summary>Description (optional)</summary><div className="content-group-body grid2"><Textarea label="Description — English" value={editingProject.description_en} onChange={v => setEditingProject({...editingProject,description_en:v})} /><Textarea label="توضیحات — فارسی" value={editingProject.description_fa} onChange={v => setEditingProject({...editingProject,description_fa:v})} /></div></details>
+                </div>}
+                {projectStep === 1 && <div className="workflow-body">
+                  <div className="workflow-section-head"><div><h3>Photos & videos</h3><p className="hint">New uploads join this gallery. The first file becomes the main media if none is set.</p></div><MediaUploader onDone={uploaded => uploadProjectFiles(uploaded,currentEditorSession)} onError={setError} /></div>
+                  <MediaPicker title="Main photo or video" media={media} ids={media.filter(item => item.file_url === editingProject.media_url).map(item => item.id)} onChange={ids => {const item = media.find(item => item.id === ids[0]);setEditingProject({...editingProject,media_url:item?.file_url || '',media_type:item && isVideoAsset(item) ? 'video' : 'image',...(!editingProject.preview_url || editingProject.preview_url === editingProject.media_url ? {preview_url:item && isVideoAsset(item) ? item.file_url : '',preview_enabled:!!item && isVideoAsset(item),preview_type:'video'} : {})});}} />
+                  <MediaPicker title="Gallery & order" media={media} ids={projectMediaMap[editingProject.id] || []} onChange={ids => setProjectMediaMap(current => ({...current,[editingProject.id]:ids}))} multiple />
+                  <MediaPicker title="Cover image" kind="image" media={media} ids={media.filter(item => item.file_url === editingProject.cover_url).map(item => item.id)} onChange={ids => setEditingProject({...editingProject,cover_url:media.find(item => item.id === ids[0])?.file_url || ''})} />
+                  <details className="content-group"><summary>Behind the scenes · {(editingProject.bts_media_ids || []).length} files</summary><div className="content-group-body"><p className="hint">Photos and videos here appear under this project and on the Behind the scenes page when the project is published.</p><MediaUploader onDone={uploaded => uploadProjectFiles(uploaded,currentEditorSession,true)} onError={setError} /><MediaPicker title="Project behind the scenes" media={media} ids={editingProject.bts_media_ids || []} onChange={ids => setEditingProject({...editingProject,bts_media_ids:ids})} multiple /></div></details>
+                  <details className="content-group"><summary>Video preview & external links (optional)</summary><div className="content-group-body"><Toggle label="Enable card video preview" value={!!editingProject.preview_enabled} onChange={value => setEditingProject({...editingProject,preview_enabled:value})} /><MediaPicker title="Video preview" kind="video" media={media} ids={media.filter(item => item.file_url === editingProject.preview_url).map(item => item.id)} onChange={ids => setEditingProject({...editingProject,preview_url:media.find(item => item.id === ids[0])?.file_url || '',preview_type:'video',preview_enabled:!!ids.length})} /><div className="grid2"><Input label="Cover URL" value={editingProject.cover_url || ''} onChange={v => setEditingProject({...editingProject,cover_url:v})} /><Input label="Main media URL" value={editingProject.media_url || ''} onChange={v => setEditingProject({...editingProject,media_url:v})} /></div></div></details>
+                </div>}
+                {projectStep === 2 && <div className="workflow-body">
+                  <div className="workflow-review"><h3>{editingProject.title_en || editingProject.title_fa || 'Add a project name'}</h3><p>{editingProject.published ? 'Currently published' : 'Currently a draft'} · {(projectMediaMap[editingProject.id] || []).length} gallery files · {(editingProject.bts_media_ids || []).length} behind-the-scenes files</p></div>
+                  <h3>Where should it appear?</h3><div className="checks">{destinations.filter(([key]) => !['home','featured','work','bts'].includes(key)).map(([key,label]) => {const checked=(destMap[editingProject.id] || []).includes(key);return <label key={key}><input type="checkbox" checked={checked} onChange={() => setDestMap(map => ({...map,[editingProject.id]:checked ? (map[editingProject.id] || []).filter(value => value !== key) : [...(map[editingProject.id] || []),key]}))} />{label}</label>;})}</div>
+                  <label className="workflow-home"><input type="checkbox" checked={(destMap[editingProject.id] || []).includes('home')} onChange={e => setDestMap(map => ({...map,[editingProject.id]:e.target.checked ? Array.from(new Set([...(map[editingProject.id] || []),'home'])) : (map[editingProject.id] || []).filter(value => value !== 'home')}))} /><span><b>Main on homepage</b><small>Show this project first in its sections. All still includes every published project.</small></span></label>
+                  <details className="content-group"><summary>Advanced display settings</summary><div className="content-group-body grid2"><Input label="Display order" type="number" value={editingProject.sort_order ?? 0} onChange={v => setEditingProject({...editingProject,sort_order:Number(v) || 0})} /><Toggle label="Use as hero fallback" value={!!editingProject.featured} onChange={value => setEditingProject({...editingProject,featured:value})} /></div></details>
+                </div>}
+                <div className="workflow-actions">
+                  <button className="ghost" onClick={() => projectStep ? setProjectStep(projectStep - 1) : (projectEditorSession.current++,setEditingProject(null))}>{projectStep ? 'Back' : 'Cancel'}</button>
+                  <div className="workflow-action-end">{(!editingProject.published || projectStep === 2) && <button className="ghost" disabled={saving} onClick={() => saveProject(false)}>{editingProject.published ? 'Unpublish' : 'Save draft'}</button>}{projectStep < 2 ? <button className="primary" onClick={() => setProjectStep(projectStep + 1)}>Next</button> : <button className="primary" disabled={saving} onClick={() => saveProject(true)}>{saving ? 'Publishing…' : editingProject.published ? 'Save & publish' : 'Publish project'}</button>}</div>
                 </div>
+                {editingProject.id > 0 && <details className="content-group"><summary>Delete project</summary><div className="content-group-body"><button className="danger" disabled={saving} onClick={() => deleteProject(editingProject.id)}>Delete project</button></div></details>}
 
-                <div className="editor-block">
-                  <h3>Publication</h3>
-                  <div className="checks">
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={!!editingProject.published}
-                        onChange={e => setEditingProject({
-                          ...editingProject,
-                          published: e.target.checked
-                        })}
-                      />
-                      Published
-                    </label>
-
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={!!editingProject.featured}
-                        onChange={e => setEditingProject({
-                          ...editingProject,
-                          featured: e.target.checked
-                        })}
-                      />
-                      Use as hero fallback
-                    </label>
-                  </div>
-                </div>
-
-                <div className="editor-block">
-                  <h3>Destinations</h3>
-                  <div className="checks">
-                    {destinations.map(([key, label]) => {
-                      const checked = (destMap[editingProject.id] || []).includes(key);
-                      return <label key={key}><input type="checkbox" checked={checked} onChange={() => setDestMap(m => ({
-                        ...m,
-                        [editingProject.id]: checked
-                          ? (m[editingProject.id] || []).filter(x => x !== key)
-                          : [...(m[editingProject.id] || []), key],
-                      }))} /> {label}</label>;
-                    })}
-                  </div>
-                </div>
-
-                <div className="editor-block">
-                  <h3>Project media</h3>
-                  <p className="hint">Cover → main photo or video → gallery. Every destination supports photos and videos.</p>
-                  <MediaPicker title="Cover image" kind="image" media={media} ids={media.filter(item => item.file_url === editingProject.cover_url).map(item => item.id)} onChange={ids => setEditingProject({...editingProject, cover_url: media.find(item => item.id === ids[0])?.file_url || ''})} upload={<MediaUploader onDone={refreshMedia} onError={setError} />} />
-                  <MediaPicker title="Main photo or video" media={media} ids={media.filter(item => item.file_url === editingProject.media_url).map(item => item.id)} onChange={ids => {const item = media.find(item => item.id === ids[0]); setEditingProject({...editingProject, media_url: item?.file_url || '', media_type: item && isVideoAsset(item) ? 'video' : 'image'});}} upload={<MediaUploader onDone={refreshMedia} onError={setError} />} />
-                  <MediaPicker title="Project gallery" media={media} ids={projectMediaMap[editingProject.id] || []} onChange={ids => setProjectMediaMap(current => ({...current, [editingProject.id]: ids}))} multiple upload={<MediaUploader onDone={async uploaded => {await refreshMedia(); if(uploaded?.length) setProjectMediaMap(current => ({...current,[editingProject.id]:Array.from(new Set([...(current[editingProject.id] || []),...uploaded.map(item => item.id)]))}));}} onError={setError} />} />
-                  <details className="content-group"><summary>Optional video preview</summary><div className="content-group-body">
-                    <Toggle label="Enable video preview on cards" value={!!editingProject.preview_enabled} onChange={value => setEditingProject({...editingProject, preview_enabled:value})} />
-                    <MediaPicker title="Video preview" kind="video" media={media} ids={media.filter(item => item.file_url === editingProject.preview_url).map(item => item.id)} onChange={ids => setEditingProject({...editingProject, preview_url:media.find(item => item.id === ids[0])?.file_url || '', preview_type:'video', preview_enabled:!!ids.length})} />
-                  </div></details>
-                </div>
-
-                <div className="editor-actions">
-                  {editingProject.id > 0 && <button className="danger" onClick={() => deleteProject(editingProject.id)}>Delete</button>}
-                  <div />
-                  <button className="ghost" onClick={() => setEditingProject(null)}>Cancel</button>
-                  <button className="primary" disabled={saving} onClick={saveProject}>{saving ? 'Saving…' : 'Save project'}</button>
-                </div>
               </div>
             )}
 
-            <div className="list">
+            <div className="list" hidden={!!editingProject}>
               {filteredProjects.map(project => (
-                <article className="row-card" key={project.id}>
+                <article className="row-card project-list-card" key={project.id}>
                   <div className="thumb">
                     {project.cover_url ? <img src={project.cover_url} alt="" /> : <span>NO COVER</span>}
                   </div>
@@ -1013,12 +1015,12 @@ export default function AdminPage() {
                     <span>{project.category} · {project.published ? 'Published' : 'Draft'} · {project.featured ? 'Featured' : 'Standard'}</span>
                     <small>{(destMap[project.id] || []).join(' · ') || 'No destinations'}</small>
                   </div>
-                  <label className="asset-bulk-check"><input type="checkbox" disabled={saving || !project.published} checked={(destMap[project.id] || []).includes('home')} onChange={async e => {
+                  <div className="project-list-actions"><label className="asset-bulk-check"><input type="checkbox" disabled={saving || !project.published} checked={(destMap[project.id] || []).includes('home')} onChange={async e => {
                     const checked = e.target.checked; const current = destMap[project.id] || [];
                     const next = checked ? [...current,'home'] : current.filter(value => value !== 'home');
                     setSaving(true); try {await api('project-home','POST',{id:project.id,show:checked}); setDestMap(map => ({...map,[project.id]:next})); flash('Homepage selection saved.');} catch(error) {setError(error instanceof Error ? error.message : 'Could not save selection.');} finally {setSaving(false);}
                   }} /> Main on homepage</label>
-                  <button className="ghost" onClick={() => setEditingProject(project)}>Edit</button>
+                  <button className="ghost" onClick={() => {projectEditorSession.current++;setProjectStep(0);openProject(project);}}>Edit</button></div>
                 </article>
               ))}
               {!filteredProjects.length && <EmptyState text="No projects yet." />}
@@ -1028,7 +1030,7 @@ export default function AdminPage() {
 
         {section === 'media' && (
           <>
-            <SectionHeader title="Media Library" description="Upload images and videos once and reuse them across the site." action={<MediaUploader onDone={async uploaded => {await refreshMedia(); setLabelIds(uploaded?.map(item => item.id) || []);}} onError={setError} />} />
+            <SectionHeader title="Media Library" description="Upload images and videos once and reuse them across the site." action={<MediaUploader onDone={async uploaded => {await refreshMedia(); clearMediaSelection(); setLabelIds(uploaded?.map(item => item.id) || []);}} onError={setError} />} />
             <div className="toolbar">
               <input aria-label="Search media" placeholder="Search media…" value={mediaSearch} onChange={e => {setMediaSearch(e.target.value); setMediaPage(0);}} />
               <select aria-label="Filter media type" value={mediaFilter} onChange={e => {setMediaFilter(e.target.value); setMediaPage(0);}}>
@@ -1037,15 +1039,16 @@ export default function AdminPage() {
                 <option value="video">Videos</option>
               </select>
             </div>
-            <div className="asset-label-panel panel">
-              <h3>Label selected files <span className="hint">({labelIds.length})</span></h3>
-              <div className="grid2"><label className="field"><span>Brand name</span><input list="brand-labels" value={brandLabel} onChange={e => setBrandLabel(e.target.value)} placeholder="Choose or type a brand" /></label><label className="field"><span>Project name</span><input list="project-labels" value={projectLabel} onChange={e => setProjectLabel(e.target.value)} placeholder="Choose or type a project" /></label></div>
-              <datalist id="brand-labels">{Array.from(new Set([...brands.map(item => item.name), ...media.map(item => item.brand_name).filter(Boolean)])).map(name => <option value={name!} key={name} />)}</datalist>
-              <datalist id="project-labels">{Array.from(new Set([...projects.map(item => item.title_en || item.title_fa), ...media.map(item => item.project_name).filter(Boolean)])).map(name => <option value={name!} key={name} />)}</datalist>
-              <details className="content-group"><summary>Placement & homepage selection</summary><div className="content-group-body"><div className="checks">{[['film','Film & teasers'],['photography','Photography'],['content','Content'],['bts','Behind the scenes']].map(([key,label]) => <label key={key}><input type="checkbox" checked={assetDestinations.includes(key)} onChange={e => setAssetDestinations(current => e.target.checked ? [...current,key] : current.filter(value => value !== key))} /> {label}</label>)}</div><div className="grid2"><label className="field"><span>Publication</span><select value={assetPublication} onChange={e => setAssetPublication(e.target.value)}><option value="keep">Keep current</option><option value="published">Published</option><option value="draft">Draft</option></select></label><label className="field"><span>Homepage</span><select value={assetHome} onChange={e => setAssetHome(e.target.value)}><option value="keep">Keep current</option><option value="show">Main in homepage sections</option><option value="hide">Standard gallery entry</option></select></label></div><p className="hint">Chosen sections replace the previous placement. Main selections appear first. All includes every published entry.</p></div></details>
-              <div className="asset-tools"><button className="primary" disabled={saving || !labelIds.length || (!brandLabel.trim() && !projectLabel.trim() && !assetDestinations.length && assetPublication === 'keep' && assetHome === 'keep')} onClick={saveMediaLabels}>Apply to selected</button><button className="ghost" disabled={!labelIds.length} onClick={() => setLabelIds([])}>Clear selection</button><button className="ghost" onClick={() => setLabelIds(current => Array.from(new Set([...current, ...filteredMedia.map(item => item.id)])))}>Select matching files</button></div>
-              <p className="hint">Apply names or placement to one file or a batch. Empty names preserve existing labels. Photos and videos can share any section.</p>
-            </div>
+            {!labelIds.length && <p className="hint">For a new project, upload from Projects. Use this library to find and reuse files; select files here for standalone publication.</p>}
+            {!!labelIds.length && <div className="asset-label-panel panel">
+              <div className="workflow-section-head"><h3>{labelIds.length} selected file{labelIds.length === 1 ? '' : 's'}</h3><button className="ghost" onClick={clearMediaSelection}>Cancel selection</button></div>
+              <h4>1 · Name (optional)</h4><div className="grid2"><label className="field"><span>Brand name</span><input list="brand-labels" value={brandLabel} onChange={e => setBrandLabel(e.target.value)} placeholder="Choose or type a brand" /></label><label className="field"><span>Project name</span><input list="project-labels" value={projectLabel} onChange={e => setProjectLabel(e.target.value)} placeholder="Choose or type a project" /></label></div>
+              <datalist id="brand-labels">{Array.from(new Set([...brands.map(item => item.name),...media.map(item => item.brand_name).filter(Boolean)])).map(name => <option value={name!} key={name} />)}</datalist><datalist id="project-labels">{Array.from(new Set([...projects.map(item => item.title_en || item.title_fa),...media.map(item => item.project_name).filter(Boolean)])).map(name => <option value={name!} key={name} />)}</datalist>
+              <h4>2 · Choose sections</h4><div className="checks">{[['film','Film & teasers'],['photography','Photography'],['content','Content'],['bts','Behind the scenes']].map(([key,label]) => <label key={key}><input type="checkbox" checked={assetDestinations.includes(key)} onChange={e => setAssetDestinations(current => e.target.checked ? [...current,key] : current.filter(value => value !== key))} />{label}</label>)}</div>
+              <details className="content-group"><summary>Homepage priority & other options</summary><div className="content-group-body"><label className="field"><span>Homepage priority</span><select value={assetHome} onChange={e => setAssetHome(e.target.value)}><option value="keep">Keep current</option><option value="show">Main in homepage sections</option><option value="hide">Standard gallery entry</option></select></label><p className="hint">Chosen sections replace the previous placement. Empty names preserve existing labels.</p><button className="ghost" disabled={saving} onClick={() => saveMediaLabels('keep')}>Save names & placement only</button></div></details>
+              <div className="workflow-publish"><div><h4>3 · Publish</h4><p>Publish files directly into their sections, or keep them in the library for a project.</p></div><div className="workflow-action-end"><button className="ghost" disabled={saving} onClick={() => saveMediaLabels('draft')}>Keep in library</button><button className="primary" disabled={saving} onClick={() => saveMediaLabels('publish')}>{saving ? 'Saving…' : 'Publish files'}</button></div></div>
+            </div>}
+            <div className="asset-tools media-selection-tools"><span className="hint">{filteredMedia.length} matching files</span><button className="ghost" onClick={() => setLabelIds(current => Array.from(new Set([...current,...filteredMedia.map(item => item.id)])))}>Select matching</button></div>
             <div className="media-grid">
               {filteredMedia.slice(Math.min(mediaPage, Math.max(0, Math.ceil(filteredMedia.length / 24) - 1)) * 24, (Math.min(mediaPage, Math.max(0, Math.ceil(filteredMedia.length / 24) - 1)) + 1) * 24).map(item => (
                 <article className="media-card" key={item.id}>
@@ -1056,14 +1059,15 @@ export default function AdminPage() {
                   </div>
                   <div className="media-meta">
                     <label className="asset-bulk-check"><input type="checkbox" checked={labelIds.includes(item.id)} onChange={e => setLabelIds(current => e.target.checked ? [...current,item.id] : current.filter(id => id !== item.id))} /> <b dir="auto">{item.name}</b></label>
-                    <small dir="auto">{[item.brand_name, item.project_name].filter(Boolean).join(' · ') || 'No brand / project label'}</small>
-                    <small>{(item.destinations || []).join(' · ') || 'Unassigned'} · {item.published ? 'Published' : 'Draft'}</small>
-                    <label className="asset-bulk-check"><input type="checkbox" checked={!!item.show_on_home} disabled={saving || !item.published || !item.destinations?.length} onChange={async e => {const checked = e.target.checked; setSaving(true); try {const result = await api<{rows:MediaAsset[]}>('media-labels','POST',{ids:[item.id],show_on_home:checked}); setMedia(current => current.map(asset => result.rows.find(row => row.id === asset.id) || asset)); flash('Homepage selection saved.');} catch(error) {setError(error instanceof Error ? error.message : 'Could not save selection.');} finally {setSaving(false);}}} /> Main on homepage</label>
+                    <small dir="auto">{[item.brand_name, item.project_name].filter(Boolean).join(' · ') || projects.filter(project => (projectMediaMap[project.id] || []).includes(item.id) || (project.bts_media_ids || []).includes(item.id) || [project.cover_url,project.media_url,project.preview_url].includes(item.file_url)).map(project => project.title_en || project.title_fa || 'Untitled project').join(' · ') || 'Library file'}</small>
+                    <small>{(item.destinations || []).join(' · ') || 'Unassigned'} · {item.published ? 'Published in galleries' : 'Library / project use'}</small>
+                    {item.show_on_home && <small>Main on homepage</small>}
                     <span>{item.file_type || 'file'} · {item.file_size ? `${Math.round(item.file_size / 1024)} KB` : '—'}</span>
-                    <div className="media-actions">
+                    <button className="ghost" onClick={() => manageMedia(item)}>Name & publish</button>
+                    <details className="file-actions"><summary>More</summary><div className="media-actions">
                       <button className="ghost" onClick={() => navigator.clipboard?.writeText(item.file_url)}>Copy URL</button>
                       <button className="danger" onClick={() => deleteMedia(item)}>Delete</button>
-                    </div>
+                    </div></details>
                   </div>
                 </article>
               ))}
@@ -1940,7 +1944,7 @@ function MediaUploader({ onDone, onError }: { onDone: (uploaded?: MediaAsset[]) 
   return (
     <label className={busy ? 'upload disabled' : 'upload'}>
       <input ref={input} type="file" accept="image/*,video/*" multiple disabled={busy} onChange={e => upload(e.target.files)} />
-      {busy ? progress || 'Uploading…' : '+ Upload media'}
+      {busy ? progress || 'Uploading…' : '+ Upload photos / videos'}
     </label>
   );
 }

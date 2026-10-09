@@ -24,11 +24,9 @@ export async function GET(request:NextRequest) {
     if (homeOnly) directQuery = directQuery.eq('show_on_home',true);
     const direct = await directQuery;
     if (direct.error) throw direct.error;
-    const projectsResult = projectIds.length
-      ? await db.from('portfolio').select('id,title_en,title_fa,media_url,media_type,cover_url').in('id', projectIds).eq('published', true).order('sort_order').order('id')
-      : { data: [], error: null };
+    const projectsResult = await db.from('portfolio').select('id,title_en,title_fa,media_url,media_type,cover_url,brand_name,bts_media_ids').eq('published',true).order('sort_order').order('id');
     if (projectsResult.error) throw projectsResult.error;
-    const projects = projectsResult.data || [];
+    const projects = (projectsResult.data || []).filter(project => (projectIds.includes(project.id) || project.bts_media_ids?.length) && (!homeOnly || homeIds.has(project.id)));
     const attachedResult = projects.length
       ? await db.from('project_media').select('project_id,media_asset_id,sort_order').in('project_id', projects.map(project => project.id)).order('sort_order').order('media_asset_id')
       : { data: [], error: null };
@@ -37,6 +35,7 @@ export async function GET(request:NextRequest) {
     const mediaIds = Array.from(new Set([
       ...(links.data || []).map(row => row.media_asset_id),
       ...attached.map(row => row.media_asset_id),
+      ...projects.flatMap(project => project.bts_media_ids || []),
     ]));
     const assetsResult = mediaIds.length
       ? await db.from('media_assets').select('*').in('id', mediaIds)
@@ -70,6 +69,10 @@ export async function GET(request:NextRequest) {
     for (const asset of direct.data || []) add(-asset.id, {...asset, name:asset.project_name || asset.name, alt_text_en:[asset.brand_name,asset.project_name].filter(Boolean).join(' · ') || asset.alt_text_en});
     // A project's BTS destination exposes its main file and gallery, never drafts.
     for (const project of projects) {
+      if (project.bts_media_ids != null) {
+        for (const mediaId of project.bts_media_ids) {const asset = assetMap.get(mediaId);if (asset) add(-asset.id,{...asset,brand_name:project.brand_name || asset.brand_name,project_name:project.title_en || project.title_fa,name:project.title_en || project.title_fa,alt_text_en:project.title_en,alt_text_fa:project.title_fa,show_on_home:homeIds.has(project.id)});}
+        continue;
+      }
       const projectAssets = attached.filter(row => row.project_id === project.id);
       const urls = Array.from(new Set<string>([
         project.media_url,
