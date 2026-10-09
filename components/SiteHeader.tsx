@@ -34,11 +34,6 @@ export default function SiteHeader() {
     };
   }, [menuOpen]);
   const initialData = useSiteData();
-  const headerBg=String(initialData.settings.nav_bg || '#171716');
-  function luminance(color:string){const value=color.replace('#','');if(!/^[0-9a-f]{6}$/i.test(value))return null;const channels=[0,2,4].map(index=>parseInt(value.slice(index,index+2),16)/255).map(value=>value<=.04045 ? value/12.92 : ((value+.055)/1.055)**2.4);return channels[0]*.2126+channels[1]*.7152+channels[2]*.0722;}
-  const bgLuminance=luminance(headerBg),configuredInk=String(initialData.settings.nav_text || '#f1efe9'),inkLuminance=luminance(configuredInk);
-  const validContrast=bgLuminance!=null && inkLuminance!=null && (Math.max(bgLuminance,inkLuminance)+.05)/(Math.min(bgLuminance,inkLuminance)+.05)>=4.5;
-  const headerInk=validContrast ? configuredInk : bgLuminance!=null && bgLuminance>.179 ? '#171716' : '#f1efe9';
 
   const [logoUrl, setLogoUrl] = useState(String(initialData.settings.logo_url || ''));
 
@@ -111,7 +106,7 @@ export default function SiteHeader() {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <header className={`site-nav ${menuOpen ? 'is-open' : ''}`} style={{'--header-bg':headerBg,'--header-ink':headerInk,'--header-logo-filter':(luminance(headerInk) || 0)>.5 ? 'brightness(0) invert(1)' : 'brightness(0)'} as React.CSSProperties}>
+    <header className={`site-nav ${menuOpen ? 'is-open' : ''}`}>
       <Link
         className="brand"
         href="/"

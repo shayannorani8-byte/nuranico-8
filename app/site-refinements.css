@@ -372,13 +372,11 @@ html body .hero .hero-video { object-position:center 30%; }
 }
 @media(prefers-reduced-motion:reduce){.portfolio-skeleton{animation:none}.portfolio-card-media>img{transition:none}}
 /* Compact homepage action and readable image header */
-html body .hero .primary-button { width:auto !important;min-width:0 !important;min-height:44px !important;padding:11px 18px !important;gap:14px !important;border-radius:8px !important;font-size:13px !important;line-height:1.5 !important; }
-html body .hero .primary-button svg { width:18px;height:18px; }
-html body .site-nav { backdrop-filter:blur(16px); }
+html body .hero .primary-button { width:auto !important;min-width:0 !important;min-height:40px !important;padding:9px 15px !important;gap:12px !important;border-radius:8px !important;font-size:12px !important;line-height:1.5 !important; }
+html body .hero .primary-button svg { width:16px;height:16px; }
 html body .service-card-top:empty { display:none; }
-html body .site-nav { background:var(--header-bg,#171716) !important; }
-html body .site-nav :is(.brand,.desktop-nav a) { color:var(--header-ink,#f1efe9) !important; }
-html body .site-nav .site-logo-image { filter:var(--header-logo-filter,none) !important; }
+html body .site:not(.contact-page) .site-nav :is(.brand,.desktop-nav a) { color:#f1efe9 !important; }
+html body .site:not(.contact-page) .site-nav .site-logo-image { filter:brightness(0) invert(1) !important; }
 html body .services-index .service-list article { grid-template-columns:minmax(0,1fr) 24px;gap:24px;min-height:220px;padding-block:32px; }
 html body .services-index .service-list article p { max-width:580px;line-height:1.7;font-size:15px; }
 html body .services-index .service-list article a { font-size:13px !important;line-height:1.5;letter-spacing:0;text-transform:none;border-radius:999px; }
@@ -402,4 +400,14 @@ html body .project-meta h3 { margin:0 0 6px !important;line-height:1.45 !importa
 html body .section-head { margin-bottom:24px !important; }
 html body .section-head h2 { font-size:32px !important;line-height:1.3 !important; }
 html body .project-meta h3 { font-size:16px !important; }
+}
+/* Slightly larger selected-work covers, with the next item still visible. */
+@media(max-width:700px){
+html body .site .work .portfolio-grid.portfolio-carousel .project-card { flex:0 0 calc((100% - 24px) / 2.7) !important;width:calc((100% - 24px) / 2.7) !important;min-width:calc((100% - 24px) / 2.7) !important; }
+}
+@media(min-width:701px) and (max-width:1100px){
+html body .site .work .portfolio-grid.portfolio-carousel .project-card { flex:0 0 calc((100% - 30px) / 3.7) !important;width:calc((100% - 30px) / 3.7) !important;min-width:calc((100% - 30px) / 3.7) !important; }
+}
+@media(min-width:1101px){
+html body .site .work .portfolio-grid.portfolio-carousel .project-card { flex:0 0 calc((100% - 60px) / 5.5) !important;width:calc((100% - 60px) / 5.5) !important;min-width:calc((100% - 60px) / 5.5) !important; }
 }
