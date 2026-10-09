@@ -100,3 +100,11 @@
 @media(prefers-reduced-motion:reduce){
  .home-motion.motion-ready .work :is(.project-card,.project-media,.section-head h2,.filter-row button){animation:none !important;clip-path:none !important;rotate:none !important;translate:none !important;scale:none !important;opacity:1 !important;}
 }
+
+/* Brand marks settle into the grid in a short, staggered sequence. */
+.home-motion.motion-ready .brands .brand-card.in-view img { animation:brand-logo-arrive .9s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(.15s + var(--motion-delay,0ms)); }
+.home-motion.motion-ready .brands.in-view .section-head h2 { animation:work-title-uncover .85s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes brand-logo-arrive { from{opacity:0;scale:.82;clip-path:inset(0 50%)}to{opacity:1;scale:1;clip-path:inset(0)} }
+@media(prefers-reduced-motion:reduce){
+ .home-motion.motion-ready .brands :is(.brand-card img,.section-head h2){animation:none !important;clip-path:none !important;scale:none !important;translate:none !important;opacity:1 !important;}
+}

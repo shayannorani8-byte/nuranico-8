@@ -1351,7 +1351,8 @@ export default function HomePage() {
 
               return (
                 <div
-                  className="brand-card"
+                  className="brand-card motion-item"
+                  style={{['--motion-delay' as string]:`${Math.min(index,10) * 90}ms`}}
                   key={brand.id}
                 >
                   {brand.logo_url ? (
