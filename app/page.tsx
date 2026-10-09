@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { usePageTexts } from '../lib/usePageTexts';
 import './home.css';
 import './home-mobile.css';
+import './home-motion.css';
 import ArrowUpRight from '../components/ArrowUpRight';
 import { localizedValue, isVideoAsset } from '../lib/media';
 import { useSiteData } from '../components/SiteData';
@@ -214,6 +215,7 @@ export default function HomePage() {
   const clientsCarouselRef = useRef<HTMLDivElement>(null);
   const [heroIndex, setHeroIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [motionReady,setMotionReady] = useState(false);
 
   useEffect(() => {
     loadSite();
@@ -265,13 +267,14 @@ export default function HomePage() {
 
   useEffect(() => {
     const nodes = Array.from(
-      document.querySelectorAll<HTMLElement>('.reveal')
+      document.querySelectorAll<HTMLElement>('.home-motion .reveal, .home-motion .motion-item')
     );
 
-    if (!('IntersectionObserver' in window)) {
+    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       nodes.forEach((node) => node.classList.add('in-view'));
       return;
     }
+    setMotionReady(true);
 
     const observer = new IntersectionObserver(
       (entries) =>
@@ -281,13 +284,14 @@ export default function HomePage() {
             observer.unobserve(entry.target);
           }
         }),
-      { threshold: 0.12 }
+      { threshold: 0.06,rootMargin:'0px 0px -5% 0px' }
     );
 
     nodes.forEach((node) => observer.observe(node));
-
-    return () => observer.disconnect();
-  }, [loading]);
+    const loops=new IntersectionObserver(entries=>entries.forEach(entry=>entry.target.classList.toggle('motion-active',entry.isIntersecting)),{threshold:0.01});
+    document.querySelectorAll('.home-motion .service-card').forEach(node=>loops.observe(node));
+    return () => {observer.disconnect();loops.disconnect();};
+  }, [loading,filter,portfolio.length,brands.length,services.length]);
 
   const heroSlides = useMemo(() => {
     const availableManaged=managedHero.filter(item=>!failedHeroImages.includes(item.cover_url || ''));
@@ -723,7 +727,7 @@ export default function HomePage() {
 
 
     <main
-      className="site"
+      className={`site home-motion${motionReady ? ' motion-ready' : ''}`}
       lang={lang}
       dir={lang === 'fa' ? 'rtl' : 'ltr'}
       style={{
@@ -934,13 +938,14 @@ export default function HomePage() {
             return (
               <Link
                 href={href}
-                className="service-card"
+                className="service-card motion-item"
                 key={service.id}
                 style={{
                   display: 'grid',
                   color: 'inherit',
                   textDecoration: 'none',
                   cursor: 'pointer',
+                  ['--motion-delay' as string]:`${index * 120}ms`,
                 }}
               >
                 <div className="service-card-top">
@@ -1143,11 +1148,12 @@ export default function HomePage() {
 
                 return (
                   <Link
-                    className={`project-card ${item.media_count && item.media_count > 1 ? 'has-gallery' : ''} card-${
+                    className={`project-card motion-item ${item.media_count && item.media_count > 1 ? 'has-gallery' : ''} card-${
                       index % 3
                     }`}
                     href={href}
                     key={item.id}
+                    style={{['--motion-delay' as string]:`${Math.min(index,8) * 65}ms`}}
                   >
                     <div className="project-media"><MediaCountBadge count={item.media_count} lang={lang} />
                       {item.cover_url ? (
@@ -1363,7 +1369,7 @@ export default function HomePage() {
         </div>
       </section>}
 
-      <footer className="footer">
+      <footer className="footer reveal">
         <div>
           <a
             className="brand"
