@@ -1103,7 +1103,7 @@
 
   /* ARROW */
   .site-nav .mobile-menu a::after {
-    content: '↗';
+    content: none;
 
     display: flex;
 

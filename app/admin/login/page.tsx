@@ -66,7 +66,7 @@ export default async function AdminLoginPage({
             <LoginSubmit />
           </form>
         </section>
-        <Link href="/" className="login-back">بازگشت به سایت <span aria-hidden="true">↗</span></Link>
+        <Link href="/" className="login-back">بازگشت به سایت </Link>
       </div>
     </main>
   );

@@ -1,8 +1,8 @@
 'use client';
 import ProjectGallery from '../../../components/ProjectGallery';
+import BtsGallery from '../../../components/BtsGallery';
 import {projectSections,sectionName} from '../../../components/PortfolioCard';
 import PortfolioFooter from '../../../components/PortfolioFooter';
-import ArrowUpRight from '../../../components/ArrowUpRight';
 import SiteHeader from '../../../components/SiteHeader';
 
 
@@ -431,7 +431,7 @@ export default function ProjectPage() {
     return <main className="project-page"><SiteHeader /><div className="project-not-found">
       <ContentStatus error onRetry={() => setRetry(value => value + 1)} retryLabel={text('retry', 'Try again', 'تلاش دوباره')}>
         {text('load_error', 'This project could not be loaded.', 'این پروژه بارگذاری نشد.')}
-      </ContentStatus><Link href="/work">{text('return_to_work', 'Return to work ↗', 'بازگشت به پروژه‌ها ↗')}</Link>
+      </ContentStatus><Link href="/work">{text('return_to_work', 'Return to work', 'بازگشت به پروژه‌ها')}</Link>
     </div></main>;
   }
   if (!project) {
@@ -456,8 +456,8 @@ export default function ProjectPage() {
           <Link href="/work">
             {text(
               'return_to_work',
-              'Return to work ↗',
-              'بازگشت به پروژه‌ها ↗'
+              'Return to work',
+              'بازگشت به پروژه‌ها'
             )}
           </Link>
         </div>
@@ -493,7 +493,7 @@ export default function ProjectPage() {
 
       <ProjectGallery presentation="sequence" title={text('gallery_label','Gallery','گالری')} lang={lang} renderVideo={url=><VideoPlayer src={url} sources={url===effectiveVideoUrl ? project.media_sources : undefined} poster={url===effectiveVideoUrl ? project.cover_url : undefined}/>} items={Array.from(new Set([...(project.media_url ? [project.media_url] : []),...attachedMedia.map(item=>item.file_url),...(project.gallery_urls || []),...(!project.media_url && !attachedMedia.length ? gallery : [])])).map((url,index)=>({url,video:isVideoAsset({file_url:url}),label:`${title} ${index+1}`}))}/>
 
-      {behindScenes.length > 0 && <><h2 id="project-bts" className="project-bts-title">{lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'}</h2><ProjectGallery title={lang === 'fa' ? 'پشت صحنه پروژه' : 'Project behind the scenes'} lang={lang} renderVideo={url => <VideoPlayer src={url} />} items={behindScenes.map((item,index) => ({url:item.file_url,video:isVideoAsset(item),label:`${title} — ${lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'} ${index+1}`}))} /></>}
+      {behindScenes.length > 0 && <><h2 id="project-bts" className="project-bts-title">{lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'}</h2><BtsGallery title={lang === 'fa' ? 'پشت صحنه پروژه' : 'Project behind the scenes'} lang={lang} renderVideo={url => <VideoPlayer src={url} />} items={behindScenes.map((item,index) => ({url:item.file_url,video:isVideoAsset(item),label:`${title} — ${lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'} ${index+1}`}))} /></>}
 
       <section className="project-end">
         <Link href="/work">
@@ -502,7 +502,7 @@ export default function ProjectPage() {
             'Explore more work',
             'مشاهده پروژه‌های بیشتر'
           )}</span>
-          <span className="project-more-icon" aria-hidden="true"><ArrowUpRight /></span>
+
         </Link>
       </section>
 

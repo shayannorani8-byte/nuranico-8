@@ -1,3 +1,4 @@
+import { isBilingualEnabled, LANGUAGE_SETTINGS_PAGE, LANGUAGE_SETTINGS_KEY } from '@/lib/site-language-settings';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSupabase } from '@/lib/supabase-admin';
 import { requireAdmin, jsonError } from '@/lib/admin-api';
@@ -206,10 +207,10 @@ export async function GET(request: NextRequest) {
         destinations: destinationMap,
         projectMedia: projectMediaMap,
         content: content.data || null,
-        settings: settings.data || null,
+        settings: { ...(settings.data || {}), bilingual_enabled: isBilingualEnabled(pageTexts.data || []) },
         fonts: fonts.data || [],
         btsMedia: btsMedia.data || [],
-        pageTexts: pageTexts.data || [],
+        pageTexts: (pageTexts.data || []).filter(row => row.page !== LANGUAGE_SETTINGS_PAGE),
       });
     }
 
@@ -224,7 +225,7 @@ export async function GET(request: NextRequest) {
       if (result.error) throw result.error;
 
       return NextResponse.json({
-        rows: result.data || [],
+        rows: (result.data || []).filter(row => row.page !== LANGUAGE_SETTINGS_PAGE),
       });
     }
 
@@ -354,7 +355,7 @@ export async function POST(request: NextRequest) {
       if (result.error) throw result.error;
 
       return NextResponse.json({
-        rows: result.data || [],
+        rows: (result.data || []).filter(row => row.page !== LANGUAGE_SETTINGS_PAGE),
       });
     }
 
@@ -520,7 +521,15 @@ export async function POST(request: NextRequest) {
 
       if (result.error) throw result.error;
 
-      return NextResponse.json({ row: result.data });
+      const bilingual = body.row?.bilingual_enabled !== false;
+      const existing = await db.from('page_texts').select('id').eq('page', LANGUAGE_SETTINGS_PAGE).eq('text_key', LANGUAGE_SETTINGS_KEY).maybeSingle();
+      if (existing.error) throw existing.error;
+      const languageRow = { page: LANGUAGE_SETTINGS_PAGE, text_key: LANGUAGE_SETTINGS_KEY, label: 'Website language mode', value_en: String(bilingual), value_fa: String(bilingual), sort_order: 0 };
+      const languageResult = existing.data
+        ? await db.from('page_texts').update(languageRow).eq('id', existing.data.id)
+        : await db.from('page_texts').insert(languageRow);
+      if (languageResult.error) throw languageResult.error;
+      return NextResponse.json({ row: { ...result.data, bilingual_enabled: bilingual } });
     }
 
     throw new Error('Unknown resource');

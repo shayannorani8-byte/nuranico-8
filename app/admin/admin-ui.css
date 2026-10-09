@@ -319,3 +319,8 @@
 .admin-discard-dialog h2 { margin:0 0 12px;font-size:20px; }
 .admin-discard-dialog p { color:#9cadc1;line-height:1.8;margin:0 0 24px; }
 .admin-discard-dialog>div { display:flex;gap:12px;flex-wrap:wrap; }
+.admin .bts-type-switch { display:flex;gap:10px;margin-bottom:18px; }
+.admin .bts-type-switch button { display:flex;align-items:center;gap:10px;border:1px solid #ffffff30;border-radius:8px;padding:10px 16px;background:transparent;color:inherit;font:inherit;cursor:pointer; }
+.admin .bts-type-switch button[aria-pressed='true'] { background:#bdd0ff;color:#101827;border-color:#bdd0ff; }
+.admin .bts-type-switch button span { opacity:.7;font-size:12px; }
+.admin .bts-type-switch button:disabled { opacity:.5;cursor:wait; }

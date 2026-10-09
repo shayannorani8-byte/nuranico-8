@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createPortal } from 'react-dom';
-import ArrowUpRight from './ArrowUpRight';
 import { usePageTexts } from '../lib/usePageTexts';
+import { useSiteLanguage } from './SiteLanguage';
 import { useSiteData } from './SiteData';
 
 export default function SiteHeader() {
   const { lang, setLang, text } = usePageTexts('global');
+  const { bilingual } = useSiteLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -140,7 +141,7 @@ export default function SiteHeader() {
       </nav>
 
       <div className="nav-actions">
-        <button
+        {bilingual && <button
           className="lang-switch"
           type="button"
           onClick={() => setLang(lang === 'en' ? 'fa' : 'en')}
@@ -151,7 +152,7 @@ export default function SiteHeader() {
           )}
         >
           {lang === 'en' ? 'FA' : 'EN'}
-        </button>
+        </button>}
 
         <Link
           className="nav-cta"
@@ -181,7 +182,7 @@ export default function SiteHeader() {
               {logoUrl ? <img src={logoUrl} alt="NURANICO" /> : <span lang="en">NURANICO</span>}
             </Link>
             <div className="full-menu-actions">
-              <button type="button" onClick={() => setLang(lang === 'en' ? 'fa' : 'en')} aria-label={text('change_language', 'Change language', 'تغییر زبان')}>{lang === 'en' ? 'FA' : 'EN'}</button>
+              {bilingual && <button type="button" onClick={() => setLang(lang === 'en' ? 'fa' : 'en')} aria-label={text('change_language', 'Change language', 'تغییر زبان')}>{lang === 'en' ? 'FA' : 'EN'}</button>}
               <button ref={closeButtonRef} type="button" onClick={closeMenu} aria-label={text('close_menu', 'Close menu', 'بستن منو')}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="m6 6 12 12M18 6 6 18" /></svg></button>
             </div>
           </div>
@@ -192,8 +193,8 @@ export default function SiteHeader() {
               ['/about', t.about, pathname === '/about'],
               ['/#brands', t.brands, false],
               ['/contact', t.contact, pathname === '/contact'],
-            ].map(([href, label, active]) => <Link key={String(href)} href={String(href)} onClick={closeMenu} aria-current={active ? 'page' : undefined}><span>{String(label)}</span><ArrowUpRight /></Link>)}
-            <Link className="full-menu-project" href={startProjectUrl || '/contact'} onClick={closeMenu}><span>{t.cta}</span><ArrowUpRight /></Link>
+            ].map(([href, label, active]) => <Link key={String(href)} href={String(href)} onClick={closeMenu} aria-current={active ? 'page' : undefined}><span>{String(label)}</span></Link>)}
+            <Link className="full-menu-project" href={startProjectUrl || '/contact'} onClick={closeMenu}><span>{t.cta}</span></Link>
           </nav>
         </dialog>, document.body
       )}

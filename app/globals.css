@@ -890,7 +890,7 @@ button {
   /* ARROWS */
 
   .global-header .global-mobile a::after {
-    content: "↗";
+    content: none;
 
     justify-self: end;
 
@@ -1364,7 +1364,7 @@ button {
   .global-mobile a:nth-child(5)::before { content: "05"; }
 
   .global-mobile a::after {
-    content: "↗";
+    content: none;
 
     justify-self: end;
 

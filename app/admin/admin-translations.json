@@ -418,5 +418,13 @@
   "Unsaved project changes": "تغییرات ذخیره‌نشدهٔ پروژه",
   "Your project has changes that are not saved. Keep editing or discard them.": "تغییرات این پروژه هنوز ذخیره نشده‌اند. می‌توانید ویرایش را ادامه دهید یا تغییرات را کنار بگذارید.",
   "Keep editing": "ادامهٔ ویرایش",
-  "Changes have not been saved. Keep editing or discard them.": "تغییرات هنوز ذخیره نشده‌اند. می‌توانید ویرایش را ادامه دهید یا تغییرات را کنار بگذارید."
+  "Changes have not been saved. Keep editing or discard them.": "تغییرات هنوز ذخیره نشده‌اند. می‌توانید ویرایش را ادامه دهید یا تغییرات را کنار بگذارید.",
+  "BTS photos": "عکس‌های پشت‌صحنه",
+  "BTS videos": "ویدیوهای پشت‌صحنه",
+  "+ Upload photos": "+ آپلود عکس",
+  "+ Upload videos": "+ آپلود ویدیو",
+  "Website language": "زبان سایت",
+  "Bilingual website": "سایت دوزبانه",
+  "English and Persian, with a language switch.": "انگلیسی و فارسی، با امکان تغییر زبان.",
+  "English only. The language switch is hidden.": "فقط انگلیسی؛ دکمه تغییر زبان پنهان می‌شود."
 }

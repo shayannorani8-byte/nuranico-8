@@ -21,10 +21,12 @@ type BtsItem = {
 };
 export default function FilmPage() {
   const { lang, text } = usePageTexts("film");
+  const [kind,setKind]=useState<"photo"|"video">("photo");
   const [items, setItems] = useState<BtsItem[]>([]),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(false),
     [retry, setRetry] = useState(0);
+  const filtered=items.filter(item=>item.kind===kind);
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -59,11 +61,11 @@ export default function FilmPage() {
         <section className="film-bts portfolio-bts-preview">
           <header>
             <h2>{text("bts_title", "Behind the scenes.", "پشت صحنه.")}</h2>
-            <Link href="/work/behind-the-scenes">
-              {text("view_all", "View all", "مشاهده همه")}{" "}
-              <span aria-hidden="true">↗</span>
+            <Link className="bts-view-all" href={`/work/behind-the-scenes?type=${kind}`}>
+              <span>{text("view_all", "View all", "مشاهده همه").replace(/[↗↖➚➜→]/g,'').trim()}</span>
             </Link>
           </header>
+          <div className="bts-type-switch" role="group" aria-label={lang==='fa' ? 'نوع پشت‌صحنه' : 'Behind-the-scenes type'}>{(['photo','video'] as const).map(type=><button type="button" key={type} aria-pressed={kind===type} onClick={()=>setKind(type)}>{lang==='fa' ? type==='photo' ? 'عکس‌ها' : 'ویدیوها' : type==='photo' ? 'Photos' : 'Videos'} <span>{loading ? '…' : items.filter(item=>item.kind===type).length}</span></button>)}</div>
           {loading ? (
             <ContentStatus>
               {text("loading", "Loading…", "در حال بارگذاری…")}
@@ -78,7 +80,7 @@ export default function FilmPage() {
             </ContentStatus>
           ) : (
             <div className="portfolio-library-grid">
-              {items.slice(0, 4).map((item) => (
+              {filtered.slice(0, 4).map((item) => (
                 <PortfolioCard
                   key={item.id}
                   lang={lang}
@@ -109,6 +111,7 @@ export default function FilmPage() {
               ))}
             </div>
           )}
+          {!loading && !error && !filtered.length && <p className="bts-type-empty">{lang==='fa' ? kind==='photo' ? 'هنوز عکس پشت‌صحنه‌ای منتشر نشده است.' : 'هنوز ویدیوی پشت‌صحنه‌ای منتشر نشده است.' : kind==='photo' ? 'No behind-the-scenes photos yet.' : 'No behind-the-scenes videos yet.'}</p>}
         </section>
       )}
       <PortfolioFooter />

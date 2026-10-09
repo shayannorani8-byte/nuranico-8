@@ -10,7 +10,8 @@ import { usePageTexts } from '../lib/usePageTexts';
 import './home.css';
 import './home-mobile.css';
 import './home-motion.css';
-import ArrowUpRight from '../components/ArrowUpRight';
+import { cleanUiLabel } from '../lib/ui-label';
+import ServiceWriting from '../components/ServiceWriting';
 import { localizedValue, isVideoAsset } from '../lib/media';
 import { useSiteData } from '../components/SiteData';
 type Lang = 'en' | 'fa';
@@ -825,13 +826,13 @@ export default function HomePage() {
             href="/contact"
           >
             <span>
-              {lang === 'fa'
+              {cleanUiLabel(lang === 'fa'
                 ? (currentHero?.hero_label ? currentHero.button_text_fa : '') || content.hero_button_fa ||
                   'شروع پروژه'
                 : (currentHero?.hero_label ? currentHero.button_text_en : '') || content.hero_button_en ||
-                  'Start a project'}
+                  'Start a project')}
             </span>
-            <b aria-hidden="true"><ArrowUpRight /></b>
+
           </a>
         </div>
 
@@ -948,8 +949,9 @@ export default function HomePage() {
                   ['--motion-delay' as string]:`${index * 120}ms`,
                 }}
               >
+                <svg className="service-card-frame" aria-hidden="true"><rect x="1" y="1" rx="10" pathLength="1" /></svg>
                 <div className="service-card-top">
-                  <b aria-hidden="true"><ArrowUpRight /></b>
+
                 </div>
 
                 <div
@@ -963,16 +965,16 @@ export default function HomePage() {
                       className="service-art-film"
                     >
                       <g className="art-main">
-                        <rect x="43" y="34" width="116" height="64" rx="2" />
-                        <rect x="72" y="22" width="116" height="64" rx="2" />
-                        <rect x="101" y="10" width="116" height="64" rx="2" />
+                        <rect pathLength={1} x="43" y="34" width="116" height="64" rx="2" />
+                        <rect pathLength={1} x="72" y="22" width="116" height="64" rx="2" />
+                        <rect pathLength={1} x="101" y="10" width="116" height="64" rx="2" />
                       </g>
 
                       <g className="art-detail">
-                        <path d="M116 42H173" />
-                        <path d="M116 50H157" />
-                        <circle cx="196" cy="91" r="3" />
-                        <path d="M188 91H153" />
+                        <path pathLength={1} d="M116 42H173" />
+                        <path pathLength={1} d="M116 50H157" />
+                        <circle pathLength={1} cx="196" cy="91" r="3" />
+                        <path pathLength={1} d="M188 91H153" />
                       </g>
                     </svg>
                   ) : index === 1 ? (
@@ -982,22 +984,22 @@ export default function HomePage() {
                       className="service-art-photo"
                     >
                       <g className="art-main">
-                        <circle cx="130" cy="60" r="42" />
-                        <circle cx="130" cy="60" r="23" />
+                        <circle pathLength={1} cx="130" cy="60" r="42" />
+                        <circle pathLength={1} cx="130" cy="60" r="23" />
 
-                        <path d="M130 18L146 42" />
-                        <path d="M166 39L145 52" />
-                        <path d="M172 76L145 72" />
-                        <path d="M130 102L119 78" />
-                        <path d="M94 81L115 68" />
-                        <path d="M88 44L115 48" />
+                        <path pathLength={1} d="M130 18L146 42" />
+                        <path pathLength={1} d="M166 39L145 52" />
+                        <path pathLength={1} d="M172 76L145 72" />
+                        <path pathLength={1} d="M130 102L119 78" />
+                        <path pathLength={1} d="M94 81L115 68" />
+                        <path pathLength={1} d="M88 44L115 48" />
                       </g>
 
                       <g className="art-detail">
-                        <path d="M72 25H91M72 25V44" />
-                        <path d="M188 25H169M188 25V44" />
-                        <path d="M72 95H91M72 95V76" />
-                        <path d="M188 95H169M188 95V76" />
+                        <path pathLength={1} d="M72 25H91M72 25V44" />
+                        <path pathLength={1} d="M188 25H169M188 25V44" />
+                        <path pathLength={1} d="M72 95H91M72 95V76" />
+                        <path pathLength={1} d="M188 95H169M188 95V76" />
                       </g>
                     </svg>
                   ) : (
@@ -1007,28 +1009,28 @@ export default function HomePage() {
                       className="service-art-content"
                     >
                       <g className="art-main">
-                        <rect x="63" y="21" width="58" height="36" rx="2" />
-                        <rect x="128" y="21" width="69" height="36" rx="2" />
-                        <rect x="63" y="64" width="82" height="35" rx="2" />
-                        <rect x="152" y="64" width="45" height="35" rx="2" />
+                        <rect pathLength={1} x="63" y="21" width="58" height="36" rx="2" />
+                        <rect pathLength={1} x="128" y="21" width="69" height="36" rx="2" />
+                        <rect pathLength={1} x="63" y="64" width="82" height="35" rx="2" />
+                        <rect pathLength={1} x="152" y="64" width="45" height="35" rx="2" />
                       </g>
 
                       <g className="art-detail">
-                        <circle cx="92" cy="39" r="5" />
-                        <path d="M143 34H180" />
-                        <path d="M143 43H168" />
-                        <path d="M77 78H130" />
-                        <path d="M77 86H112" />
-                        <path d="M166 76L184 87" />
-                        <path d="M184 76L166 87" />
+                        <circle pathLength={1} cx="92" cy="39" r="5" />
+                        <path pathLength={1} d="M143 34H180" />
+                        <path pathLength={1} d="M143 43H168" />
+                        <path pathLength={1} d="M77 78H130" />
+                        <path pathLength={1} d="M77 86H112" />
+                        <path pathLength={1} d="M166 76L184 87" />
+                        <path pathLength={1} d="M184 76L166 87" />
                       </g>
                     </svg>
                   )}
                 </div>
 
                 <div className="service-card-copy">
-                  <h3>{title}</h3>
-                  <p>{description}</p>
+                  <ServiceWriting as="h3" text={title}/>
+                  <ServiceWriting as="p" text={description}/>
                 </div>
               </Link>
             );
@@ -1183,7 +1185,7 @@ export default function HomePage() {
                             'مشاهده پروژه'
                           )}
                         </span>
-                        <b aria-hidden="true"><ArrowUpRight /></b>
+
                       </div>
                     </div>
 

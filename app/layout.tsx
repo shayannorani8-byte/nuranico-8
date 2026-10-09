@@ -1,4 +1,5 @@
 import './globals.css';
+import { isBilingualEnabled } from '../lib/site-language-settings';
 import './home.css';
 import './work/project.css';
 import './content-page.css';
@@ -140,7 +141,7 @@ export default async function RootLayout({
                   publisher: {
                     '@id': 'https://nuranico.com/#organization',
                   },
-                  inLanguage: ['en', 'fa'],
+                  inLanguage: isBilingualEnabled(typography.pageTexts) ? ['en', 'fa'] : ['en'],
                 },
               ],
             }),

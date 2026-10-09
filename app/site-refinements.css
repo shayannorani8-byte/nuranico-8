@@ -393,6 +393,17 @@ html body .portfolio-bts-preview { max-width:1280px;margin-inline:auto;padding:0
 .portfolio-bts-preview h2 { margin:0;font-size:28px;line-height:1.4; }
 html body .portfolio-bts-preview header>a { padding:10px 18px;border:1px solid #ffffff35;border-radius:999px;color:#eee;font-size:13px !important;letter-spacing:0 !important;text-transform:none !important;text-decoration:none; }
 .project-bts-title { scroll-margin-top:110px; }
+.bts-type-switch { display:flex;gap:10px;margin:0 0 24px;flex-wrap:wrap; }
+html body .bts-type-switch button { display:inline-flex;align-items:center;gap:10px;padding:10px 17px;border:1px solid #ffffff30;border-radius:999px;background:transparent;color:#eee;font:inherit;font-size:14px;cursor:pointer; }
+html body .bts-type-switch button[aria-pressed='true'] { background:#e9e6df;color:#171716;border-color:#e9e6df; }
+.bts-type-switch button span { opacity:.65;font-size:12px; }
+.bts-type-switch button:focus-visible { outline:2px solid currentColor;outline-offset:3px; }
+.bts-type-switch button:disabled { opacity:.5;cursor:wait; }
+.bts-type-empty { color:#aaa;font-size:14px;line-height:1.7;padding:16px 0 32px; }
+html body .portfolio-bts-preview header>a.bts-view-all { display:inline-flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap;flex-shrink:0;min-height:42px;padding:10px 15px;line-height:1.4 !important;text-transform:none !important; }
+html body .bts-view-all svg { display:block;width:17px;height:17px;flex-shrink:0; }
+html body .bts-view-all::before,html body .bts-view-all::after { content:none !important; }
+.portfolio-bts-preview>header h2 { min-width:0; }
 @media(max-width:700px){html body .portfolio-bts-preview{padding:0 18px 48px}.portfolio-bts-preview h2{font-size:24px}.portfolio-bts-preview>header{gap:16px}}
 html body .project-meta { display:block !important; }
 html body .project-meta h3 { margin:0 0 6px !important;line-height:1.45 !important; }
@@ -411,3 +422,8 @@ html body .site .work .portfolio-grid.portfolio-carousel .project-card { flex:0 
 @media(min-width:1101px){
 html body .site .work .portfolio-grid.portfolio-carousel .project-card { flex:0 0 calc((100% - 60px) / 5.5) !important;width:calc((100% - 60px) / 5.5) !important;min-width:calc((100% - 60px) / 5.5) !important; }
 }
+
+.project-page .project-loading { min-height:100svh;align-items:center;text-align:center;padding:100px 24px; }
+
+/* Text-only action buttons. */
+.site .primary-button { justify-content:center !important;gap:0 !important; }

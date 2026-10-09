@@ -10,7 +10,7 @@ export default function NotFound() {
     <section className="project-not-found">
       <p>404 / NURANICO</p>
       <h1>{lang === 'fa' ? 'صفحه پیدا نشد.' : 'Page not found.'}</h1>
-      <Link href="/">{lang === 'fa' ? 'بازگشت به خانه ↗' : 'Back home ↗'}</Link>
+      <Link href="/">{lang === 'fa' ? 'بازگشت به خانه' : 'Back home'}</Link>
     </section>
   </main>;
 }

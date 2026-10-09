@@ -69,7 +69,7 @@ export default function ContactPage() {
           dir="ltr"
           href={`mailto:${email}`}
         >
-          {email} ↗
+          {email}
         </a>
 
         {phone && <a className="contact-link" lang="en" dir="ltr" href={`tel:${phone.replace(/[۰-۹]/g, digit => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))).replace(/[٠-٩]/g, digit => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit))).replace(/[^0-9+]/g, '')}`}>{phone}</a>}
@@ -159,8 +159,8 @@ export default function ContactPage() {
         <Link href="/">
           {text(
             'back_home',
-            'Back home ↗',
-            'بازگشت به خانه ↗'
+            'Back home',
+            'بازگشت به خانه'
           )}
         </Link>
       </footer>

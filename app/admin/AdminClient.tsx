@@ -6,6 +6,7 @@ import { AdminLocaleProvider, useAdminLocale } from './AdminLocale';
 import {projectSections,sectionName} from '../../components/PortfolioCard';
 import ProjectMediaEditor from './ProjectMediaEditor';
 import MediaPicker, { type MediaAsset } from './MediaPicker';
+import BtsMediaPicker from './BtsMediaPicker';
 import { isVideoAsset } from '../../lib/media';
 
 type Section =
@@ -88,6 +89,7 @@ type Service = {
 };
 
 type Settings = {
+  bilingual_enabled: boolean;
   id?: number;
   heading_color: string;
   logo_color: string;
@@ -216,6 +218,7 @@ const destinations = [
 ] as const;
 
 const emptySettings: Settings = {
+  bilingual_enabled: true,
   heading_color: '#f1efe9',
   logo_color: '#f1efe9',
   link_color: '#f1efe9',
@@ -418,7 +421,7 @@ function AdminWorkspace() {
   const [projectStep, setProjectStep] = useState(0);
   const [uploadsActive,setUploadsActive]=useState(0);
   const projectUploadBusy=(busy:boolean)=>setUploadsActive(current=>Math.max(0,current+(busy ? 1 : -1)));
-  const [settingsTab,setSettingsTab] = useState('identity');
+  const [settingsTab,setSettingsTab] = useState('language');
   const [savedSettings,setSavedSettings] = useState<Settings | null>(null);
   const [fontSearch,setFontSearch] = useState('');
   const projectEditorSession = useRef(0);
@@ -942,12 +945,12 @@ function AdminWorkspace() {
             </button>)}
           </div>)}
         </nav>
-        <div className="sidebar-footer"><span>{t("Website management")}</span><button className="logout" onClick={logout}>{t("Log out")}<span aria-hidden="true">↗</span></button></div>
+        <div className="sidebar-footer"><span>{t("Website management")}</span><button className="logout" onClick={logout}>{t("Log out")}</button></div>
       </aside>
       <section className="workspace" aria-label={t(activeSection.label)}>
         <header className="admin-topbar">
           <div className="admin-breadcrumb"><button className="admin-menu-toggle" aria-label={t("Toggle navigation")} aria-controls="admin-sidebar" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(!navigationOpen)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button><span>{t("Workspace")}</span><span aria-hidden="true">/</span><strong>{t(activeSection.label)}</strong></div>
-          <button className="admin-language-toggle" type="button" onClick={toggle} aria-label={lang === 'fa' ? 'Switch admin to English' : 'تغییر زبان پنل به فارسی'}>{lang === 'fa' ? 'EN' : 'FA'}</button><a className="admin-site-link" href="/" target="_blank" rel="noreferrer">{t("View website")}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12" /></svg></a>
+          <button className="admin-language-toggle" type="button" onClick={toggle} aria-label={lang === 'fa' ? 'Switch admin to English' : 'تغییر زبان پنل به فارسی'}>{lang === 'fa' ? 'EN' : 'FA'}</button><a className="admin-site-link" href="/" target="_blank" rel="noreferrer">{t("View website")}</a>
         </header>
         <div className="workspace-content">
         {(message || error) && <div role={error ? 'alert' : 'status'} className={error ? 'notice error' : 'notice'}>{t(error || message)}</div>}
@@ -963,7 +966,7 @@ function AdminWorkspace() {
                 ['brands', t("Brands"), brands.length, t("The people you work with")],
                 ['services', t("Services"), services.length, t("What your studio offers")],
               ] as [Section, string, number, string][]).map(([id, label, value, detail]) => (
-                <button className="stat" key={id} onClick={() => navigateTo(id)}><span>{t(label)}<span aria-hidden="true">↗</span></span><b>{value}</b><small>{t(detail)}</small></button>
+                <button className="stat" key={id} onClick={() => navigateTo(id)}><span>{t(label)}</span><b>{value}</b><small>{t(detail)}</small></button>
               ))}
             </div>
             <div className="dashboard-section-head"><h2>{t("A place for every update")}</h2><p>{t("Choose where you want to start.")}</p></div>
@@ -981,9 +984,9 @@ function AdminWorkspace() {
         {section === 'bts' && <>
           <SectionHeader title={t("Behind the Scenes")} description="Behind-the-scenes files belong to their projects. Open a project to upload, arrange and publish them." />
           <div className="panel"><h3>{t("Project galleries")}</h3><div className="list">{projects.filter(project => project.bts_media_ids?.length || (destMap[project.id] || []).includes('bts')).map(project => <article className="row-card" key={project.id}><div className="row-content"><b>{(lang === 'fa' ? project.title_fa || project.title_en : project.title_en || project.title_fa) || t("Untitled project")}</b><div className="sub">{project.bts_media_ids?.length ?? (projectMediaMap[project.id] || []).length} {t("files ·")}{project.published ? t("Published") : t("Draft")}</div></div><button className="ghost" onClick={() => {projectEditorSession.current++;openProject(project);setProjectStep(1);navigateTo('projects');}}>{t("Open project")}</button></article>)}</div><button className="ghost" onClick={() => navigateTo('projects')}>{t("Go to projects")}</button></div>
-          <details className="content-group"><summary>{t("Independent gallery ·")}{btsMediaIds.length} {t("files")}</summary><div className="content-group-body"><MediaUploader onBusyChange={projectUploadBusy} onDone={async uploaded => {await refreshMedia();if(uploaded?.length) setBtsMediaIds(current => Array.from(new Set([...current,...uploaded.map(item => item.id)])));}} onError={setError} />
+          <details className="content-group"><summary>{t("Independent gallery ·")}{btsMediaIds.length} {t("files")}</summary><div className="content-group-body">
           <div className="workflow-status"><span>{btsMediaIds.length} {t("files in this gallery")}</span><b>{btsMediaIds.join(',') === btsSavedIds.join(',') ? t("Published version") : t("Unpublished changes")}</b></div>
-          <div className="panel"><p className="hint">{t("For project behind-the-scenes, open the project → Media → Behind the scenes.")}</p><MediaPicker title={t("Choose & arrange media")} media={media} ids={btsMediaIds} onChange={setBtsMediaIds} multiple />
+          <div className="panel"><p className="hint">{t("For project behind-the-scenes, open the project → Media → Behind the scenes.")}</p><BtsMediaPicker busy={uploadsActive>0} media={media} ids={btsMediaIds} onChange={setBtsMediaIds} upload={kind=><MediaUploader kind={kind} onBusyChange={projectUploadBusy} onDone={async uploaded=>{await refreshMedia();if(uploaded?.length)setBtsMediaIds(current=>Array.from(new Set([...current,...uploaded.map(item=>item.id)])));}} onError={setError}/>}/>
             {btsMediaIds.some(id => !btsSavedIds.includes(id)) && <details className="content-group"><summary>{t("Name new files (optional)")}</summary><div className="content-group-body"><p className="hint">{t("Applies only to the newly added files in this gallery.")}</p><div className="grid2"><Input label="Brand name" value={btsBrandName} onChange={setBtsBrandName} /><Input label="Project name" value={btsProjectName} onChange={setBtsProjectName} /></div></div></details>}
             <div className="workflow-publish"><p>{t("Changes appear online after publishing.")}</p><button className="primary" disabled={saving || btsMediaIds.join(',') === btsSavedIds.join(',')} onClick={saveBts}>{saving ? t("Publishing…") : t("Publish gallery")}</button></div>
           </div>
@@ -1027,7 +1030,7 @@ function AdminWorkspace() {
                 {projectStep === 1 && <div className="workflow-body">
                   <div className="workflow-section-head"><div><h3>{t("Photos & videos")}</h3><p className="hint">{t("New uploads join this gallery. The first file becomes the main media if none is set.")}</p></div><MediaUploader onBusyChange={projectUploadBusy} onDone={uploaded => uploadProjectFiles(uploaded,currentEditorSession)} onError={setError} /></div>
                   <ProjectMediaEditor media={media} ids={Array.from(new Set([...(projectMediaMap[editingProject.id] || []),...media.filter(item=>item.file_url===editingProject.media_url).map(item=>item.id)]))} mainUrl={editingProject.media_url} coverUrl={editingProject.cover_url} onChange={ids=>updateProjectMedia(ids)} onMain={item=>setProjectMain(item)} onCover={item=>setEditingProject({...editingProject,cover_url:item.file_url})} onBehindScenes={id=>{updateProjectMedia(Array.from(new Set([...(projectMediaMap[editingProject.id] || []),...media.filter(item=>item.file_url===editingProject.media_url).map(item=>item.id)])).filter(value=>value!==id));setEditingProject(current=>current ? {...current,bts_media_ids:Array.from(new Set([...(current.bts_media_ids || []),id]))} : current);}}/>
-                  <details className="content-group"><summary>{t("Behind the scenes ·")}{(editingProject.bts_media_ids || []).length} {t("files")}</summary><div className="content-group-body"><p className="hint">{t("Photos and videos here appear under this project and on the Behind the scenes page when the project is published.")}</p><MediaUploader onBusyChange={projectUploadBusy} onDone={uploaded => uploadProjectFiles(uploaded,currentEditorSession,true)} onError={setError} /><MediaPicker title={t("Project behind the scenes")} media={media} ids={editingProject.bts_media_ids || []} onChange={ids => setEditingProject({...editingProject,bts_media_ids:ids})} multiple /></div></details>
+                  <details className="content-group"><summary>{t("Behind the scenes ·")}{(editingProject.bts_media_ids || []).length} {t("files")}</summary><div className="content-group-body"><p className="hint">{t("Photos and videos here appear under this project and on the Behind the scenes page when the project is published.")}</p><BtsMediaPicker busy={uploadsActive>0} media={media} ids={editingProject.bts_media_ids || []} onChange={ids=>setEditingProject(current=>current ? {...current,bts_media_ids:ids} : current)} upload={kind=><MediaUploader kind={kind} onBusyChange={projectUploadBusy} onDone={uploaded=>uploadProjectFiles(uploaded,currentEditorSession,true)} onError={setError}/>}/></div></details>
                   <details className="content-group"><summary>{t("Video preview & external links (optional)")}</summary><div className="content-group-body"><Toggle label="Enable card video preview" value={!!editingProject.preview_enabled} onChange={value => setEditingProject({...editingProject,preview_enabled:value})} /><MediaPicker title={t("Video preview")} kind="video" media={media} ids={media.filter(item => item.file_url === editingProject.preview_url).map(item => item.id)} onChange={ids => setEditingProject({...editingProject,preview_url:media.find(item => item.id === ids[0])?.file_url || '',preview_type:'video',preview_enabled:!!ids.length})} /><div className="grid2"><Input label="Cover URL" value={editingProject.cover_url || ''} onChange={v => setEditingProject({...editingProject,cover_url:v})} /><Input label="Main media URL" value={editingProject.media_url || ''} onChange={v => setEditingProject({...editingProject,media_url:v})} /></div></div></details>
                 </div>}
                 {projectStep === 2 && <div className="workflow-body">
@@ -1263,8 +1266,9 @@ function AdminWorkspace() {
 
         {section === 'settings' && <>
           <SectionHeader title={t("Settings")} description="Logo, colors and typography, organized by purpose." />
-          <nav className="settings-tabs" aria-label={t("Settings categories")}>{[['identity',t("Logo")],['colors',t("Colors")],['typography',t("Typography")],['fonts',t("Font library")]].map(([key,label]) => <button type="button" key={key} aria-pressed={settingsTab === key} className={settingsTab === key ? 'active' : ''} onClick={() => setSettingsTab(key)}>{label}</button>)}</nav>
+          <nav className="settings-tabs" aria-label={t("Settings categories")}>{[['language',t("Website language")],['identity',t("Logo")],['colors',t("Colors")],['typography',t("Typography")],['fonts',t("Font library")]].map(([key,label]) => <button type="button" key={key} aria-pressed={settingsTab === key} className={settingsTab === key ? 'active' : ''} onClick={() => setSettingsTab(key)}>{label}</button>)}</nav>
           <div className="editor settings-editor">
+            {settingsTab === 'language' && <section><h2>{t("Website language")}</h2><Toggle label="Bilingual website" value={settings.bilingual_enabled} onChange={value => setSettings({...settings,bilingual_enabled:value})} /><p className="hint">{settings.bilingual_enabled ? t("English and Persian, with a language switch.") : t("English only. The language switch is hidden.")}</p></section>}
             {settingsTab === 'identity' && <section aria-labelledby="settings-logo-title"><h2 id="settings-logo-title">{t("Website logo")}</h2><p className="hint">{t("Upload your logo or replace the current one.")}</p><LogoUploader value={settings.logo_url} onChange={url => setSettings({...settings,logo_url:url})} onError={setError} /></section>}
             {settingsTab === 'colors' && <section aria-labelledby="settings-colors-title"><h2 id="settings-colors-title">{t("Website colors")}</h2><p className="hint">{t("Choose the area you want to adjust.")}</p>{([
               [t("Backgrounds & text"), [['bg_color',t("Main background")],['surface_color',t("About background")],['card_bg',t("Cards background")],['text_color',t("Main text")],['heading_color',t("Headings")],['muted_color',t("Secondary text")],['tag_color',t("Labels")],['border_color',t("Borders")]]],
@@ -1693,7 +1697,7 @@ function LogoUploader({
 }
 
 
-function MediaUploader({ onDone, onError, onBusyChange }: { onBusyChange?:(busy:boolean)=>void; onDone: (uploaded?: MediaAsset[]) => Promise<void>; onError: (s: string) => void }) {
+function MediaUploader({ onDone, onError, onBusyChange, kind = 'all' }: { kind?:'all'|'image'|'video'; onBusyChange?:(busy:boolean)=>void; onDone: (uploaded?: MediaAsset[]) => Promise<void>; onError: (s: string) => void }) {
   const {t} = useAdminLocale();
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -1751,8 +1755,8 @@ function MediaUploader({ onDone, onError, onBusyChange }: { onBusyChange?:(busy:
 
   return (
     <div className="upload-control"><label className={busy ? 'upload disabled' : 'upload'}>
-      <input ref={input} type="file" accept="image/*,video/*" multiple disabled={busy} onChange={e => upload(e.target.files)} />
-      {busy ? progress || t("Uploading…") : t("+ Upload photos / videos")}
+      <input ref={input} type="file" accept={kind==='image' ? 'image/*' : kind==='video' ? 'video/*' : 'image/*,video/*'} multiple disabled={busy} onChange={e => upload(e.target.files)} />
+      {busy ? progress || t("Uploading…") : t(kind==='image' ? '+ Upload photos' : kind==='video' ? '+ Upload videos' : '+ Upload photos / videos')}
     </label>{!!fileProgress.length && <div className="upload-file-progress" aria-live="polite">{fileProgress.map((file,index)=><div key={index}><span dir="auto">{file.name}</span><progress max="100" value={file.percent}/><small>{file.status==='done' ? t('Uploaded') : file.status==='error' ? t('Not uploaded') : `${file.percent}%`}</small></div>)}</div>}</div>
   );
 }

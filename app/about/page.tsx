@@ -95,7 +95,7 @@ export default function AboutPage() {
       <footer className="inner-footer">
         <span lang="en" dir="ltr">NURANICO®</span>
         <Link href="/">
-          {pageText('back_home', 'Back home ↗', 'بازگشت به خانه ↗')}
+          {pageText('back_home', 'Back home', 'بازگشت به خانه')}
         </Link>
       </footer>
     </main>

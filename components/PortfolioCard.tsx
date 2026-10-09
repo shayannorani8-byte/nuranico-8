@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import MediaCountBadge from "./MediaCountBadge";
-import ArrowUpRight from "./ArrowUpRight";
 import { isVideoAsset, localizedValue } from "../lib/media";
 
 export type PortfolioItem = {
@@ -80,9 +79,7 @@ export default function PortfolioCard({
             </svg>
           </span>
         )}
-        <span className="portfolio-open-cue" aria-hidden="true">
-          <ArrowUpRight />
-        </span>
+
       </div>
       <div className="portfolio-card-copy">
         {item.brand_name && (

@@ -1,4 +1,5 @@
 'use client';
+import { cleanUiLabel } from './ui-label';
 
 import { useEffect, useMemo, useState } from 'react';
 import { useSiteLanguage } from '../components/SiteLanguage';
@@ -72,7 +73,7 @@ export function usePageTexts(page: string) {
     const row = map[key];
 
     if (!row) {
-      return lang === 'fa' ? fallbackFa : fallbackEn;
+      return cleanUiLabel(lang === 'fa' ? fallbackFa : fallbackEn);
     }
 
     const value =
@@ -81,10 +82,10 @@ export function usePageTexts(page: string) {
         : row.value_en;
 
     if (value && value.trim()) {
-      return value;
+      return cleanUiLabel(value);
     }
 
-    return lang === 'fa' ? fallbackFa : fallbackEn;
+    return cleanUiLabel(lang === 'fa' ? fallbackFa : fallbackEn);
   }
 
   return {

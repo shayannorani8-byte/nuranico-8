@@ -27,6 +27,8 @@ export default function BehindTheScenesPage() {
     [error, setError] = useState(false),
     [retry, setRetry] = useState(0),
     [query, setQuery] = useState("");
+  const [kind,setKind]=useState<"photo"|"video">("photo");
+  useEffect(()=>{setKind(new URLSearchParams(window.location.search).get("type")==="video" ? "video" : "photo");},[]);
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -52,6 +54,7 @@ export default function BehindTheScenesPage() {
   }, [retry]);
   const groups = new Map<string, Item[]>();
   for (const item of items) {
+    if(item.kind!==kind)continue;
     if (
       ![
         item.name,
@@ -83,6 +86,7 @@ export default function BehindTheScenesPage() {
             <h1>{text("hero_title", "Behind the scenes.", "پشت صحنه.")}</h1>
           </div>
         </header>
+        <div className="bts-type-switch" role="group" aria-label={lang==='fa' ? 'نوع پشت‌صحنه' : 'Behind-the-scenes type'}>{(['photo','video'] as const).map(type=><button type="button" key={type} aria-pressed={kind===type} onClick={()=>setKind(type)}>{lang==='fa' ? type==='photo' ? 'عکس‌ها' : 'ویدیوها' : type==='photo' ? 'Photos' : 'Videos'} <span>{loading ? '…' : new Intl.NumberFormat(lang).format(items.filter(item=>item.kind===type).length)}</span></button>)}</div>
         <label className="portfolio-search">
           <svg
             width="18"
@@ -141,7 +145,7 @@ export default function BehindTheScenesPage() {
                       <h2 dir="auto">{title}</h2>
                       <span>
                         {new Intl.NumberFormat(lang).format(files.length)}{" "}
-                        {lang === "fa" ? "محتوا" : "items"}
+                        {lang === "fa" ? "محتوا" : files.length===1 ? "item" : "items"}
                       </span>
                     </div>
                     {first.project_id && (
@@ -150,7 +154,7 @@ export default function BehindTheScenesPage() {
                         href={`/work/${first.project_id}`}
                       >
                         {lang === "fa" ? "مشاهده پروژه" : "View project"}{" "}
-                        <span aria-hidden="true">↗</span>
+
                       </Link>
                     )}
                   </header>
@@ -186,8 +190,8 @@ export default function BehindTheScenesPage() {
                     ? "نتیجه‌ای پیدا نشد."
                     : "No matches."
                   : lang === "fa"
-                    ? "هنوز پشت صحنه‌ای منتشر نشده است."
-                    : "No behind-the-scenes collections yet."}
+                    ? kind==='photo' ? "هنوز عکس پشت‌صحنه‌ای منتشر نشده است." : "هنوز ویدیوی پشت‌صحنه‌ای منتشر نشده است."
+                    : kind==='photo' ? "No behind-the-scenes photos yet." : "No behind-the-scenes videos yet."}
               </ContentStatus>
             )}
           </div>

@@ -86,18 +86,18 @@ export default function ServicesPage() {
 
                 }}
               >
-                {text('view_service', 'VIEW SERVICE ↗', 'مشاهده سرویس ↗')}
+                {text('view_service', 'VIEW SERVICE', 'مشاهده سرویس')}
               </Link>
             </div>
 
-            <b>↗</b>
+
           </article>
         ))}
       </section>
 
       <footer className="content-footer">
         <Link href="/">
-          {text('back_home', 'Back home ↗', 'بازگشت به خانه ↗')}
+          {text('back_home', 'Back home', 'بازگشت به خانه')}
         </Link>
       </footer>
     </main>
