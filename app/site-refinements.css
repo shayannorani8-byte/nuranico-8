@@ -262,7 +262,7 @@ html body .project-page .project-end { min-height:0 !important;height:auto !impo
 html body .project-page .project-end>a { display:inline-flex !important;flex-direction:row !important;align-items:center;justify-content:center;gap:16px;width:auto !important;max-width:100% !important;min-height:48px;padding:12px 20px;border:1px solid #ffffff30;border-radius:999px;background:transparent;color:#f1efe9;font-size:15px !important;line-height:1.5 !important;text-transform:none !important;letter-spacing:0 !important;text-decoration:none;transition:background .2s,border-color .2s; }
 html body .project-page .project-end>a:hover { background:#303030;border-color:#ffffff90; }
 html body .project-page .project-end>a:active { background:#3b3b3b; }
-html body .project-end .project-more-label { font-size:inherit;line-height:inherit;letter-spacing:0; }
+html body .project-end .project-more-label { font-size:inherit !important;line-height:inherit !important;letter-spacing:0 !important; }
 html body .project-end .project-more-icon { width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:none; }
 .project-more-icon svg { width:20px;height:20px; }
 html body .project-page .project-end>a:focus-visible { outline:2px solid #f1efe9;outline-offset:4px; }
