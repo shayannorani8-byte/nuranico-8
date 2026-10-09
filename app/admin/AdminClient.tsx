@@ -189,7 +189,7 @@ const navigation: { group: string; items: { id: Section; label: string; descript
   ] },
   { group: 'Assets & appearance', items: [
     { id: 'media', label: 'Media library', description: 'Upload once. Reuse anywhere.', icon: 'M3 3h18v18H3zM3 16l6-6 4 4 3-3 5 5M15 7h.01' },
-    { id: 'settings', label: 'Appearance', description: 'Colors, logo and bilingual typography', icon: 'M4 5h16M4 12h16M4 19h16M9 3v4M15 10v4M7 17v4' },
+    { id: 'settings', label: 'Settings', description: 'Logo, colors and bilingual typography', icon: 'M4 5h16M4 12h16M4 19h16M9 3v4M15 10v4M7 17v4' },
   ] },
 ];
 const navigationItems = navigation.flatMap(group => group.items);
@@ -405,6 +405,9 @@ export default function AdminPage() {
   const [projectLabel, setProjectLabel] = useState('');
   const [assetDestinations, setAssetDestinations] = useState<string[]>([]);
   const [projectStep, setProjectStep] = useState(0);
+  const [settingsTab,setSettingsTab] = useState('identity');
+  const [savedSettings,setSavedSettings] = useState<Settings | null>(null);
+  const [fontSearch,setFontSearch] = useState('');
   const projectEditorSession = useRef(0);
   const currentEditorSession = projectEditorSession.current;
   const [btsSavedIds, setBtsSavedIds] = useState<number[]>([]);
@@ -501,6 +504,7 @@ export default function AdminPage() {
         })
       );
       setSettings({ ...emptySettings, ...(data.settings || {}) });
+      setSavedSettings({ ...emptySettings, ...(data.settings || {}) });
     } catch (e) {
       setLoadFailed(true);
       setError(e instanceof Error ? e.message : 'Could not load admin data.');
@@ -780,10 +784,11 @@ export default function AdminPage() {
   }
 
   async function saveSettings() {
-    setSaving(true);
+    setError('');setSaving(true);
     try {
       const result = await api<{ row: Settings }>('settings', 'POST', { row: settings });
       setSettings({ ...emptySettings, ...result.row });
+      setSavedSettings({ ...emptySettings, ...result.row });
       flash('Settings saved.');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Settings could not be saved.');
@@ -870,6 +875,7 @@ export default function AdminPage() {
     });
   }, [media, mediaSearch, mediaFilter, projects, projectMediaMap]);
 
+  const settingsDirty = !!savedSettings && JSON.stringify(settings) !== JSON.stringify(savedSettings);
   const activeSection = navigationItems.find(item => item.id === section)!;
   const publishedProjects = projects.filter(project => project.published).length;
 
@@ -1220,233 +1226,26 @@ export default function AdminPage() {
           </>
         )}
 
-        {section === 'settings' && (
-          <>
-            <SectionHeader title="Settings" description="Global visual settings. These are stored in Supabase." action={<button className="primary" disabled={saving} onClick={saveSettings}>{saving ? 'Saving…' : 'Save settings'}</button>} />
-            <div className="editor">
-              <h2>Colors</h2>
-
-              <p className="hint">
-                Complete website color system. Changes affect colors only —
-                typography and layout remain untouched.
-              </p>
-
-              <div className="color-grid">
-                {([
-                  ['bg_color', 'Main background'],
-                  ['surface_color', 'Surface / About'],
-                  ['card_bg', 'Services / Cards'],
-                  ['text_color', 'Main text'],
-                  ['heading_color', 'Headings'],
-                  ['muted_color', 'Muted text'],
-                  ['tag_color', 'Labels / Tags'],
-                  ['border_color', 'Borders / Lines'],
-
-                  ['nav_bg', 'Navigation background'],
-                  ['nav_text', 'Navigation text'],
-                  ['nav_active', 'Navigation active'],
-                  ['logo_color', 'Logo'],
-                  ['link_color', 'Links'],
-
-                  ['button_color', 'Button background'],
-                  ['button_text', 'Button text'],
-                  ['button_hover', 'Button hover'],
-
-                  ['footer_bg', 'Footer background'],
-                  ['footer_text', 'Footer text'],
-
-                  ['brands_bg', 'Brands background'],
-                  ['brands_text', 'Brands text'],
-                  ['brands_muted', 'Brands muted text'],
-                  ['brands_hover', 'Brands card hover'],
-                ] as const).map(([key, label]) => (
-                  <label className="color-field" key={key}>
-                    <span>{label}</span>
-
-                    <input
-                      type="color"
-                      value={settings[key] || '#000000'}
-                      onChange={e =>
-                        setSettings({
-                          ...settings,
-                          [key]: e.target.value
-                        })
-                      }
-                    />
-
-                    <code>{settings[key]}</code>
-                  </label>
-                ))}
-              </div>
-              <div className="font-section-head">
-                <div>
-                  <h2>Typography</h2>
-                  <p className="hint">
-                    Choose heading fonts for each language. Black and ExtraBold fonts use a regular companion for body text when the body weight is below 600.
-                  </p>
-                </div>
-
-                <FontUploader
-                  onUploaded={font => {
-                    setFonts(current => [
-                      font,
-                      ...current.filter(x => x.id !== font.id)
-                    ]);
-                    flash('Font uploaded.');
-                  }}
-                  onError={setError}
-                />
-              </div>
-
-              <div className="grid2 typography-controls">
-                <label className="field">
-                  <span>English font</span>
-                  <select
-                    className="field-select"
-                    value={settings.font_en}
-                    onChange={e =>
-                      setSettings({
-                        ...settings,
-                        font_en: e.target.value
-                      })
-                    }
-                  >
-                    <option value="DM Sans">DM Sans</option>
-                    <option value="Space Grotesk">Space Grotesk</option>
-
-                    {fonts.map(font => (
-                      <option
-                        key={font.id}
-                        value={font.family_name}
-                      >
-                        {font.family_name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="field">
-                  <span>Persian font</span>
-                  <select
-                    className="field-select"
-                    value={settings.font_fa}
-                    onChange={e =>
-                      setSettings({
-                        ...settings,
-                        font_fa: e.target.value
-                      })
-                    }
-                  >
-                    <option value="Yekan Bakh">Yekan Bakh</option>
-
-                    {fonts.map(font => (
-                      <option
-                        key={font.id}
-                        value={font.family_name}
-                      >
-                        {font.family_name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-              </div>
-
-              <div style={{marginTop:24}}>
-                <h3 style={{marginBottom:12}}>English Typography</h3>
-
-                <div className="grid2 typography-controls">
-                  <Input label="English heading size (px)" type="number"
-                    value={settings.heading_size_en}
-                    onChange={v => setSettings({...settings,heading_size_en:Number(v)||0})}
-                  />
-
-                  <Input label="English body size (px)" type="number"
-                    value={settings.body_size_en}
-                    onChange={v => setSettings({...settings,body_size_en:Number(v)||0})}
-                  />
-
-                  <Input label="English small size (px)" type="number"
-                    value={settings.small_size_en}
-                    onChange={v => setSettings({...settings,small_size_en:Number(v)||0})}
-                  />
-
-                  <Input label="English line height" type="number"
-                    value={settings.line_height_en}
-                    onChange={v => setSettings({...settings,line_height_en:Number(v)||0})}
-                  />
-
-                  <Input label="English letter spacing (px)" type="number"
-                    value={settings.letter_spacing_en}
-                    onChange={v => setSettings({...settings,letter_spacing_en:Number(v)||0})}
-                  />
-                </div>
-              </div>
-
-              <div style={{marginTop:24}}>
-                <h3 style={{marginBottom:12}}>Persian Typography</h3>
-
-                <div className="grid2 typography-controls">
-                  <Input label="Persian heading size (px)" type="number"
-                    value={settings.heading_size_fa}
-                    onChange={v => setSettings({...settings,heading_size_fa:Number(v)||0})}
-                  />
-
-                  <Input label="Persian body size (px)" type="number"
-                    value={settings.body_size_fa}
-                    onChange={v => setSettings({...settings,body_size_fa:Number(v)||0})}
-                  />
-
-                  <Input label="Persian small size (px)" type="number"
-                    value={settings.small_size_fa}
-                    onChange={v => setSettings({...settings,small_size_fa:Number(v)||0})}
-                  />
-
-                  <Input label="Persian line height" type="number"
-                    value={settings.line_height_fa}
-                    onChange={v => setSettings({...settings,line_height_fa:Number(v)||0})}
-                  />
-
-                  <Input label="Persian letter spacing (px)" type="number"
-                    value={settings.letter_spacing_fa}
-                    onChange={v => setSettings({...settings,letter_spacing_fa:Number(v)||0})}
-                  />
-                </div>
-              </div>
-
-              <div className="grid2 typography-controls" style={{marginTop:24}}>
-                <Input label="Heading weight" type="number"
-                  value={settings.heading_weight}
-                  onChange={v => setSettings({...settings,heading_weight:Number(v)||400})}
-                />
-
-                <Input label="Body weight" type="number"
-                  value={settings.body_weight}
-                  onChange={v => setSettings({...settings,body_weight:Number(v)||400})}
-                />
-
-                <div className="settings-logo-field">
-                  <label className="settings-field-title">
-                    Site Logo
-                  </label>
-
-                  <LogoUploader
-                    value={settings.logo_url}
-                    onChange={url =>
-                      setSettings({
-                        ...settings,
-                        logo_url: url
-                      })
-                    }
-                    onError={setError}
-                  />
-                </div>
-              </div>
-
-              <h2>Font Library</h2>
-
-              <div className="font-library">
-                {fonts.map(font => (
+        {section === 'settings' && <>
+          <SectionHeader title="Settings" description="Logo, colors and typography, organized by purpose." />
+          <nav className="settings-tabs" aria-label="Settings categories">{[['identity','Logo'],['colors','Colors'],['typography','Typography'],['fonts','Font library']].map(([key,label]) => <button type="button" key={key} aria-pressed={settingsTab === key} className={settingsTab === key ? 'active' : ''} onClick={() => setSettingsTab(key)}>{label}</button>)}</nav>
+          <div className="editor settings-editor">
+            {settingsTab === 'identity' && <section aria-labelledby="settings-logo-title"><h2 id="settings-logo-title">Website logo</h2><p className="hint">Upload your logo or replace the current one.</p><LogoUploader value={settings.logo_url} onChange={url => setSettings({...settings,logo_url:url})} onError={setError} /></section>}
+            {settingsTab === 'colors' && <section aria-labelledby="settings-colors-title"><h2 id="settings-colors-title">Website colors</h2><p className="hint">Choose the area you want to adjust.</p>{([
+              ['Backgrounds & text', [['bg_color','Main background'],['surface_color','About background'],['card_bg','Cards background'],['text_color','Main text'],['heading_color','Headings'],['muted_color','Secondary text'],['tag_color','Labels'],['border_color','Borders']]],
+              ['Navigation & logo', [['nav_bg','Navigation background'],['nav_text','Navigation text'],['nav_active','Active navigation'],['logo_color','Logo color']]],
+              ['Buttons & links', [['button_color','Button background'],['button_text','Button text'],['button_hover','Button hover'],['link_color','Links']]],
+              ['Brands section', [['brands_bg','Background'],['brands_text','Text'],['brands_muted','Secondary text'],['brands_hover','Card hover']]],
+              ['Footer', [['footer_bg','Background'],['footer_text','Text']]],
+            ] as [string,[keyof Settings,string][]][]).map(([title,fields],index) => <details key={title} className="content-group" open={index === 0}><summary>{title}<small>{fields.length} colors</small></summary><div className="content-group-body color-grid">{fields.map(([key,label]) => <label className="color-field" key={key}><span>{label}</span><input type="color" aria-label={`${title}: ${label}`} value={String(settings[key] || '#000000')} onChange={e => setSettings({...settings,[key]:e.target.value})} /><code>{settings[key]}</code></label>)}</div></details>)}</section>}
+            {settingsTab === 'typography' && <section aria-labelledby="settings-type-title"><h2 id="settings-type-title">Typography</h2><p className="hint">Choose fonts for each language. Heavy heading fonts use a regular companion for body text.</p>
+              <div className="settings-languages">{(['en','fa'] as const).map(language => <section className="settings-language" key={language}><h3>{language === 'en' ? 'English' : 'فارسی'}</h3><label className="field"><span>{language === 'en' ? 'English font' : 'فونت فارسی'}</span><select className="field-select" value={settings[`font_${language}`]} onChange={e => setSettings({...settings,[`font_${language}`]:e.target.value})}>{Array.from(new Set([...(language === 'en' ? ['DM Sans','Space Grotesk'] : ['Yekan Bakh']),settings[`font_${language}`],...fonts.map(font => font.family_name)])).map(family => <option key={family} value={family}>{family}</option>)}</select></label>
+                <details className="content-group"><summary>{language === 'en' ? 'Sizes & spacing' : 'اندازه و فاصله‌ها'}</summary><div className="content-group-body grid2">{([['heading_size','Heading size (px)'],['body_size','Body size (px)'],['small_size','Small text (px)'],['line_height','Line height'],['letter_spacing','Letter spacing (px)']] as const).map(([field,label]) => {const key=`${field}_${language}` as keyof Settings;return <Input key={key} label={label} type="number" value={settings[key] as number} onChange={value => setSettings({...settings,[key]:Number(value)||0})} />;})}</div></details>
+              </section>)}</div>
+              <details className="content-group"><summary>Font weights</summary><div className="content-group-body"><p className="hint">Shared defaults for both languages. A heading font with its own Black or ExtraBold weight keeps that weight.</p><div className="grid2">{(['heading_weight','body_weight'] as const).map(key => <label className="field" key={key}><span>{key === 'heading_weight' ? 'Heading weight' : 'Body weight'}</span><select className="field-select" value={settings[key]} onChange={e => setSettings({...settings,[key]:Number(e.target.value)})}>{Array.from(new Set([100,200,300,400,500,600,700,800,900,settings[key]])).sort((a,b)=>a-b).map(weight => <option value={weight} key={weight}>{({100:'Thin',200:'ExtraLight',300:'Light',400:'Regular',500:'Medium',600:'SemiBold',700:'Bold',800:'ExtraBold',900:'Black'} as Record<number,string>)[weight] || 'Custom'} · {weight}</option>)}</select></label>)}</div></div></details>
+            </section>}
+            {settingsTab === 'fonts' && <section aria-labelledby="settings-fonts-title"><div className="font-section-head"><div><h2 id="settings-fonts-title">Font library</h2><p className="hint">Upload fonts and manage their weights by family.</p></div><FontUploader onUploaded={font => {setFonts(current => [font,...current.filter(item => item.id !== font.id)]);flash('Font uploaded.');}} onError={setError} /></div><input className="settings-font-search" aria-label="Search fonts" placeholder="Search font family or file…" value={fontSearch} onChange={e => setFontSearch(e.target.value)} />
+              {Array.from(new Set(fonts.filter(font => [font.family_name,font.name].join(' ').toLowerCase().includes(fontSearch.trim().toLowerCase())).map(font => font.family_name))).map(family => <details className="content-group settings-font-family" key={family}><summary>{family}<small>{fonts.filter(font => font.family_name === family).length} files</small></summary><div className="content-group-body"><div className="font-actions"><button className="ghost" disabled={settings.font_en === family} onClick={() => setSettings({...settings,font_en:family})}>{settings.font_en === family ? 'Selected for English' : 'Use for English'}</button><button className="ghost" disabled={settings.font_fa === family} onClick={() => setSettings({...settings,font_fa:family})}>{settings.font_fa === family ? 'Selected for Persian' : 'Use for Persian'}</button></div><div className="font-library">{fonts.filter(font => font.family_name === family).sort((a,b)=>a.font_weight-b.font_weight).map(font => (
                   <article
                     className="font-card"
                     key={font.id}
@@ -1494,43 +1293,16 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    <div className="font-actions">
-                      <button
-                        className="ghost"
-                        type="button"
-                        onClick={() =>
-                          setSettings({
-                            ...settings,
-                            font_en: font.family_name
-                          })
-                        }
-                      >
-                        Use for English
-                      </button>
 
-                      <button
-                        className="ghost"
-                        type="button"
-                        onClick={() =>
-                          setSettings({
-                            ...settings,
-                            font_fa: font.family_name
-                          })
-                        }
-                      >
-                        Use for Persian
-                      </button>
-                    </div>
                   </article>
-                ))}
+              ))}</div></div></details>)}
+              {!fonts.length && <EmptyState text="No custom fonts uploaded yet." />}
+              {!!fonts.length && !fonts.some(font => [font.family_name,font.name].join(' ').toLowerCase().includes(fontSearch.trim().toLowerCase())) && <EmptyState text="No matching fonts." />}
+            </section>}
+          </div>
+          <div className="settings-save-bar"><span role="status">{settingsDirty ? 'Unsaved changes' : 'All settings saved'}</span><div><button className="ghost" disabled={!settingsDirty || saving} onClick={() => {if(savedSettings) setSettings({...savedSettings});setError('');}}>Discard changes</button><button className="primary" disabled={!settingsDirty || saving} onClick={saveSettings}>{saving ? 'Saving…' : 'Save settings'}</button></div></div>
+        </>}
 
-                {!fonts.length && (
-                  <EmptyState text="No custom fonts uploaded yet." />
-                )}
-              </div>
-            </div>
-          </>
-        )}
         </>}
         </div>
       </section>
