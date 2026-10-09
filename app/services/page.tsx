@@ -67,7 +67,6 @@ export default function ServicesPage() {
       <section className="service-list">
         {services.map((service) => (
           <article key={service.number}>
-            <span>{service.number}</span>
 
             <div>
               <h2>{service.title}</h2>

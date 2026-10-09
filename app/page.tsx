@@ -1,4 +1,5 @@
 'use client';
+import {projectSections,sectionName} from '../components/PortfolioCard';
 import MediaCountBadge from '../components/MediaCountBadge';
 import SiteHeader from '../components/SiteHeader';
 
@@ -9,7 +10,7 @@ import { usePageTexts } from '../lib/usePageTexts';
 import './home.css';
 import './home-mobile.css';
 import ArrowUpRight from '../components/ArrowUpRight';
-import { localizedValue } from '../lib/media';
+import { localizedValue, isVideoAsset } from '../lib/media';
 import { useSiteData } from '../components/SiteData';
 type Lang = 'en' | 'fa';
 
@@ -87,6 +88,12 @@ type Content = {
 };
 
 type PortfolioItem = {
+  brand_name?:string | null;
+  destinations?:string[];
+  hero_label?:boolean;
+  button_text_en?:string | null;
+  button_text_fa?:string | null;
+  has_video?:boolean;
   media_count?:number;
   id: number;
   title_fa: string;
@@ -192,6 +199,7 @@ export default function HomePage() {
   const [fonts, setFonts] = useState<FontAsset[]>(initialData.fonts);
   const [content, setContent] = useState<Content>(initialData.content as Content);
   const [heroPortfolio, setHeroPortfolio] = useState<PortfolioItem[]>([]);
+  const [managedHero,setManagedHero]=useState<PortfolioItem[]>([]);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [filmPortfolio, setFilmPortfolio] = useState<PortfolioItem[]>([]);
   const [photoPortfolio, setPhotoPortfolio] = useState<PortfolioItem[]>([]);
@@ -204,7 +212,6 @@ export default function HomePage() {
   const workCarouselRef = useRef<HTMLDivElement>(null);
   const clientsCarouselRef = useRef<HTMLDivElement>(null);
   const [heroIndex, setHeroIndex] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -282,11 +289,12 @@ export default function HomePage() {
   }, [loading]);
 
   const heroSlides = useMemo(() => {
+    if(managedHero.length)return managedHero;
     const featured = heroPortfolio.filter((item) => item.featured);
     const source = featured.length ? featured : heroPortfolio;
 
     return source.slice(0, 3);
-  }, [heroPortfolio]);
+  }, [heroPortfolio,managedHero]);
 
   useEffect(() => {
     if (!heroSlides.length) return;
@@ -314,6 +322,7 @@ export default function HomePage() {
       brandsResult,
       servicesResult,
       fontsResult,
+      heroResult,
     ] = await Promise.all([
       supabase
         .from('site_settings')
@@ -352,6 +361,7 @@ export default function HomePage() {
         .from('font_assets')
         .select('id,family_name,file_url,format,font_weight,font_style')
         .order('created_at', { ascending: false }),
+      supabase.from('hero_slides').select('*').eq('published',true).order('sort_order').order('id'),
     ]);
 
     if (settingsResult.data) {
@@ -362,6 +372,7 @@ export default function HomePage() {
       setContent(contentResult.data);
     }
 
+    if(heroResult.data)setManagedHero(heroResult.data.filter(slide=>slide.media_url).map(slide=>({...slide,category:'hero',hero_label:true,cover_url:isVideoAsset(slide) ? '' : slide.media_url,preview_url:isVideoAsset(slide) ? slide.media_url : '',preview_enabled:isVideoAsset(slide),preview_type:'video'})));
     if (portfolioResult.data) {
       setHeroPortfolio(portfolioResult.data);
     }
@@ -507,7 +518,7 @@ export default function HomePage() {
     });
   }
 
-  const currentHero = heroSlides[heroIndex];
+  const currentHero = heroSlides[heroIndex % Math.max(1,heroSlides.length)];
 
   const heroImage =
     currentHero?.cover_url || '';
@@ -741,7 +752,7 @@ export default function HomePage() {
               <div
                 key={slide.id}
                 className={`hero-slide ${
-                  index === heroIndex
+                  index === heroIndex % Math.max(1,heroSlides.length)
                     ? 'active'
                     : ''
                 }`}
@@ -787,17 +798,17 @@ export default function HomePage() {
 
           <h1>
             {lang === 'fa'
-              ? content.hero_title_fa ||
+              ? (currentHero?.hero_label ? currentHero.title_fa : '') || content.hero_title_fa ||
                 'تصویر می‌سازیم، اثر می‌گذاریم.'
-              : content.hero_title_en ||
+              : (currentHero?.hero_label ? currentHero.title_en : '') || content.hero_title_en ||
                 'We create images that leave an impact.'}
           </h1>
 
           <p className="hero-copy">
             {lang === 'fa'
-              ? content.hero_description_fa ||
+              ? (currentHero?.hero_label ? currentHero.description_fa : '') || content.hero_description_fa ||
                 'استودیو خلاق NURANICO برای برندهایی که می‌خواهند متفاوت دیده شوند.'
-              : content.hero_description_en ||
+              : (currentHero?.hero_label ? currentHero.description_en : '') || content.hero_description_en ||
                 'A creative studio for brands that want to be seen differently.'}
           </p>
 
@@ -807,9 +818,9 @@ export default function HomePage() {
           >
             <span>
               {lang === 'fa'
-                ? content.hero_button_fa ||
+                ? (currentHero?.hero_label ? currentHero.button_text_fa : '') || content.hero_button_fa ||
                   'شروع پروژه'
-                : content.hero_button_en ||
+                : (currentHero?.hero_label ? currentHero.button_text_en : '') || content.hero_button_en ||
                   'Start a project'}
             </span>
             <b aria-hidden="true"><ArrowUpRight /></b>
@@ -834,7 +845,7 @@ export default function HomePage() {
                 key={slide.id}
                 type="button"
                 className={
-                  index === heroIndex
+                  index === heroIndex % Math.max(1,heroSlides.length)
                     ? 'active'
                     : ''
                 }
@@ -856,20 +867,9 @@ export default function HomePage() {
       >
         <div className="section-head">
           <div>
-            <p className="eyebrow">
-              01 / {pageText(
-                'services_eyebrow',
-                'SERVICES',
-                'خدمات'
-              )}
-            </p>
 
             <h2>{t.servicesTitle}</h2>
           </div>
-
-          <span className="section-index">
-            01—03
-          </span>
         </div>
 
         <div className="service-grid">
@@ -940,7 +940,6 @@ export default function HomePage() {
                 }}
               >
                 <div className="service-card-top">
-                  <span>{number}</span>
                   <b aria-hidden="true"><ArrowUpRight /></b>
                 </div>
 
@@ -1034,23 +1033,9 @@ export default function HomePage() {
       >
         <div className="section-head">
           <div>
-            <p className="eyebrow">
-              02 / {pageText(
-                'work_eyebrow',
-                'SELECTED WORK',
-                'نمونه‌کارهای منتخب'
-              )}
-            </p>
 
             <h2>{t.workTitle}</h2>
           </div>
-
-          <span className="section-index">
-            {String(
-              shown.length || 6
-            ).padStart(2, '0')}{' '}
-            WORKS
-          </span>
         </div>
 
         <div
@@ -1101,19 +1086,6 @@ export default function HomePage() {
           </div>
         ) : (
           <>
-            {shown.length > 0 ? (
-              <div className="work-browser-head">
-                <div className="work-browser-count">
-                  {String(shown.length).padStart(2, '0')}{' '}
-                  {pageText(
-                    'projects_label',
-                    'PROJECTS',
-                    'پروژه'
-                  )}
-                </div>
-
-              </div>
-            ) : null}
 
             <div className={`work-carousel-shell ${
               workIsCarousel ? 'is-carousel' : ''
@@ -1192,6 +1164,7 @@ export default function HomePage() {
                         />
                       ) : null}
 
+                      {(isVideoAsset(item) || item.has_video) && <span className="portfolio-video-cue" aria-label={lang==='fa' ? 'ویدیو' : 'Video'}><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>}
                       <div className="project-overlay">
                         <span>
                           {pageText(
@@ -1206,53 +1179,12 @@ export default function HomePage() {
 
                     <div className="project-meta">
                       <div>
-                        <p>
-                          {filter === 'bts'
-                            ? pageText(
-                                'card_bts',
-                                'BEHIND THE SCENES',
-                                'پشت صحنه'
-                              )
-                            : item.category === 'video'
-                            ? pageText(
-                                'card_film',
-                                'FILM',
-                                'فیلم'
-                              )
-                            : item.category === 'photo'
-                            ? pageText(
-                                'card_photo',
-                                'PHOTO',
-                                'عکس'
-                              )
-                            : item.category === 'advertising'
-                            ? pageText(
-                                'card_advertising',
-                                'ADVERTISING',
-                                'تبلیغات'
-                              )
-                            : pageText(
-                                'card_content',
-                                'CONTENT',
-                                'محتوا'
-                              )}
-                        </p>
-
+                        {item.brand_name && <p className="portfolio-brand" dir="auto">{item.brand_name}</p>}
                         <h3>{title}</h3>
+                        <p className="portfolio-section">{filter==='bts' ? sectionName('bts',lang) : projectSections(item).map(key=>sectionName(key,lang)).join(' · ')}</p>
 
-                        {description ? (
-                          <span>
-                            {description}
-                          </span>
-                        ) : null}
+
                       </div>
-
-                      <strong>
-                        {String(index + 1).padStart(
-                          2,
-                          '0'
-                        )}
-                      </strong>
                     </div>
                   </Link>
                 );
@@ -1298,17 +1230,10 @@ export default function HomePage() {
             <div className="about-image-empty" />
           )}
 
-          <span>N / 2026</span>
+
         </div>
 
         <div className="about-copy">
-          <p className="eyebrow">
-            03 / {pageText(
-              'about_eyebrow',
-              'ABOUT',
-              'درباره ما'
-            )}
-          </p>
 
           <h2>
             {lang === 'fa'
@@ -1329,19 +1254,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section
+      {brands.length > 0 && <section
         id="brands"
         className="section brands reveal"
       >
         <div className="section-head">
           <div>
-            <p className="eyebrow">
-              04 / {pageText(
-                'brands_eyebrow',
-                'SELECTED CLIENTS',
-                'مشتریان منتخب'
-              )}
-            </p>
 
             <h2>{t.brandsTitle}</h2>
           </div>
@@ -1411,27 +1329,13 @@ export default function HomePage() {
               ...Array.from(brandBySlot.keys())
             );
 
-            const totalSlots = Math.max(14, highestUsedSlot + 1);
+            const totalSlots = highestUsedSlot + 1;
 
             return Array.from({ length: totalSlots }, (_, index) => {
               const brand = brandBySlot.get(index);
               const slotNumber = index + 1;
 
-              if (!brand) {
-                return (
-                  <div
-                    className="brand-card placeholder"
-                    key={`placeholder-${slotNumber}`}
-                  >
-                    {pageText(
-                      'client_placeholder',
-                      'CLIENT',
-                      'مشتری'
-                    )} /{' '}
-                    {String(slotNumber).padStart(2, '0')}
-                  </div>
-                );
-              }
+              if (!brand) return null;
 
               return (
                 <div
@@ -1453,7 +1357,7 @@ export default function HomePage() {
           })()}
           </div>
         </div>
-      </section>
+      </section>}
 
       <footer className="footer">
         <div>

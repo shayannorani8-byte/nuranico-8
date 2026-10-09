@@ -1,5 +1,7 @@
 'use client';
 import ProjectGallery from '../../../components/ProjectGallery';
+import {projectSections,sectionName} from '../../../components/PortfolioCard';
+import PortfolioFooter from '../../../components/PortfolioFooter';
 import ArrowUpRight from '../../../components/ArrowUpRight';
 import SiteHeader from '../../../components/SiteHeader';
 
@@ -21,6 +23,7 @@ type AttachedMedia = {
 };
 
 type Project = {
+  destinations?:string[];
   brand_name?: string | null;
   bts_media_ids?: number[] | null;
   id: number;
@@ -353,137 +356,6 @@ function VideoPlayer({
   );
 }
 
-function PhotoViewer({
-  images,
-  alt,
-  text,
-}: {
-  images: string[];
-  alt: string;
-  text: (
-    key: string,
-    fallbackEn?: string,
-    fallbackFa?: string
-  ) => string;
-}) {
-  const [index, setIndex] = useState(0);
-  const [zoom, setZoom] = useState(false);
-  const touchStartX = useRef<number | null>(null);
-  const touchEndX = useRef<number | null>(null);
-
-  const showPrevious = () => {
-    if (images.length < 2) return;
-    setZoom(false);
-    setIndex((value) => (value - 1 + images.length) % images.length);
-  };
-
-  const showNext = () => {
-    if (images.length < 2) return;
-    setZoom(false);
-    setIndex((value) => (value + 1) % images.length);
-  };
-
-  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    touchEndX.current = null;
-    touchStartX.current = event.touches[0]?.clientX ?? null;
-  };
-
-  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
-    touchEndX.current = event.touches[0]?.clientX ?? null;
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStartX.current === null || touchEndX.current === null) return;
-
-    const distance = touchStartX.current - touchEndX.current;
-    const threshold = 45;
-
-    if (distance > threshold) {
-      showNext();
-    } else if (distance < -threshold) {
-      showPrevious();
-    }
-
-    touchStartX.current = null;
-    touchEndX.current = null;
-  };
-
-  useEffect(() => {
-    if (!images.length) return;
-
-    function onKey(event: KeyboardEvent) {
-      if (event.key === 'ArrowRight') setIndex((value) => (value + 1) % images.length);
-      if (event.key === 'ArrowLeft') setIndex((value) => (value - 1 + images.length) % images.length);
-      if (event.key === 'Escape') setZoom(false);
-    }
-
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [images.length]);
-
-  useEffect(() => {
-    if (index >= images.length) setIndex(0);
-  }, [images.length, index]);
-
-  if (!images.length) {
-    return (
-      <div className="photo-viewer photo-viewer-empty">
-        <div className="photo-stage">
-          <p>
-            {text(
-              'no_media',
-              'No media has been added to this project yet.',
-              'هنوز رسانه‌ای به این پروژه اضافه نشده است.'
-            )}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const image = images[index];
-
-  return (
-    <div className={`photo-viewer ${zoom ? 'zoomed' : ''}`}>
-      <div
-        className="photo-stage"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <img src={image} alt={`${alt} ${index + 1}`} onClick={() => setZoom((value) => !value)} />
-
-        {images.length > 1 && (
-          <>
-            <button type="button" className="photo-prev" onClick={showPrevious} aria-label={text('previous_image', 'Previous image', 'تصویر قبلی')}>←</button>
-            <button type="button" className="photo-next" onClick={showNext} aria-label={text('next_image', 'Next image', 'تصویر بعدی')}>→</button>
-            <span className="photo-counter">
-              {String(index + 1).padStart(2, '0')} / {String(images.length).padStart(2, '0')}
-            </span>
-          </>
-        )}
-      </div>
-
-      {images.length > 1 && (
-        <div className="photo-thumbs">
-          {images.map((item, itemIndex) => (
-            <button
-              type="button"
-              key={`${item}-${itemIndex}`}
-              aria-label={`${text('view_image', 'View image', 'مشاهده تصویر')} ${itemIndex + 1}`}
-              aria-pressed={itemIndex === index}
-              className={itemIndex === index ? 'active' : ''}
-              onClick={() => setIndex(itemIndex)}
-            >
-              <img src={item} alt="" />
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function ProjectPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id || '';
@@ -507,14 +379,15 @@ export default function ProjectPage() {
       try {
         const projectId = Number(id);
         if (!Number.isSafeInteger(projectId) || projectId <= 0) return;
-        const [projectResult, linksResult] = await Promise.all([
+        const [projectResult, linksResult, destinationsResult] = await Promise.all([
           supabase.from('portfolio').select('*').eq('id', projectId).eq('published', true).abortSignal(AbortSignal.timeout(12000)).maybeSingle(),
           supabase.from('project_media').select('media_asset_id,sort_order').eq('project_id', projectId).order('sort_order', { ascending: true }).abortSignal(AbortSignal.timeout(12000)),
+          supabase.from('project_destinations').select('destination').eq('project_id',projectId).abortSignal(AbortSignal.timeout(12000)),
         ]);
         if (projectResult.error) throw projectResult.error;
         if (linksResult.error) throw linksResult.error;
         if (cancelled) return;
-        setProject(projectResult.data);
+        setProject(projectResult.data ? {...projectResult.data,destinations:(destinationsResult.data || []).map(row=>row.destination)} : null);
         if (!projectResult.data) return;
         const mediaIds = (linksResult.data || []).map(row => row.media_asset_id).filter((value): value is number => value != null);
         const btsIds:number[] = projectResult.data.bts_media_ids || [];
@@ -604,11 +477,7 @@ export default function ProjectPage() {
     ...(!isVideo(project) && !attachedVideos.length && !mainImage && !attachedImages.length && !project.gallery_urls?.length && project.cover_url ? [project.cover_url] : []),
   ]));
   const effectiveVideoUrl = isVideo(project) ? project.media_url : !project.media_url ? attachedVideos[0]?.file_url : undefined;
-  const galleryVideos = Array.from(new Set([
-    ...attachedVideos.map(item => item.file_url),
-    ...(project.gallery_urls || []).filter(url => isVideoAsset({ file_url: url })),
-  ])).filter(url => url !== effectiveVideoUrl);
-  const video = !!effectiveVideoUrl;
+
 
   return (
     <main className="project-page">
@@ -616,41 +485,15 @@ export default function ProjectPage() {
 
       <section className="project-hero">
         <div>
-          <p>
-            {String(project.category).toUpperCase()} /{' '}
-            {text('project_label', 'PROJECT', 'پروژه')}{' '}
-            {String(
-              project.id > 0
-                ? project.id
-                : Math.abs(project.id)
-            ).padStart(2, '0')}
-          </p>
+          <p>{projectSections(project).map(key=>sectionName(key,lang)).join(' · ')}</p>
           <h1>{title}</h1>{project.brand_name && <p dir="auto">{project.brand_name}</p>}
           {description ? <div className="project-description">{description}</div> : null}
         </div>
       </section>
 
-      {video && effectiveVideoUrl ? (
-        <section className="project-media-block">
-          <VideoPlayer
-            key={effectiveVideoUrl}
-            src={effectiveVideoUrl}
-            sources={project.media_sources}
-            poster={project.cover_url}
-          />
-        </section>
-      ) : (
-        <section className="project-media-block">
-          <PhotoViewer
-            images={gallery}
-            alt={title}
-            text={text}
-          />
-        </section>
-      )}
+      <ProjectGallery presentation="sequence" title={text('gallery_label','Gallery','گالری')} lang={lang} renderVideo={url=><VideoPlayer src={url} sources={url===effectiveVideoUrl ? project.media_sources : undefined} poster={url===effectiveVideoUrl ? project.cover_url : undefined}/>} items={Array.from(new Set([...(project.media_url ? [project.media_url] : []),...attachedMedia.map(item=>item.file_url),...(project.gallery_urls || []),...(!project.media_url && !attachedMedia.length ? gallery : [])])).map((url,index)=>({url,video:isVideoAsset({file_url:url}),label:`${title} ${index+1}`}))}/>
 
-      {(gallery.length > 1 || galleryVideos.length > 0 || (video && gallery.length > 0)) && <ProjectGallery title={text('gallery_label','Gallery','گالری')} lang={lang} renderVideo={url => <VideoPlayer src={url} />} items={Array.from(new Set([...attachedMedia.map(item => item.file_url),...(project.gallery_urls || []),...(video ? gallery : [])])).filter(url => url !== effectiveVideoUrl).map((url,index) => ({url,video:isVideoAsset({file_url:url}),label:`${title} ${index+1}`}))} />}
-      {behindScenes.length > 0 && <><h2 className="project-bts-title">{lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'}</h2><ProjectGallery title={lang === 'fa' ? 'پشت صحنه پروژه' : 'Project behind the scenes'} lang={lang} renderVideo={url => <VideoPlayer src={url} />} items={behindScenes.map((item,index) => ({url:item.file_url,video:isVideoAsset(item),label:`${title} — ${lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'} ${index+1}`}))} /></>}
+      {behindScenes.length > 0 && <><h2 id="project-bts" className="project-bts-title">{lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'}</h2><ProjectGallery title={lang === 'fa' ? 'پشت صحنه پروژه' : 'Project behind the scenes'} lang={lang} renderVideo={url => <VideoPlayer src={url} />} items={behindScenes.map((item,index) => ({url:item.file_url,video:isVideoAsset(item),label:`${title} — ${lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'} ${index+1}`}))} /></>}
 
       <section className="project-end">
         <Link href="/work">
@@ -663,16 +506,7 @@ export default function ProjectPage() {
         </Link>
       </section>
 
-      <footer className="project-footer">
-        <span lang="en" dir="ltr">NURANICO®</span>
-        <span>
-          {text(
-            'footer_studio',
-            'Creative studio / 2026',
-            'استودیوی خلاق / ۲۰۲۶'
-          )}
-        </span>
-      </footer>
+      <PortfolioFooter/>
     </main>
   );
 }

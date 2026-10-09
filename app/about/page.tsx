@@ -59,7 +59,6 @@ export default function AboutPage() {
 
       <section className="inner-hero split">
         <div>
-          <p>{pageText('eyebrow', '03 / ABOUT', '03 / درباره')}</p>
           <h1>{title}</h1>
         </div>
 

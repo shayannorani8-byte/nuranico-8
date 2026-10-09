@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import './admin-ui.css';
 import { AdminLocaleProvider, useAdminLocale } from './AdminLocale';
+import {projectSections,sectionName} from '../../components/PortfolioCard';
+import ProjectMediaEditor from './ProjectMediaEditor';
 import MediaPicker, { type MediaAsset } from './MediaPicker';
 import { isVideoAsset } from '../../lib/media';
 
@@ -414,6 +416,8 @@ function AdminWorkspace() {
   const [projectLabel, setProjectLabel] = useState('');
   const [assetDestinations, setAssetDestinations] = useState<string[]>([]);
   const [projectStep, setProjectStep] = useState(0);
+  const [uploadsActive,setUploadsActive]=useState(0);
+  const projectUploadBusy=(busy:boolean)=>setUploadsActive(current=>Math.max(0,current+(busy ? 1 : -1)));
   const [settingsTab,setSettingsTab] = useState('identity');
   const [savedSettings,setSavedSettings] = useState<Settings | null>(null);
   const [fontSearch,setFontSearch] = useState('');
@@ -448,6 +452,12 @@ function AdminWorkspace() {
   const [editingService, setEditingService] = useState<Service | null>(null);
 
   const [projectSearch, setProjectSearch] = useState('');
+  const [projectStatus,setProjectStatus] = useState('all');
+  const [projectCategory,setProjectCategory] = useState('all');
+  const [discardIntent,setDiscardIntent]=useState<{section?:Section;editor?:'project'|'hero'|'brand'|'service'} | null>(null);
+  const discardCancel=useRef<HTMLButtonElement>(null),discardPanel=useRef<HTMLDivElement>(null);
+  const projectSnapshot = useRef('');
+  const [savedContent,setSavedContent] = useState<Content | null>(null);
   const [mediaSearch, setMediaSearch] = useState('');
   const [mediaFilter, setMediaFilter] = useState('all');
 
@@ -500,7 +510,7 @@ function AdminWorkspace() {
           .map(item => item.media_asset_id)
       );
       setBtsSavedIds((data.btsMedia || []).slice().sort((a,b) => a.sort_order - b.sort_order).map(item => item.media_asset_id));
-      setContent({ ...emptyContent, ...(data.content || {}) });
+      setContent({ ...emptyContent, ...(data.content || {}) });setSavedContent({ ...emptyContent, ...(data.content || {}) });
       setPageTexts(
         (data.pageTexts || []).slice().sort((a, b) => {
           const pageCompare = a.page.localeCompare(b.page);
@@ -568,7 +578,7 @@ function AdminWorkspace() {
 
   function openProject(project:Project) {
     const legacyIds = (destMap[project.id] || []).includes('bts') ? Array.from(new Set([...(projectMediaMap[project.id] || []),...media.filter(item => item.file_url === project.media_url || (!project.media_url && !(projectMediaMap[project.id] || []).length && item.file_url === project.cover_url)).map(item => item.id)])) : [];
-    setEditingProject({...project,bts_media_ids:project.bts_media_ids ?? (legacyIds.length ? legacyIds : null)});
+    const opened={...project,bts_media_ids:project.bts_media_ids ?? (legacyIds.length ? legacyIds : null)};projectSnapshot.current=JSON.stringify({row:opened,destinations:destMap[project.id] || [],mediaIds:projectMediaMap[project.id] || []});setEditingProject(opened);
   }
 
   async function saveProject(publish: boolean) {
@@ -701,7 +711,7 @@ function AdminWorkspace() {
     setSaving(true);
     try {
       const result = await api<{ row: Content }>('content', 'POST', { row: content });
-      setContent({ ...emptyContent, ...result.row });
+      setContent({ ...emptyContent, ...result.row });setSavedContent({ ...emptyContent, ...result.row });
       flash('Content saved.');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Content could not be saved.');
@@ -750,7 +760,7 @@ function AdminWorkspace() {
     } : current);
   }
 
-  const visibleTexts = pageTexts.filter(row => !(row.page === 'home' && /^(statement_|landscape_|keep_line_|contact_)/.test(row.text_key)));
+  const visibleTexts = pageTexts.filter(row => !(['film','photography','content'].includes(row.page) && row.text_key==='projects_eyebrow') && !(['about','contact'].includes(row.page) && row.text_key==='eyebrow') && !(row.page === 'home' && /^(statement_|landscape_|keep_line_|contact_|services_eyebrow$|work_eyebrow$|about_eyebrow$|brands_eyebrow$)/.test(row.text_key)));
   function editText(id:number, field:'value_en'|'value_fa', value:string) {
     setPageTexts(current => current.map(row => row.id === id ? {...row,[field]:value} : row));
     setDirtyTexts(current => current.includes(id) ? current : [...current,id]);
@@ -870,10 +880,8 @@ function AdminWorkspace() {
 
   const filteredProjects = useMemo(() => {
     const q = projectSearch.trim().toLowerCase();
-    return projects.filter(p => !q ||
-      [p.title_en, p.title_fa, p.category, p.brand_name].some(v => (v || '').toLowerCase().includes(q))
-    ).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
-  }, [projects, projectSearch]);
+    return projects.filter(p => (projectStatus==='all' || (projectStatus==='published' ? p.published : !p.published)) && (projectCategory==='all' || projectSections({...p,destinations:destMap[p.id] || []}).includes(projectCategory)) && (!q || [p.title_en,p.title_fa,p.category,p.brand_name].some(v=>(v || '').toLowerCase().includes(q)))).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
+  }, [projects,projectSearch,projectStatus,projectCategory,destMap]);
 
   const filteredMedia = useMemo(() => {
     const q = mediaSearch.trim().toLowerCase();
@@ -885,10 +893,29 @@ function AdminWorkspace() {
   }, [media, mediaSearch, mediaFilter, projects, projectMediaMap]);
 
   const settingsDirty = !!savedSettings && JSON.stringify(settings) !== JSON.stringify(savedSettings);
+  const projectDirty=!!editingProject && (projectSnapshot.current ? JSON.stringify({row:editingProject,destinations:destMap[editingProject.id] || [],mediaIds:projectMediaMap[editingProject.id] || []})!==projectSnapshot.current : !!(editingProject.title_en || editingProject.title_fa || editingProject.media_url || (projectMediaMap[0] || []).length || editingProject.bts_media_ids?.length));
+  const contentDirty=!!savedContent && JSON.stringify(content)!==JSON.stringify(savedContent);
+  const heroDirty=!!editingHero && (editingHero.id ? JSON.stringify(editingHero)!==JSON.stringify(hero.find(item=>item.id===editingHero.id)) : !!(editingHero.title_en || editingHero.title_fa || editingHero.media_url || editingHero.description_en || editingHero.description_fa));
+  const brandDirty=!!editingBrand && (editingBrand.id ? JSON.stringify(editingBrand)!==JSON.stringify(brands.find(item=>item.id===editingBrand.id)) : !!(editingBrand.name || editingBrand.logo_url || editingBrand.website_url));
+  const serviceDirty=!!editingService && (editingService.id ? JSON.stringify(editingService)!==JSON.stringify(services.find(item=>item.id===editingService.id)) : !!(editingService.title_en || editingService.title_fa || editingService.description_en || editingService.description_fa));
+  const hasUnsaved=heroDirty || brandDirty || serviceDirty || uploadsActive>0 || projectDirty || settingsDirty || !!dirtyTexts.length || contentDirty || btsMediaIds.join(',')!==btsSavedIds.join(',');
+  useEffect(()=>{if(!hasUnsaved)return;const handler=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue='';};window.addEventListener('beforeunload',handler);return()=>window.removeEventListener('beforeunload',handler);},[hasUnsaved]);
+  function closeOtherEditor(editor:'hero'|'brand'|'service'){if(uploadsActive){setError('Wait for uploads to finish.');return;}if((editor==='hero' && heroDirty) || (editor==='brand' && brandDirty) || (editor==='service' && serviceDirty)){setDiscardIntent({editor});return;}discardOtherEditor(editor);}
+  function discardOtherEditor(editor:'hero'|'brand'|'service'){if(editor==='hero')setEditingHero(null);else if(editor==='brand')setEditingBrand(null);else setEditingService(null);}
+  function closeProject(){if(uploadsActive){setError('Wait for uploads to finish.');return;}if(projectDirty){setDiscardIntent({});return;}closeProjectWithoutPrompt();}
+  useEffect(()=>{if(!discardIntent)return;const previous=document.activeElement as HTMLElement | null;discardCancel.current?.focus();const key=(event:KeyboardEvent)=>{if(event.key==='Escape')setDiscardIntent(null);if(event.key==='Tab'){const buttons=Array.from(discardPanel.current?.querySelectorAll<HTMLButtonElement>('button') || []);const first=buttons[0],last=buttons[buttons.length-1];if(event.shiftKey && document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey && document.activeElement===last){event.preventDefault();first?.focus();}}};window.addEventListener('keydown',key);return()=>{window.removeEventListener('keydown',key);previous?.focus();};},[discardIntent]);
+  function closeProjectWithoutPrompt(){projectEditorSession.current++;if(editingProject?.id){setDestMap(current=>({...current,[editingProject.id]:JSON.parse(projectSnapshot.current || '{}').destinations || []}));setProjectMediaMap(current=>({...current,[editingProject.id]:JSON.parse(projectSnapshot.current || '{}').mediaIds || []}));}setEditingProject(null);}
+  function setProjectMain(item:MediaAsset){if(editingProject)setProjectMediaMap(current=>({...current,[editingProject.id]:Array.from(new Set([...(current[editingProject.id] || []),...media.filter(asset=>asset.file_url===editingProject.media_url).map(asset=>asset.id),item.id]))}));setEditingProject(current=>current ? {...current,media_url:item.file_url,media_type:isVideoAsset(item) ? 'video' : 'image',preview_url:isVideoAsset(item) ? item.file_url : '',preview_enabled:isVideoAsset(item),preview_type:'video'} : current);}
+  function updateProjectMedia(ids:number[]){if(!editingProject)return;const priorIds=Array.from(new Set([...(projectMediaMap[editingProject.id] || []),...media.filter(item=>item.file_url===editingProject.media_url).map(item=>item.id)]));setProjectMediaMap(current=>({...current,[editingProject.id]:ids}));const selected=ids.flatMap(id=>{const item=media.find(item=>item.id===id);return item ? [item] : [];});const mainRemoved=media.some(item=>priorIds.includes(item.id) && !ids.includes(item.id) && item.file_url===editingProject.media_url);const coverRemoved=media.some(item=>priorIds.includes(item.id) && !ids.includes(item.id) && item.file_url===editingProject.cover_url);setEditingProject(current=>current ? {...current,...((!current.media_url || mainRemoved) ? {media_url:selected[0]?.file_url || '',media_type:selected[0] && isVideoAsset(selected[0]) ? 'video' : 'image',preview_url:selected[0] && isVideoAsset(selected[0]) ? selected[0].file_url : '',preview_enabled:!!selected[0] && isVideoAsset(selected[0])} : {}),...((!current.cover_url || coverRemoved) ? {cover_url:selected.find(item=>!isVideoAsset(item))?.file_url || ''} : {})} : current);}
   const activeSection = navigationItems.find(item => item.id === section)!;
   const publishedProjects = projects.filter(project => project.published).length;
 
   function navigateTo(next: Section) {
+    if(next!==section && uploadsActive){setError('Wait for uploads to finish.');return;}
+    if(next!==section && editingProject){if(projectDirty){setDiscardIntent({section:next});return;}closeProjectWithoutPrompt();}
+    if(next!==section && editingHero){if(heroDirty){setDiscardIntent({section:next,editor:'hero'});return;}discardOtherEditor('hero');}
+    if(next!==section && editingBrand){if(brandDirty){setDiscardIntent({section:next,editor:'brand'});return;}discardOtherEditor('brand');}
+    if(next!==section && editingService){if(serviceDirty){setDiscardIntent({section:next,editor:'service'});return;}discardOtherEditor('service');}
     setSection(next);
     setNavigationOpen(false);
     setMessage('');setError('');
@@ -898,6 +925,7 @@ function AdminWorkspace() {
   return (
     <main className={`admin${navigationOpen ? ' menu-open' : ''}`} lang={lang} dir={lang === 'fa' ? 'rtl' : 'ltr'}>
       <style>{styles}</style>
+      {discardIntent && <div className="admin-discard-overlay"><div ref={discardPanel} role="dialog" aria-modal="true" aria-labelledby="discard-title" className="admin-discard-dialog"><h2 id="discard-title">{t('Unsaved changes')}</h2><p>{t('Changes have not been saved. Keep editing or discard them.')}</p><div><button type="button" ref={discardCancel} className="primary" onClick={()=>setDiscardIntent(null)}>{t('Keep editing')}</button><button type="button" className="ghost" onClick={()=>{const destination=discardIntent.section;if(discardIntent.editor && discardIntent.editor!=='project')discardOtherEditor(discardIntent.editor);else closeProjectWithoutPrompt();setDiscardIntent(null);if(destination){setSection(destination);setNavigationOpen(false);setMessage('');setError('');window.scrollTo({top:0,behavior:'instant'});}}}>{t('Discard changes')}</button></div></div></div>}
       <button className="admin-nav-backdrop" aria-label={t("Close navigation")} onClick={() => setNavigationOpen(false)} />
       <aside className="sidebar" id="admin-sidebar" aria-label={t("Admin navigation")}>
         <a className="admin-brand" href="/" target="_blank" rel="noreferrer">
@@ -953,7 +981,7 @@ function AdminWorkspace() {
         {section === 'bts' && <>
           <SectionHeader title={t("Behind the Scenes")} description="Behind-the-scenes files belong to their projects. Open a project to upload, arrange and publish them." />
           <div className="panel"><h3>{t("Project galleries")}</h3><div className="list">{projects.filter(project => project.bts_media_ids?.length || (destMap[project.id] || []).includes('bts')).map(project => <article className="row-card" key={project.id}><div className="row-content"><b>{(lang === 'fa' ? project.title_fa || project.title_en : project.title_en || project.title_fa) || t("Untitled project")}</b><div className="sub">{project.bts_media_ids?.length ?? (projectMediaMap[project.id] || []).length} {t("files ·")}{project.published ? t("Published") : t("Draft")}</div></div><button className="ghost" onClick={() => {projectEditorSession.current++;openProject(project);setProjectStep(1);navigateTo('projects');}}>{t("Open project")}</button></article>)}</div><button className="ghost" onClick={() => navigateTo('projects')}>{t("Go to projects")}</button></div>
-          <details className="content-group"><summary>{t("Independent gallery ·")}{btsMediaIds.length} {t("files")}</summary><div className="content-group-body"><MediaUploader onDone={async uploaded => {await refreshMedia();if(uploaded?.length) setBtsMediaIds(current => Array.from(new Set([...current,...uploaded.map(item => item.id)])));}} onError={setError} />
+          <details className="content-group"><summary>{t("Independent gallery ·")}{btsMediaIds.length} {t("files")}</summary><div className="content-group-body"><MediaUploader onBusyChange={projectUploadBusy} onDone={async uploaded => {await refreshMedia();if(uploaded?.length) setBtsMediaIds(current => Array.from(new Set([...current,...uploaded.map(item => item.id)])));}} onError={setError} />
           <div className="workflow-status"><span>{btsMediaIds.length} {t("files in this gallery")}</span><b>{btsMediaIds.join(',') === btsSavedIds.join(',') ? t("Published version") : t("Unpublished changes")}</b></div>
           <div className="panel"><p className="hint">{t("For project behind-the-scenes, open the project → Media → Behind the scenes.")}</p><MediaPicker title={t("Choose & arrange media")} media={media} ids={btsMediaIds} onChange={setBtsMediaIds} multiple />
             {btsMediaIds.some(id => !btsSavedIds.includes(id)) && <details className="content-group"><summary>{t("Name new files (optional)")}</summary><div className="content-group-body"><p className="hint">{t("Applies only to the newly added files in this gallery.")}</p><div className="grid2"><Input label="Brand name" value={btsBrandName} onChange={setBtsBrandName} /><Input label="Project name" value={btsProjectName} onChange={setBtsProjectName} /></div></div></details>}
@@ -968,7 +996,7 @@ function AdminWorkspace() {
               title={t("Projects")}
               description="Portfolio projects, destinations, media and publication."
               action={<button className="primary" disabled={!!editingProject} onClick={() => {
-                projectEditorSession.current++;
+                projectEditorSession.current++;projectSnapshot.current='';
                 setProjectStep(0);
                 setDestMap(current => ({ ...current, 0: [] }));
                 setProjectMediaMap(current => ({ ...current, 0: [] }));
@@ -980,14 +1008,14 @@ function AdminWorkspace() {
               }); }}>{t("+ New project")}</button>}
             />
             <div className="toolbar">
-              <input hidden={!!editingProject} aria-label={t("Search projects")} placeholder={t("Search projects…")} value={projectSearch} onChange={e => setProjectSearch(e.target.value)} />
+              <select hidden={!!editingProject} aria-label={t("Publication status")} value={projectStatus} onChange={e=>setProjectStatus(e.target.value)}><option value="all">{t("All statuses")}</option><option value="published">{t("Published")}</option><option value="draft">{t("Draft")}</option></select><select hidden={!!editingProject} aria-label={t("Section")} value={projectCategory} onChange={e=>setProjectCategory(e.target.value)}><option value="all">{t("All sections")}</option>{destinations.filter(([key])=>["film","photography","content","bts"].includes(key)).map(([key,label])=><option key={key} value={key}>{t(label)}</option>)}</select><input hidden={!!editingProject} aria-label={t("Search projects")} placeholder={t("Search projects…")} value={projectSearch} onChange={e => setProjectSearch(e.target.value)} />
             </div>
 
             {editingProject && (
               <div className="editor">
                 <div className="editor-top">
                   <h2>{editingProject.id ? t("Edit project") : t("New project")}</h2>
-                  <button className="ghost" onClick={() => {projectEditorSession.current++;setEditingProject(null);}}>{t("Close")}</button>
+                  <button className="ghost" onClick={closeProject}>{t("Close")}</button>
                 </div>
 
                 <nav className="workflow-steps" aria-label={t("Project setup")}>{[t("Name"),t("Media"),t("Publish")].map((label,index) => <button type="button" key={label} aria-current={projectStep === index ? 'step' : undefined} className={projectStep === index ? 'active' : ''} onClick={() => {setError('');setProjectStep(index);}}><span>{index + 1}</span>{t(label)}</button>)}</nav>
@@ -997,22 +1025,20 @@ function AdminWorkspace() {
                   <details className="content-group"><summary>{t("Description (optional)")}</summary><div className="content-group-body grid2"><Textarea label="Description — English" value={editingProject.description_en} onChange={v => setEditingProject({...editingProject,description_en:v})} /><Textarea label="توضیحات — فارسی" value={editingProject.description_fa} onChange={v => setEditingProject({...editingProject,description_fa:v})} /></div></details>
                 </div>}
                 {projectStep === 1 && <div className="workflow-body">
-                  <div className="workflow-section-head"><div><h3>{t("Photos & videos")}</h3><p className="hint">{t("New uploads join this gallery. The first file becomes the main media if none is set.")}</p></div><MediaUploader onDone={uploaded => uploadProjectFiles(uploaded,currentEditorSession)} onError={setError} /></div>
-                  <MediaPicker title={t("Main photo or video")} media={media} ids={media.filter(item => item.file_url === editingProject.media_url).map(item => item.id)} onChange={ids => {const item = media.find(item => item.id === ids[0]);setEditingProject({...editingProject,media_url:item?.file_url || '',media_type:item && isVideoAsset(item) ? 'video' : 'image',...(!editingProject.preview_url || editingProject.preview_url === editingProject.media_url ? {preview_url:item && isVideoAsset(item) ? item.file_url : '',preview_enabled:!!item && isVideoAsset(item),preview_type:'video'} : {})});}} />
-                  <MediaPicker title={t("Gallery & order")} media={media} ids={projectMediaMap[editingProject.id] || []} onChange={ids => setProjectMediaMap(current => ({...current,[editingProject.id]:ids}))} multiple />
-                  <MediaPicker title={t("Cover image")} kind="image" media={media} ids={media.filter(item => item.file_url === editingProject.cover_url).map(item => item.id)} onChange={ids => setEditingProject({...editingProject,cover_url:media.find(item => item.id === ids[0])?.file_url || ''})} />
-                  <details className="content-group"><summary>{t("Behind the scenes ·")}{(editingProject.bts_media_ids || []).length} {t("files")}</summary><div className="content-group-body"><p className="hint">{t("Photos and videos here appear under this project and on the Behind the scenes page when the project is published.")}</p><MediaUploader onDone={uploaded => uploadProjectFiles(uploaded,currentEditorSession,true)} onError={setError} /><MediaPicker title={t("Project behind the scenes")} media={media} ids={editingProject.bts_media_ids || []} onChange={ids => setEditingProject({...editingProject,bts_media_ids:ids})} multiple /></div></details>
+                  <div className="workflow-section-head"><div><h3>{t("Photos & videos")}</h3><p className="hint">{t("New uploads join this gallery. The first file becomes the main media if none is set.")}</p></div><MediaUploader onBusyChange={projectUploadBusy} onDone={uploaded => uploadProjectFiles(uploaded,currentEditorSession)} onError={setError} /></div>
+                  <ProjectMediaEditor media={media} ids={Array.from(new Set([...(projectMediaMap[editingProject.id] || []),...media.filter(item=>item.file_url===editingProject.media_url).map(item=>item.id)]))} mainUrl={editingProject.media_url} coverUrl={editingProject.cover_url} onChange={ids=>updateProjectMedia(ids)} onMain={item=>setProjectMain(item)} onCover={item=>setEditingProject({...editingProject,cover_url:item.file_url})} onBehindScenes={id=>{updateProjectMedia(Array.from(new Set([...(projectMediaMap[editingProject.id] || []),...media.filter(item=>item.file_url===editingProject.media_url).map(item=>item.id)])).filter(value=>value!==id));setEditingProject(current=>current ? {...current,bts_media_ids:Array.from(new Set([...(current.bts_media_ids || []),id]))} : current);}}/>
+                  <details className="content-group"><summary>{t("Behind the scenes ·")}{(editingProject.bts_media_ids || []).length} {t("files")}</summary><div className="content-group-body"><p className="hint">{t("Photos and videos here appear under this project and on the Behind the scenes page when the project is published.")}</p><MediaUploader onBusyChange={projectUploadBusy} onDone={uploaded => uploadProjectFiles(uploaded,currentEditorSession,true)} onError={setError} /><MediaPicker title={t("Project behind the scenes")} media={media} ids={editingProject.bts_media_ids || []} onChange={ids => setEditingProject({...editingProject,bts_media_ids:ids})} multiple /></div></details>
                   <details className="content-group"><summary>{t("Video preview & external links (optional)")}</summary><div className="content-group-body"><Toggle label="Enable card video preview" value={!!editingProject.preview_enabled} onChange={value => setEditingProject({...editingProject,preview_enabled:value})} /><MediaPicker title={t("Video preview")} kind="video" media={media} ids={media.filter(item => item.file_url === editingProject.preview_url).map(item => item.id)} onChange={ids => setEditingProject({...editingProject,preview_url:media.find(item => item.id === ids[0])?.file_url || '',preview_type:'video',preview_enabled:!!ids.length})} /><div className="grid2"><Input label="Cover URL" value={editingProject.cover_url || ''} onChange={v => setEditingProject({...editingProject,cover_url:v})} /><Input label="Main media URL" value={editingProject.media_url || ''} onChange={v => setEditingProject({...editingProject,media_url:v})} /></div></div></details>
                 </div>}
                 {projectStep === 2 && <div className="workflow-body">
-                  <div className="workflow-review"><h3>{editingProject.title_en || editingProject.title_fa || t("Add a project name")}</h3><p>{editingProject.published ? t("Currently published") : t("Currently a draft")} · {(projectMediaMap[editingProject.id] || []).length} {t("gallery files ·")}{(editingProject.bts_media_ids || []).length} {t("behind-the-scenes files")}</p></div>
+                  <div className="workflow-review project-publish-preview">{(editingProject.cover_url || editingProject.media_url) && <div className="project-preview-cover">{editingProject.cover_url || !isVideoAsset(editingProject) ? <img src={editingProject.cover_url || editingProject.media_url || ''} alt=""/> : <video src={editingProject.media_url || undefined} muted playsInline preload="metadata"/>}</div>}<div><p className="hint">{t("Card preview")}</p><h3>{editingProject.title_en || editingProject.title_fa || t("Add a project name")}</h3><p>{editingProject.published ? t("Currently published") : t("Currently a draft")} · {new Set([...(editingProject.media_url ? [editingProject.media_url] : []),...(projectMediaMap[editingProject.id] || []).flatMap(id=>{const item=media.find(item=>item.id===id);return item ? [item.file_url] : [];})]).size} {t("gallery files ·")}{(editingProject.bts_media_ids || []).length} {t("behind-the-scenes files")}</p>{editingProject.brand_name && <p dir="auto">{editingProject.brand_name}</p>}</div></div>
                   <h3>{t("Where should it appear?")}</h3><div className="checks">{destinations.filter(([key]) => !['home','featured','work','bts'].includes(key)).map(([key,label]) => {const checked=(destMap[editingProject.id] || []).includes(key);return <label key={key}><input type="checkbox" checked={checked} onChange={() => setDestMap(map => ({...map,[editingProject.id]:checked ? (map[editingProject.id] || []).filter(value => value !== key) : [...(map[editingProject.id] || []),key]}))} />{t(label)}</label>;})}</div>
                   <label className="workflow-home"><input type="checkbox" checked={(destMap[editingProject.id] || []).includes('home')} onChange={e => setDestMap(map => ({...map,[editingProject.id]:e.target.checked ? Array.from(new Set([...(map[editingProject.id] || []),'home'])) : (map[editingProject.id] || []).filter(value => value !== 'home')}))} /><span><b>{t("Main on homepage")}</b><small>{t("Show this project first in its sections. All still includes every published project.")}</small></span></label>
                   <details className="content-group"><summary>{t("Advanced display settings")}</summary><div className="content-group-body grid2"><Input label="Display order" type="number" value={editingProject.sort_order ?? 0} onChange={v => setEditingProject({...editingProject,sort_order:Number(v) || 0})} /><Toggle label="Use as hero fallback" value={!!editingProject.featured} onChange={value => setEditingProject({...editingProject,featured:value})} /></div></details>
                 </div>}
                 <div className="workflow-actions">
-                  <button className="ghost" onClick={() => projectStep ? setProjectStep(projectStep - 1) : (projectEditorSession.current++,setEditingProject(null))}>{projectStep ? t("Back") : t("Cancel")}</button>
-                  <div className="workflow-action-end">{(!editingProject.published || projectStep === 2) && <button className="ghost" disabled={saving} onClick={() => saveProject(false)}>{editingProject.published ? t("Unpublish") : t("Save draft")}</button>}{projectStep < 2 ? <button className="primary" onClick={() => setProjectStep(projectStep + 1)}>{t("Next")}</button> : <button className="primary" disabled={saving} onClick={() => saveProject(true)}>{saving ? t("Publishing…") : editingProject.published ? t("Save & publish") : t("Publish project")}</button>}</div>
+                  <button className="ghost" onClick={() => projectStep ? setProjectStep(projectStep - 1) : closeProject()}>{projectStep ? t("Back") : t("Cancel")}</button>
+                  <div className="workflow-action-end">{(!editingProject.published || projectStep === 2) && <button className="ghost" disabled={saving || uploadsActive>0} onClick={() => saveProject(false)}>{editingProject.published ? t("Unpublish") : t("Save draft")}</button>}{projectStep < 2 ? <button className="primary" onClick={() => setProjectStep(projectStep + 1)}>{t("Next")}</button> : <button className="primary" disabled={saving || uploadsActive>0} onClick={() => saveProject(true)}>{saving ? t("Publishing…") : editingProject.published ? t("Save & publish") : t("Publish project")}</button>}</div>
                 </div>
                 {editingProject.id > 0 && <details className="content-group"><summary>{t("Delete project")}</summary><div className="content-group-body"><button className="danger" disabled={saving} onClick={() => deleteProject(editingProject.id)}>{t("Delete project")}</button></div></details>}
 
@@ -1027,7 +1053,7 @@ function AdminWorkspace() {
                   </div>
                   <div className="row-main">
                     <b>{(lang === 'fa' ? project.title_fa || project.title_en : project.title_en || project.title_fa) || t("Untitled project")}</b>
-                    <span>{t(project.category)} · {project.published ? t("Published") : t("Draft")} · {project.featured ? t("Featured") : t("Standard")}</span>
+                    <span>{projectSections({...project,destinations:destMap[project.id] || []}).map(key=>sectionName(key,lang)).join(' · ')} · {project.published ? t("Published") : t("Draft")} · {project.featured ? t("Featured") : t("Standard")}</span>
                     <small>{(destMap[project.id] || []).map(key => t(destinations.find(([value]) => value === key)?.[1] || key)).join(' · ') || t("No destinations")}</small>
                   </div>
                   <div className="project-list-actions"><label className="asset-bulk-check"><input type="checkbox" disabled={saving || !project.published} checked={(destMap[project.id] || []).includes('home')} onChange={async e => {
@@ -1045,7 +1071,7 @@ function AdminWorkspace() {
 
         {section === 'media' && (
           <>
-            <SectionHeader title={t("Media Library")} description="Upload images and videos once and reuse them across the site." action={<MediaUploader onDone={async uploaded => {await refreshMedia(); clearMediaSelection(); setLabelIds(uploaded?.map(item => item.id) || []);}} onError={setError} />} />
+            <SectionHeader title={t("Media Library")} description="Upload images and videos once and reuse them across the site." action={<MediaUploader onBusyChange={projectUploadBusy} onDone={async uploaded => {await refreshMedia(); clearMediaSelection(); setLabelIds(uploaded?.map(item => item.id) || []);}} onError={setError} />} />
             <div className="toolbar">
               <input aria-label={t("Search media")} placeholder={t("Search media…")} value={mediaSearch} onChange={e => {setMediaSearch(e.target.value); setMediaPage(0);}} />
               <select aria-label={t("Filter media type")} value={mediaFilter} onChange={e => {setMediaFilter(e.target.value); setMediaPage(0);}}>
@@ -1101,21 +1127,22 @@ function AdminWorkspace() {
             })}>{t("+ New slide")}</button>} />
             {editingHero && (
               <div className="editor">
-                <div className="editor-top"><h2>{editingHero.id ? t("Edit slide") : t("New slide")}</h2><button className="ghost" onClick={() => setEditingHero(null)}>{t("Close")}</button></div>
+                <div className="editor-top"><h2>{editingHero.id ? t("Edit slide") : t("New slide")}</h2><button className="ghost" onClick={() => closeOtherEditor('hero')}>{t("Close")}</button></div>
+                <MediaPicker title={t("Slide media")} media={media} ids={media.filter(item=>item.file_url===editingHero.media_url).map(item=>item.id)} onChange={ids=>{const item=media.find(item=>item.id===ids[0]);setEditingHero({...editingHero,media_url:item?.file_url || '',media_type:item && isVideoAsset(item) ? 'video' : 'image'});}} upload={<MediaUploader onBusyChange={projectUploadBusy} onDone={async uploaded=>{await refreshMedia();if(uploaded?.[0])setEditingHero(current=>current ? {...current,media_url:uploaded[0].file_url,media_type:isVideoAsset(uploaded[0]) ? 'video' : 'image'} : current);}} onError={setError}/>}/>
                 <div className="grid2">
                   <Input label="Title — English" value={editingHero.title_en || ''} onChange={v => setEditingHero({...editingHero, title_en: v})} />
                   <Input label="عنوان — فارسی" value={editingHero.title_fa || ''} onChange={v => setEditingHero({...editingHero, title_fa: v})} />
                   <Textarea label="Description — English" value={editingHero.description_en} onChange={v => setEditingHero({...editingHero, description_en: v})} />
                   <Textarea label="توضیحات — فارسی" value={editingHero.description_fa} onChange={v => setEditingHero({...editingHero, description_fa: v})} />
-                  <Input label="Media URL" value={editingHero.media_url || ''} onChange={v => setEditingHero({...editingHero, media_url: v})} />
+                  <details className="content-group"><summary>{t("External media URL (optional)")}</summary><Input label="Media URL" value={editingHero.media_url || ''} onChange={v => setEditingHero({...editingHero,media_url:v})}/></details>
                   <select className="field-select" value={editingHero.media_type} onChange={e => setEditingHero({...editingHero, media_type: e.target.value})}><option value="image">Image</option><option value="video">{t("Video")}</option></select>
                   <Input label="Button — English" value={editingHero.button_text_en || ''} onChange={v => setEditingHero({...editingHero, button_text_en: v})} />
                   <Input label="Button — فارسی" value={editingHero.button_text_fa || ''} onChange={v => setEditingHero({...editingHero, button_text_fa: v})} />
-                  <Input label="Button URL" value={editingHero.button_url || ''} onChange={v => setEditingHero({...editingHero, button_url: v})} />
+                  <p className="hint">{t("The slide button opens Contact.")}</p>
                   <Input label="Sort order" type="number" value={editingHero.sort_order} onChange={v => setEditingHero({...editingHero, sort_order: Number(v) || 0})} />
                 </div>
                 <Toggle label="Published" value={editingHero.published} onChange={v => setEditingHero({...editingHero, published: v})} />
-                <div className="editor-actions"><button className="danger" onClick={() => editingHero.id && deleteHero(editingHero.id)}>{t("Delete")}</button><div /><button className="ghost" onClick={() => setEditingHero(null)}>{t("Cancel")}</button><button className="primary" disabled={saving} onClick={saveHero}>{saving ? t("Saving…") : t("Save slide")}</button></div>
+                <div className="editor-actions"><button className="danger" onClick={() => editingHero.id && deleteHero(editingHero.id)}>{t("Delete")}</button><div /><button className="ghost" onClick={() => closeOtherEditor('hero')}>{t("Cancel")}</button><button className="primary" disabled={saving} onClick={saveHero}>{saving ? t("Saving…") : t("Save slide")}</button></div>
               </div>
             )}
             <div className="list">
@@ -1146,10 +1173,10 @@ function AdminWorkspace() {
               });
             }}>{t("+ New brand")}</button>} />
             {editingBrand && <div className="editor">
-              <div className="editor-top"><h2>{editingBrand.id ? t("Edit brand") : t("New brand")}</h2><button className="ghost" onClick={() => setEditingBrand(null)}>{t("Close")}</button></div>
+              <div className="editor-top"><h2>{editingBrand.id ? t("Edit brand") : t("New brand")}</h2><button className="ghost" onClick={() => closeOtherEditor('brand')}>{t("Close")}</button></div>
               <div className="grid2"><Input label="Name" value={editingBrand.name} onChange={v => setEditingBrand({...editingBrand,name:v})}/><Input label="Logo URL" value={editingBrand.logo_url || ''} onChange={v => setEditingBrand({...editingBrand,logo_url:v})}/><Input label="Website URL" value={editingBrand.website_url || ''} onChange={v => setEditingBrand({...editingBrand,website_url:v})}/><Input label="Sort order" type="number" value={editingBrand.sort_order ?? 0} onChange={v => setEditingBrand({...editingBrand,sort_order:Number(v)||0})}/></div>
               <Toggle label="Published" value={!!editingBrand.published} onChange={v => setEditingBrand({...editingBrand,published:v})}/>
-              <div className="editor-actions">{editingBrand.id > 0 && <button className="danger" onClick={() => deleteBrand(editingBrand.id)}>{t("Delete")}</button>}<div/><button className="ghost" onClick={() => setEditingBrand(null)}>{t("Cancel")}</button><button className="primary" onClick={saveBrand}>{t("Save brand")}</button></div>
+              <div className="editor-actions">{editingBrand.id > 0 && <button className="danger" onClick={() => deleteBrand(editingBrand.id)}>{t("Delete")}</button>}<div/><button className="ghost" onClick={() => closeOtherEditor('brand')}>{t("Cancel")}</button><button className="primary" onClick={saveBrand}>{t("Save brand")}</button></div>
             </div>}
             <div className="list">{brands.map(item => <article className="row-card" key={item.id}><div className="thumb">{item.logo_url ? <img src={item.logo_url} alt="" /> : <span>LOGO</span>}</div><div className="row-main"><b>{item.name}</b><span>{item.published ? t("Published") : t("Draft")}</span></div><button className="ghost" onClick={() => setEditingBrand(item)}>{t("Edit")}</button></article>)}{!brands.length && <EmptyState text="No brands."/>}</div>
           </>
@@ -1159,10 +1186,10 @@ function AdminWorkspace() {
           <>
             <SectionHeader title={t("Services")} description="Services are stored in the CMS instead of local component state." action={<button className="primary" onClick={() => setEditingService({id:0,title_en:'',title_fa:'',description_en:'',description_fa:'',published:true,sort_order:services.length})}>{t("+ New service")}</button>} />
             {editingService && <div className="editor">
-              <div className="editor-top"><h2>{editingService.id ? t("Edit service") : t("New service")}</h2><button className="ghost" onClick={() => setEditingService(null)}>{t("Close")}</button></div>
+              <div className="editor-top"><h2>{editingService.id ? t("Edit service") : t("New service")}</h2><button className="ghost" onClick={() => closeOtherEditor('service')}>{t("Close")}</button></div>
               <div className="grid2"><Input label="Title — English" value={editingService.title_en} onChange={v => setEditingService({...editingService,title_en:v})}/><Input label="عنوان — فارسی" value={editingService.title_fa || ''} onChange={v => setEditingService({...editingService,title_fa:v})}/><Textarea label="Description — English" value={editingService.description_en} onChange={v => setEditingService({...editingService,description_en:v})}/><Textarea label="توضیحات — فارسی" value={editingService.description_fa} onChange={v => setEditingService({...editingService,description_fa:v})}/><Input label="Sort order" type="number" value={editingService.sort_order} onChange={v => setEditingService({...editingService,sort_order:Number(v)||0})}/></div>
               <Toggle label="Published" value={editingService.published} onChange={v => setEditingService({...editingService,published:v})}/>
-              <div className="editor-actions">{editingService.id > 0 && <button className="danger" onClick={() => deleteService(editingService.id)}>{t("Delete")}</button>}<div/><button className="ghost" onClick={() => setEditingService(null)}>{t("Cancel")}</button><button className="primary" onClick={saveService}>{t("Save service")}</button></div>
+              <div className="editor-actions">{editingService.id > 0 && <button className="danger" onClick={() => deleteService(editingService.id)}>{t("Delete")}</button>}<div/><button className="ghost" onClick={() => closeOtherEditor('service')}>{t("Cancel")}</button><button className="primary" onClick={saveService}>{t("Save service")}</button></div>
             </div>}
             <div className="list">{services.map(item => <article className="row-card" key={item.id}><div className="row-main"><b>{item.title_en || item.title_fa}</b><span>{item.published ? t("Published") : t("Draft")} · #{item.sort_order}</span></div><button className="ghost" onClick={() => setEditingService(item)}>{t("Edit")}</button></article>)}{!services.length && <EmptyState text="No services yet."/>}</div>
           </>
@@ -1200,7 +1227,7 @@ function AdminWorkspace() {
                 />
               </div>
 
-              <MediaPicker title={t("About image")} kind="image" media={media} ids={media.filter(item => item.file_url === content.about_image_url).map(item => item.id)} onChange={ids => setContent({...content,about_image_url:media.find(item => item.id === ids[0])?.file_url || ''})} upload={<MediaUploader onDone={refreshMedia} onError={setError} />} />
+              <MediaPicker title={t("About image")} kind="image" media={media} ids={media.filter(item => item.file_url === content.about_image_url).map(item => item.id)} onChange={ids => setContent({...content,about_image_url:media.find(item => item.id === ids[0])?.file_url || ''})} upload={<MediaUploader onBusyChange={projectUploadBusy} onDone={refreshMedia} onError={setError} />} />
               </div></details><details className="content-group"><summary>{t("Contact")}</summary><div className="content-group-body"><div className="grid2"><Input label="Contact title — English" value={content.contact_title_en} onChange={v => setContent({...content,contact_title_en:v})}/><Input label="Contact title — فارسی" value={content.contact_title_fa} onChange={v => setContent({...content,contact_title_fa:v})}/><Input label="Email" value={content.contact_email} onChange={v => setContent({...content,contact_email:v})}/><Input label="Phone" value={content.contact_phone} onChange={v => setContent({...content,contact_phone:v})}/><Input label="NURANICO Instagram URL" value={content.contact_instagram} onChange={v => setContent({...content,contact_instagram:v})}/><Input label="Shayan Instagram URL" value={content.personal_instagram} onChange={v => setContent({...content,personal_instagram:v})}/><Input label="Start Project URL" value={content.start_project_url || ''} onChange={v => setContent({...content,start_project_url:v})} placeholder="/contact or https://..."/></div>
               </div></details><details className="content-group"><summary>{t("SEO")}</summary><div className="content-group-body"><div className="grid2"><Input label="SEO title — English" value={content.seo_title_en} onChange={v => setContent({...content,seo_title_en:v})}/><Input label="SEO title — فارسی" value={content.seo_title_fa} onChange={v => setContent({...content,seo_title_fa:v})}/><Textarea label="SEO description — English" value={content.seo_description_en} onChange={v => setContent({...content,seo_description_en:v})}/><Textarea label="SEO description — فارسی" value={content.seo_description_fa} onChange={v => setContent({...content,seo_description_fa:v})}/></div>
               </div></details>
@@ -1328,6 +1355,7 @@ function FontUploader({
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
+  const [fileProgress,setFileProgress]=useState<{name:string;percent:number;status:'uploading'|'done'|'error'}[]>([]);
 
   async function upload(file: File | undefined) {
     if (!file) return;
@@ -1501,6 +1529,7 @@ function LogoUploader({
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
+  const [fileProgress,setFileProgress]=useState<{name:string;percent:number;status:'uploading'|'done'|'error'}[]>([]);
 
   async function upload(file: File | undefined) {
     if (!file) return;
@@ -1664,19 +1693,22 @@ function LogoUploader({
 }
 
 
-function MediaUploader({ onDone, onError }: { onDone: (uploaded?: MediaAsset[]) => Promise<void>; onError: (s: string) => void }) {
+function MediaUploader({ onDone, onError, onBusyChange }: { onBusyChange?:(busy:boolean)=>void; onDone: (uploaded?: MediaAsset[]) => Promise<void>; onError: (s: string) => void }) {
   const {t} = useAdminLocale();
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
+  const [fileProgress,setFileProgress]=useState<{name:string;percent:number;status:'uploading'|'done'|'error'}[]>([]);
 
   async function upload(files: FileList | null) {
     if (!files?.length) return;
-    setBusy(true);
+    setBusy(true);onBusyChange?.(true);
+    setFileProgress(Array.from(files).map(file=>({name:file.name,percent:0,status:'uploading'})));
     const uploaded: MediaAsset[] = [];
+    let activeIndex=0;
     try {
       for (const [index,file] of Array.from(files).entries()) {
-        setProgress(`Uploading ${index + 1} / ${files.length}…`);
+        activeIndex=index;setProgress(`${t('Uploading…')} ${index + 1} / ${files.length}`);
         if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
           throw new Error(`${file.name}: only images and videos are supported.`);
         }
@@ -1689,12 +1721,7 @@ function MediaUploader({ onDone, onError }: { onDone: (uploaded?: MediaAsset[]) 
         const urlData = await urlResponse.json();
         if (!urlResponse.ok) throw new Error(urlData.error || 'Could not create upload URL.');
 
-        const put = await fetch(urlData.uploadUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': file.type || 'application/octet-stream' },
-          body: file,
-        });
-        if (!put.ok) throw new Error(`${file.name}: storage upload failed.`);
+        await new Promise<void>((resolve,reject)=>{const request=new XMLHttpRequest();request.open('PUT',urlData.uploadUrl);request.setRequestHeader('Content-Type',file.type || 'application/octet-stream');request.upload.onprogress=event=>{if(event.lengthComputable)setFileProgress(current=>current.map((row,i)=>i===index ? {...row,percent:Math.round(event.loaded/event.total*100)} : row));};request.onload=()=>request.status>=200 && request.status<300 ? resolve() : reject(new Error(`${file.name}: storage upload failed.`));request.onerror=()=>reject(new Error(`${file.name}: storage upload failed.`));request.send(file);});
 
         const complete = await fetch('/api/admin/media/complete', {
           method: 'POST',
@@ -1710,21 +1737,23 @@ function MediaUploader({ onDone, onError }: { onDone: (uploaded?: MediaAsset[]) 
         const completeData = await complete.json();
         if (!complete.ok) throw new Error(completeData.error || `${file.name}: database save failed.`);
         if (completeData.row) uploaded.push(completeData.row);
+        setFileProgress(current=>current.map((row,i)=>i===index ? {...row,percent:100,status:'done'} : row));
       }
     } catch (e) {
+      setFileProgress(current=>current.map((row,i)=>i>=activeIndex ? {...row,status:'error'} : row));
       onError(e instanceof Error ? e.message : 'Upload failed.');
     } finally {
       if (uploaded.length) { try { await onDone(uploaded); } catch { onError('Files uploaded. Refresh the library to see them.'); } }
-      setBusy(false);
+      setBusy(false);onBusyChange?.(false);
       if (input.current) input.current.value = '';
     }
   }
 
   return (
-    <label className={busy ? 'upload disabled' : 'upload'}>
+    <div className="upload-control"><label className={busy ? 'upload disabled' : 'upload'}>
       <input ref={input} type="file" accept="image/*,video/*" multiple disabled={busy} onChange={e => upload(e.target.files)} />
       {busy ? progress || t("Uploading…") : t("+ Upload photos / videos")}
-    </label>
+    </label>{!!fileProgress.length && <div className="upload-file-progress" aria-live="polite">{fileProgress.map((file,index)=><div key={index}><span dir="auto">{file.name}</span><progress max="100" value={file.percent}/><small>{file.status==='done' ? t('Uploaded') : file.status==='error' ? t('Not uploaded') : `${file.percent}%`}</small></div>)}</div>}</div>
   );
 }
 

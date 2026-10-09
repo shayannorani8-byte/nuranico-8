@@ -50,9 +50,6 @@ export default function ContactPage() {
       <SiteHeader />
 
       <section className="contact-inner">
-        <p>
-          {text('eyebrow', '06 / LET’S TALK', '06 / تماس')}
-        </p>
 
         <h1>
           {localizedValue(lang, titles.en, titles.fa, text('title', 'Let’s create something.', 'بیایید چیزی بسازیم.'))}

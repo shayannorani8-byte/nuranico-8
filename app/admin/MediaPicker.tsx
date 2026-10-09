@@ -19,15 +19,16 @@ export function MediaThumbnail({ item }: { item: MediaAsset }) {
     : <div className="asset-image"><img src={item.file_url} alt="" loading="lazy" /></div>;
 }
 
-export default function MediaPicker({ title, media, ids, onChange, kind = 'all', multiple = false, upload }: {
+export default function MediaPicker({ title, media, ids, onChange, kind = 'all', multiple = false, upload, hideSelection = false }: {
   title: string; media: MediaAsset[]; ids: number[]; onChange: (ids: number[]) => void;
-  kind?: 'all' | 'image' | 'video'; multiple?: boolean; upload?: React.ReactNode;
+  kind?: 'all' | 'image' | 'video'; multiple?: boolean; upload?: React.ReactNode; hideSelection?:boolean;
 }) {
   const {t} = useAdminLocale();
   const [query, setQuery] = useState('');
   const [type, setType] = useState(kind);
   const [selectedOnly, setSelectedOnly] = useState(false);
   const [page, setPage] = useState(0);
+  const [selectionLimit,setSelectionLimit]=useState(8);
   const selected = ids.map(id => media.find(item => item.id === id)).filter((item): item is MediaAsset => !!item);
   const matches = useMemo(() => media.filter(item => {
     const video = isVideoAsset(item);
@@ -45,10 +46,11 @@ export default function MediaPicker({ title, media, ids, onChange, kind = 'all',
   }
   return <section className="asset-role">
     <div className="asset-role-head"><h3>{t(title)}</h3><span>{ids.length} {t("selected")}</span></div>
-    {!!selected.length && <div className="asset-selection">{selected.map((item, index) => <article key={item.id} className="asset-selected">
+    {!hideSelection && !!selected.length && <div className="asset-selection">{selected.slice(0,selectionLimit).map((item, index) => <article key={item.id} className="asset-selected">
       <MediaThumbnail item={item} /><div><b dir="auto">{item.name}</b><small dir="auto">{[item.brand_name, item.project_name].filter(Boolean).join(' · ')}</small>
       <div className="asset-order">{multiple && <><button type="button" disabled={!index} aria-label={`${t('Move earlier')}: ${item.name}`} onClick={() => move(index, -1)}>↑</button><button type="button" disabled={index === ids.length - 1} aria-label={`${t('Move later')}: ${item.name}`} onClick={() => move(index, 1)}>↓</button></>}<button type="button" aria-label={`${t('Remove')}: ${item.name}`} onClick={() => onChange(ids.filter(id => id !== item.id))}>{t("Remove")}</button></div></div>
     </article>)}</div>}
+    {!hideSelection && selected.length>selectionLimit && <button type="button" className="ghost" onClick={()=>setSelectionLimit(value=>value+8)}>{t('Show more selected files')}</button>}
     <details className="asset-browser"><summary>{selected.length ? t("Change / add media") : t("Choose media")}</summary>
       <div className="asset-browser-body">
         <div className="asset-tools"><input aria-label={`${t('Search')} ${t(title)}`} placeholder={t("File, brand or project…")} value={query} onChange={e => {setQuery(e.target.value);setPage(0);}} />
