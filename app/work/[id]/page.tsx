@@ -654,12 +654,12 @@ export default function ProjectPage() {
 
       <section className="project-end">
         <Link href="/work">
-          {text(
+          <span className="project-more-label">{text(
             'explore_more',
             'Explore more work',
             'مشاهده پروژه‌های بیشتر'
-          )}{' '}
-          <span className="project-more-icon"><ArrowUpRight /></span>
+          )}</span>
+          <span className="project-more-icon" aria-hidden="true"><ArrowUpRight /></span>
         </Link>
       </section>
 
