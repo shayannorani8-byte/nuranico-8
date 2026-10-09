@@ -427,3 +427,18 @@ html body .site .work .portfolio-grid.portfolio-carousel .project-card { flex:0 
 
 /* Text-only action buttons. */
 .site .primary-button { justify-content:center !important;gap:0 !important; }
+
+/* Compact, matching language and menu controls across public pages. */
+html body .site-nav .nav-actions { gap:8px !important; }
+html body .site-nav :is(.menu-button,.lang-switch) { width:44px !important;height:44px !important;min-width:44px;min-height:44px;padding:0 !important;border-radius:12px !important;box-shadow:none !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;border-color:color-mix(in srgb,var(--menu-text) 18%,transparent) !important;transition:background .2s,border-color .2s; }
+html body .site-nav .lang-switch { font-family:'DM Sans',sans-serif !important;font-size:12px !important;font-weight:600 !important;line-height:1 !important;letter-spacing:.02em !important; }
+html body .site-nav .menu-button { flex-direction:column !important;gap:6px !important; }
+html body .site-nav .menu-button span { width:20px !important;height:2px !important;margin:0 !important;transition:transform .2s; }
+html body .site-nav :is(.menu-button,.lang-switch):hover { background:color-mix(in srgb,var(--menu-bg) 90%,var(--menu-text)) !important;border-color:color-mix(in srgb,var(--menu-text) 35%,transparent) !important; }
+html body .site-nav :is(.menu-button,.lang-switch):active { background:color-mix(in srgb,var(--menu-bg) 82%,var(--menu-text)) !important; }
+html body .site-nav :is(.menu-button,.lang-switch):focus-visible { outline:2px solid var(--menu-text);outline-offset:4px; }
+
+html body .site-nav .nav-actions > :is(.menu-button,.lang-switch) { flex:0 0 44px !important;min-width:44px !important;min-height:44px !important; }
+html body .site-nav .menu-button span { position:static !important;inset:auto !important;transform:none !important; }
+html body .site-nav.is-open .menu-button span:first-child { transform:translateY(4px) rotate(45deg) !important; }
+html body .site-nav.is-open .menu-button span:last-child { transform:translateY(-4px) rotate(-45deg) !important; }
