@@ -3,6 +3,9 @@
 import SiteHeader from '../../components/SiteHeader';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import ContentStatus from '../../components/ContentStatus';
+import { localizedValue, isVideoAsset } from '../../lib/media';
 import { usePageTexts } from '../../lib/usePageTexts';
 
 type Item = {
@@ -16,16 +19,25 @@ type Item = {
 };
 
 export default function WorkPage() {
-  const { text } = usePageTexts('work');
+  const searchParams = useSearchParams();
+  const requestedDestination = searchParams.get('destination') || 'work';
+  const destination = ['film', 'photography', 'content'].includes(requestedDestination) ? requestedDestination : 'work';
+  const { lang, text } = usePageTexts('work');
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [error, setError] = useState(false);
+  const [retry, setRetry] = useState(0);
+
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
     async function loadProjects() {
       try {
         const response = await fetch(
-          '/api/public/projects?destination=work',
-          { cache: 'no-store' }
+          `/api/public/projects?destination=${destination}`,
+          { cache: 'no-store', signal: AbortSignal.timeout(12000) }
         );
 
         const result = await response.json();
@@ -34,24 +46,24 @@ export default function WorkPage() {
           throw new Error(result?.error || 'Could not load work');
         }
 
-        setItems(result.items || []);
+        if (!cancelled) setItems(result.items || []);
       } catch (error) {
         console.error('Could not load work:', error);
-        setItems([]);
+        if (!cancelled) setError(true);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
     void loadProjects();
-  }, []);
+    return () => { cancelled = true; };
+  }, [destination, retry]);
 
   const getType = (item: Item) => {
-    const mediaType = (item.media_type || '').toLowerCase();
     const category = (item.category || '').toLowerCase();
 
     if (
-      mediaType.includes('video') ||
+      isVideoAsset(item) ||
       category === 'video' ||
       category === 'film'
     ) {
@@ -65,10 +77,19 @@ export default function WorkPage() {
     <main className="content-page work-gallery-page">
       <SiteHeader />
 
+      <header className="work-page-head">
+        <h1>{destination === 'film' ? (lang === 'fa' ? 'فیلم و تیزر' : 'Film & Teasers') : destination === 'photography' ? (lang === 'fa' ? 'عکاسی' : 'Photography') : destination === 'content' ? (lang === 'fa' ? 'محتوا' : 'Content') : text('title', 'Our work.', 'پروژه‌های ما.')}</h1>
+      </header>
+      {loading ? <ContentStatus>{text('loading', 'Loading projects…', 'در حال بارگذاری پروژه‌ها…')}</ContentStatus> : error ? (
+        <ContentStatus error onRetry={() => setRetry(value => value + 1)} retryLabel={text('retry', 'Try again', 'تلاش دوباره')}>
+          {text('load_error', 'Projects could not be loaded.', 'پروژه‌ها بارگذاری نشدند.')}
+        </ContentStatus>
+      ) : items.length === 0 ? <ContentStatus>{text('empty_projects', 'No projects have been published here yet.', 'هنوز پروژه‌ای در این بخش منتشر نشده است.')}</ContentStatus> : null}
       <section className="work-clean-grid">
-        {!loading &&
+        {!loading && !error &&
           items.map((item) => {
             const type = getType(item);
+            const image = item.cover_url || (!isVideoAsset(item) ? item.media_url : '');
 
             return (
               <Link
@@ -77,10 +98,10 @@ export default function WorkPage() {
                 key={item.id}
               >
                 <div className="work-clean-media">
-                  {item.cover_url ? (
+                  {image ? (
                     <img
-                      src={item.cover_url}
-                      alt={item.title_en || item.title_fa || text('project_alt', 'NURANICO project', 'پروژه NURANICO')}
+                      src={image}
+                      alt={localizedValue(lang, item.title_en, item.title_fa, text('project_alt', 'NURANICO project', 'پروژه NURANICO'))}
                       loading="lazy"
                     />
                   ) : (
@@ -90,7 +111,7 @@ export default function WorkPage() {
 
                 <div className="work-clean-info">
                   <h2>
-                    {item.title_en || item.title_fa}
+                    {localizedValue(lang, item.title_en, item.title_fa, text('untitled', 'Untitled', 'بدون عنوان'))}
                   </h2>
 
                   <span className="work-clean-type">

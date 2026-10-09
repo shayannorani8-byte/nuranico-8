@@ -1,3 +1,7 @@
+@font-face { font-family:'DM Sans'; src:url('/fonts/DM-Sans.ttf') format('truetype'); font-style:normal; font-weight:100 1000; font-display:block; }
+@font-face { font-family:'Space Grotesk'; src:url('/fonts/Space-Grotesk.ttf') format('truetype'); font-style:normal; font-weight:300 700; font-display:block; }
+@font-face { font-family:'Vazirmatn'; src:url('/fonts/Vazirmatn.ttf') format('truetype'); font-style:normal; font-weight:100 900; font-display:block; }
+:root { --font-en:'DM Sans'; --font-fa:'Vazirmatn'; --font-body:var(--font-en); --font-heading:var(--font-en); }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; background:#171716; }
 body { margin:0; background:#171716; color:#f1efe9; }
@@ -3423,4 +3427,3 @@ button {
 .content-footer {
   font-size: 1.2em;
 }
-

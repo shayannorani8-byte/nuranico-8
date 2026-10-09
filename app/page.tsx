@@ -7,6 +7,9 @@ import Link from 'next/link';
 import { usePageTexts } from '../lib/usePageTexts';
 import './home.css';
 import './home-mobile.css';
+import ArrowUpRight from '../components/ArrowUpRight';
+import { localizedValue } from '../lib/media';
+import { useSiteData } from '../components/SiteData';
 type Lang = 'en' | 'fa';
 
 type Settings = {
@@ -180,12 +183,11 @@ function PreviewVideo({
 }
 
 export default function HomePage() {
-  const { text: pageText } = usePageTexts('home');
-  const [lang, setLang] = useState<Lang>('en');
-  const [langReady, setLangReady] = useState(false);
-  const [settings, setSettings] = useState<Settings>({});
-  const [fonts, setFonts] = useState<FontAsset[]>([]);
-  const [content, setContent] = useState<Content>({});
+  const { lang, text: pageText } = usePageTexts('home');
+  const initialData = useSiteData();
+  const [settings, setSettings] = useState<Settings>(initialData.settings as Settings);
+  const [fonts, setFonts] = useState<FontAsset[]>(initialData.fonts);
+  const [content, setContent] = useState<Content>(initialData.content as Content);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [filmPortfolio, setFilmPortfolio] = useState<PortfolioItem[]>([]);
   const [photoPortfolio, setPhotoPortfolio] = useState<PortfolioItem[]>([]);
@@ -200,24 +202,6 @@ export default function HomePage() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem('nuranico-lang');
-    const initialLang: Lang = saved === 'fa' ? 'fa' : 'en';
-
-    setLang(initialLang);
-    document.documentElement.lang = initialLang;
-    document.documentElement.dir = initialLang === 'fa' ? 'rtl' : 'ltr';
-    setLangReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (!langReady) return;
-
-    document.documentElement.lang = lang;
-    document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
-    window.localStorage.setItem('nuranico-lang', lang);
-  }, [lang, langReady]);
 
   useEffect(() => {
     loadSite();
@@ -817,7 +801,7 @@ export default function HomePage() {
                 : content.hero_button_en ||
                   'Explore work'}
             </span>
-            <b>↗</b>
+            <b aria-hidden="true"><ArrowUpRight /></b>
           </a>
         </div>
 
@@ -933,7 +917,7 @@ export default function HomePage() {
                 : service.description_en || service.description_fa || '';
 
             return (
-              <a
+              <Link
                 href={href}
                 className="service-card"
                 key={service.id}
@@ -946,7 +930,7 @@ export default function HomePage() {
               >
                 <div className="service-card-top">
                   <span>{number}</span>
-                  <b>↗</b>
+                  <b aria-hidden="true"><ArrowUpRight /></b>
                 </div>
 
                 <div
@@ -1027,7 +1011,7 @@ export default function HomePage() {
                   <h3>{title}</h3>
                   <p>{description}</p>
                 </div>
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -1166,17 +1150,9 @@ export default function HomePage() {
                     ? '/work/behind-the-scenes'
                     : `/work/${item.id}`;
 
-                const title =
-                  lang === 'fa'
-                    ? item.title_fa
-                    : item.title_en ||
-                      item.title_fa;
+                const title = localizedValue(lang, item.title_en, item.title_fa, pageText('untitled', 'Untitled', 'بدون عنوان'));
 
-                const description =
-                  lang === 'fa'
-                    ? item.description_fa
-                    : item.description_en ||
-                      item.description_fa;
+                const description = localizedValue(lang, item.description_en, item.description_fa);
 
                 return (
                   <Link
@@ -1216,7 +1192,7 @@ export default function HomePage() {
                             'مشاهده پروژه'
                           )}
                         </span>
-                        <b>↗</b>
+                        <b aria-hidden="true"><ArrowUpRight /></b>
                       </div>
                     </div>
 
@@ -1544,13 +1520,13 @@ export default function HomePage() {
 
           <p>{t.contactSub}</p>
 
-          <a
+          <Link
             className="primary-button"
             href={content.start_project_url || '/contact'}
           >
             <span>{t.cta}</span>
-            <b>↗</b>
-          </a>
+            <b aria-hidden="true"><ArrowUpRight /></b>
+          </Link>
         </div>
 
         <div className="contact-mark">

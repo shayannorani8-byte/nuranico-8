@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
 import { usePageTexts } from '../../lib/usePageTexts';
+import { useSiteData } from '../../components/SiteData';
 
 type AboutContent = {
   about_title_en?: string | null;
@@ -16,17 +17,11 @@ type AboutContent = {
 };
 
 export default function AboutPage() {
-  const [lang, setLang] = useState<'en' | 'fa'>('en');
-  const [content, setContent] = useState<AboutContent>({});
-  const { text: pageText } = usePageTexts('about');
+  const initialData = useSiteData();
+  const [content, setContent] = useState<AboutContent>(initialData.content as AboutContent);
+  const { lang, text: pageText } = usePageTexts('about');
 
   useEffect(() => {
-    const savedLang = localStorage.getItem('nuranico-lang');
-
-    if (savedLang === 'fa' || savedLang === 'en') {
-      setLang(savedLang);
-    }
-
     async function loadContent() {
       const { data, error } = await supabase
         .from('site_content')
@@ -44,11 +39,7 @@ export default function AboutPage() {
     void loadContent();
   }, []);
 
-  useEffect(() => {
-    document.documentElement.lang = lang;
-    document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
-    localStorage.setItem('nuranico-lang', lang);
-  }, [lang]);
+
 
   const title =
     lang === 'fa'
@@ -103,7 +94,7 @@ export default function AboutPage() {
       </section>
 
       <footer className="inner-footer">
-        <span>NURANICO®</span>
+        <span lang="en" dir="ltr">NURANICO®</span>
         <Link href="/">
           {pageText('back_home', 'Back home ↗', 'بازگشت به خانه ↗')}
         </Link>

@@ -4,21 +4,19 @@ import SiteHeader from '../../components/SiteHeader';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePageTexts } from '../../lib/usePageTexts';
+import { localizedValue } from '../../lib/media';
+import { useSiteData } from '../../components/SiteData';
 
 export default function ContactPage() {
-  const [lang, setLang] = useState<'en' | 'fa'>('en');
-  const [email, setEmail] = useState('hello@nuranico.com');
-  const [instagram, setInstagram] = useState('');
-  const [personalInstagram, setPersonalInstagram] = useState('');
-  const { text } = usePageTexts('contact');
+  const initialData = useSiteData();
+  const [email, setEmail] = useState(String(initialData.content.contact_email || 'hello@nuranico.com'));
+  const [instagram, setInstagram] = useState(String(initialData.content.contact_instagram || ''));
+  const [personalInstagram, setPersonalInstagram] = useState(String(initialData.content.personal_instagram || ''));
+  const [phone, setPhone] = useState(String(initialData.content.contact_phone || ''));
+  const [titles, setTitles] = useState({ en: String(initialData.content.contact_title_en || ''), fa: String(initialData.content.contact_title_fa || '') });
+  const { lang, text } = usePageTexts('contact');
 
   useEffect(() => {
-    const saved = localStorage.getItem('nuranico-lang');
-
-    if (saved === 'fa' || saved === 'en') {
-      setLang(saved);
-    }
-
     import('../../lib/supabase').then(({ supabase }) =>
       supabase
         .from('site_content')
@@ -26,6 +24,10 @@ export default function ContactPage() {
         .limit(1)
         .maybeSingle()
         .then(({ data }) => {
+          if (data) {
+            setTitles({ en: data.contact_title_en || '', fa: data.contact_title_fa || '' });
+            setPhone(data.contact_phone || '');
+          }
           if (data?.contact_email) {
             setEmail(data.contact_email);
           }
@@ -41,13 +43,7 @@ export default function ContactPage() {
     );
   }, []);
 
-  useEffect(() => {
-    document.documentElement.lang = lang;
-    document.documentElement.dir =
-      lang === 'fa' ? 'rtl' : 'ltr';
 
-    localStorage.setItem('nuranico-lang', lang);
-  }, [lang]);
 
   return (
     <main className="content-page contact-page">
@@ -59,11 +55,7 @@ export default function ContactPage() {
         </p>
 
         <h1>
-          {text(
-            'title',
-            'Let’s create something.',
-            'بیایید چیزی بسازیم.'
-          )}
+          {localizedValue(lang, titles.en, titles.fa, text('title', 'Let’s create something.', 'بیایید چیزی بسازیم.'))}
         </h1>
 
         <p>
@@ -76,10 +68,14 @@ export default function ContactPage() {
 
         <a
           className="contact-link"
+          lang="en"
+          dir="ltr"
           href={`mailto:${email}`}
         >
           {email} ↗
         </a>
+
+        {phone && <a className="contact-link" lang="en" dir="ltr" href={`tel:${phone.replace(/[۰-۹]/g, digit => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))).replace(/[٠-٩]/g, digit => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit))).replace(/[^0-9+]/g, '')}`}>{phone}</a>}
 
         {instagram ? (
           <a
@@ -110,7 +106,7 @@ export default function ContactPage() {
               <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
             </svg>
 
-            <span lang="en">
+            <span lang="en" dir="ltr">
               @{instagram
                 .replace(/^https?:\/\/(www\.)?instagram\.com\//i, '')
                 .replace(/^@/, '')
@@ -149,7 +145,7 @@ export default function ContactPage() {
               <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
             </svg>
 
-            <span lang="en">
+            <span lang="en" dir="ltr">
               @{personalInstagram
                 .replace(/^https?:\/\/(www\.)?instagram\.com\//i, '')
                 .replace(/^@/, '')
@@ -161,7 +157,7 @@ export default function ContactPage() {
       </section>
 
       <footer className="inner-footer">
-        <span>NURANICO®</span>
+        <span lang="en" dir="ltr">NURANICO®</span>
 
         <Link href="/">
           {text(

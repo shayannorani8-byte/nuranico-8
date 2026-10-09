@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
         db.from('brands').select('*').order('sort_order', { ascending: true }).order('id', { ascending: true }),
         db.from('services').select('*').order('sort_order', { ascending: true }).order('id', { ascending: true }),
         db.from('project_destinations').select('project_id,destination'),
-        db.from('project_media').select('project_id,media_asset_id'),
+        db.from('project_media').select('project_id,media_asset_id').order('sort_order', { ascending: true }),
         db.from('site_content').select('*').limit(1).maybeSingle(),
         db.from('site_settings').select('*').eq('id', 1).maybeSingle(),
         db.from('font_assets').select('*').order('created_at', { ascending: false }),

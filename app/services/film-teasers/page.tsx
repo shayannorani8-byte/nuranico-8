@@ -5,6 +5,8 @@ import SiteHeader from '../../../components/SiteHeader';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ServiceProjectShowcase from '../../../components/ServiceProjectShowcase';
+import ContentStatus from '../../../components/ContentStatus';
+import { localizedValue } from '../../../lib/media';
 import { usePageTexts } from '../../../lib/usePageTexts';
 
 type BtsItem = {
@@ -21,21 +23,27 @@ type BtsItem = {
 };
 
 export default function FilmTeasersPage() {
-  const { text } = usePageTexts('film');
+  const { lang, text } = usePageTexts('film');
   const [btsItems, setBtsItems] = useState<BtsItem[]>([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setError(false);
 
     async function loadBts() {
       try {
         const response = await fetch('/api/public/bts', {
           cache: 'no-store',
+          signal: AbortSignal.timeout(12000),
         });
 
         const result = await response.json();
 
-        console.log('FILM BTS API RESULT:', result);
 
         if (!response.ok) {
           throw new Error(result?.error || 'Could not load BTS');
@@ -48,8 +56,10 @@ export default function FilmTeasersPage() {
         console.error('Could not load Film BTS:', error);
 
         if (!cancelled) {
-          setBtsItems([]);
+          setError(true);
         }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
 
@@ -58,7 +68,7 @@ export default function FilmTeasersPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [retry]);
 
   return (
     <main className="service-page">
@@ -78,16 +88,9 @@ export default function FilmTeasersPage() {
         )}
       />
 
-      <section className="film-bts">
+      {(loading || error || btsItems.length > 0) && <section className="film-bts">
           <div className="film-bts-head">
             <div>
-              <span>
-                {text(
-                  'bts_eyebrow',
-                  'BEHIND THE SCENES',
-                  'پشت صحنه'
-                )}
-              </span>
               <h2>
                 {text(
                   'bts_title',
@@ -107,7 +110,8 @@ export default function FilmTeasersPage() {
           </div>
 
           <div className="film-bts-grid">
-            {btsItems.length === 0 && (
+            {loading ? <ContentStatus>{text('loading', 'Loading…', 'در حال بارگذاری…')}</ContentStatus> : error ? <ContentStatus error onRetry={() => setRetry(value => value + 1)} retryLabel={text('retry', 'Try again', 'تلاش دوباره')}>{text('bts_load_error', 'Behind the scenes could not be loaded.', 'پشت صحنه بارگذاری نشد.')}</ContentStatus> : null}
+            {!loading && !error && btsItems.length === 0 && (
               <div className="film-bts-empty">
                 {text(
                   'empty_bts',
@@ -117,7 +121,7 @@ export default function FilmTeasersPage() {
               </div>
             )}
 
-            {btsItems.slice(0, 4).map((item, index) => {
+            {!loading && !error && btsItems.slice(0, 4).map((item, index) => {
               const isVideo = item.kind === 'video';
 
               return (
@@ -145,8 +149,7 @@ export default function FilmTeasersPage() {
                       <img
                         src={item.file_url}
                         alt={
-                          item.alt_text_en ||
-                          item.alt_text_fa ||
+                          localizedValue(lang, item.alt_text_en, item.alt_text_fa) ||
                           item.name ||
                           text(
                             'bts_item_fallback',
@@ -185,7 +188,7 @@ export default function FilmTeasersPage() {
               );
             })}
           </div>
-        </section>
+        </section>}
 <style jsx>{`
         .service-page {
           min-height: 100vh;

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from 'next/link';
 import SiteHeader from "../../components/SiteHeader";
 import { usePageTexts } from "../../lib/usePageTexts";
 
@@ -52,11 +53,10 @@ export default function ServicesPage() {
   ];
 
   return (
-    <main className="content-page">
+    <main className="content-page services-index">
       <SiteHeader />
 
       <section className="inner-hero">
-        <p>{text('eyebrow', '01 / SERVICES', '01 / خدمات')}</p>
         <h1>{text(
           'hero_title',
           'From idea to final frame.',
@@ -73,7 +73,7 @@ export default function ServicesPage() {
               <h2>{service.title}</h2>
               <p>{service.text}</p>
 
-              <a
+              <Link
                 href={service.href}
                 style={{
                   display: "inline-block",
@@ -84,11 +84,11 @@ export default function ServicesPage() {
                   textDecoration: "none",
                   cursor: "pointer",
                   position: "relative",
-                  zIndex: 9999,
+
                 }}
               >
                 {text('view_service', 'VIEW SERVICE ↗', 'مشاهده سرویس ↗')}
-              </a>
+              </Link>
             </div>
 
             <b>↗</b>
@@ -97,9 +97,9 @@ export default function ServicesPage() {
       </section>
 
       <footer className="content-footer">
-        <a href="/">
+        <Link href="/">
           {text('back_home', 'Back home ↗', 'بازگشت به خانه ↗')}
-        </a>
+        </Link>
       </footer>
     </main>
   );

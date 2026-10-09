@@ -6,7 +6,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase';
+import ContentStatus from '../../../components/ContentStatus';
+import { localizedValue, isVideoAsset } from '../../../lib/media';
 import { usePageTexts } from '../../../lib/usePageTexts';
+import { useSiteLanguage } from '../../../components/SiteLanguage';
 type AttachedMedia = {
   id: number;
   file_url: string;
@@ -34,9 +37,7 @@ type Project = {
 
 
 function isVideo(project: Project) {
-  const type = (project.media_type || '').toLowerCase();
-  const url = `${project.media_url || ''} ${project.cover_url || ''}`.toLowerCase();
-  return type.includes('video') || /\.(mp4|webm|mov|m4v)(\?|$)/.test(url);
+  return isVideoAsset(project);
 }
 
 function formatTime(value: number) {
@@ -54,7 +55,9 @@ function VideoPlayer({
   sources?: Record<string, string> | null;
   poster?: string;
 }) {
+  const { lang } = useSiteLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoError, setVideoError] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -88,6 +91,16 @@ function VideoPlayer({
     const entries = sources ? Object.entries(sources).filter(([, url]) => !!url) : [];
     return entries.length ? entries : [['Auto', src] as [string, string]];
   }, [sources, src]);
+
+  useEffect(() => {
+    setActiveSrc(src);
+    setVideoError(false);
+    setVideoSize(null);
+    setPlaying(false);
+    setCurrent(0);
+    setDuration(0);
+    setQuality('Auto');
+  }, [src]);
 
   async function togglePlay() {
     const video = videoRef.current;
@@ -140,11 +153,12 @@ function VideoPlayer({
         {
           '--video-aspect': videoSize
             ? `${videoSize.width} / ${videoSize.height}`
-            : 'auto',
-          '--video-ratio': videoRatio ?? 0,
+            : '16 / 9',
+          '--video-ratio': videoRatio ?? 16 / 9,
         } as React.CSSProperties
       }
     >
+      <div className="player-stage">
       <video
         ref={videoRef}
         src={activeSrc}
@@ -153,7 +167,7 @@ function VideoPlayer({
         controlsList="nodownload"
         disablePictureInPicture
         onContextMenu={(event) => event.preventDefault()}
-        preload="metadata"
+        preload="auto"
         onLoadedMetadata={(event) => {
           const video = event.currentTarget;
 
@@ -178,11 +192,23 @@ function VideoPlayer({
             });
           }
         }}
+        onResize={(event) => {
+          const video = event.currentTarget;
+          if (video.videoWidth && video.videoHeight) {
+            setVideoSize({ width: video.videoWidth, height: video.videoHeight });
+          }
+        }}
         onTimeUpdate={(event) =>
           setCurrent(event.currentTarget.currentTime)
         }
         onPlay={() => setPlaying(true)}
-        onPlaying={() => setPlaying(true)}
+        onPlaying={() => {
+          setPlaying(true);
+          const video = videoRef.current;
+          if (video?.videoWidth && video.videoHeight) {
+            setVideoSize({ width: video.videoWidth, height: video.videoHeight });
+          }
+        }}
         onPause={() => setPlaying(false)}
         onEnded={() => {
           setPlaying(false);
@@ -200,6 +226,7 @@ function VideoPlayer({
         onError={(event) => {
           const video = event.currentTarget;
           setPlaying(false);
+          setVideoError(true);
 
           console.error('Video media error:', {
             code: video.error?.code,
@@ -212,12 +239,12 @@ function VideoPlayer({
         onClick={togglePlay}
       />
 
-      {!playing && (
+      {videoError ? <div className="player-error" role="alert"><p>{lang === 'fa' ? 'ویدیو بارگذاری نشد.' : 'This video could not be loaded.'}</p><button type="button" onClick={() => { setVideoError(false); videoRef.current?.load(); }}>{lang === 'fa' ? 'تلاش دوباره' : 'Try again'}</button></div> : !playing && (
         <button
           type="button"
           className="player-center-play"
           onClick={togglePlay}
-          aria-label="Play"
+          aria-label={lang === 'fa' ? 'پخش ویدیو' : 'Play video'}
         >
           <svg
             className="player-play-icon"
@@ -229,12 +256,17 @@ function VideoPlayer({
         </button>
       )}
 
-      <div className="player-controls">
+      </div>
+
+      <div className="player-controls" dir="ltr">
+        <button type="button" className="player-toggle" onClick={togglePlay} aria-label={playing ? (lang === 'fa' ? 'توقف پخش' : 'Pause') : (lang === 'fa' ? 'پخش' : 'Play')}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">{playing ? <path d="M8 6v12M16 6v12" /> : <path d="M8 5l11 7-11 7Z" />}</svg>
+        </button>
         <button
           type="button"
           className="player-skip"
           onClick={() => seek(-10)}
-          aria-label="Back 10 seconds"
+          aria-label={lang === 'fa' ? '۱۰ ثانیه عقب' : 'Back 10 seconds'}
         >
           <svg viewBox="0 0 32 32" aria-hidden="true">
             <path className="skip-arrow" d="M11.3 9.2H6.2V4.1" />
@@ -246,7 +278,7 @@ function VideoPlayer({
           type="button"
           className="player-skip"
           onClick={() => seek(10)}
-          aria-label="Forward 10 seconds"
+          aria-label={lang === 'fa' ? '۱۰ ثانیه جلو' : 'Forward 10 seconds'}
         >
           <svg viewBox="0 0 32 32" aria-hidden="true">
             <path className="skip-arrow" d="M20.7 9.2h5.1V4.1" />
@@ -265,13 +297,13 @@ function VideoPlayer({
           onChange={(event) => {
             if (videoRef.current) videoRef.current.currentTime = Number(event.target.value);
           }}
-          aria-label="Video timeline"
+          aria-label={lang === 'fa' ? 'زمان ویدیو' : 'Video timeline'}
         />
         <button type="button" onClick={() => {
           const next = !muted;
           setMuted(next);
           if (videoRef.current) videoRef.current.muted = next;
-        }} aria-label="Mute">{muted ? '×' : 'VOL'}</button>
+        }} aria-label={muted ? (lang === 'fa' ? 'وصل صدا' : 'Unmute') : (lang === 'fa' ? 'قطع صدا' : 'Mute')} aria-pressed={muted}>{muted ? '×' : 'VOL'}</button>
 <button
           type="button"
           className="player-fullscreen"
@@ -306,7 +338,7 @@ function VideoPlayer({
               console.error('Fullscreen failed:', error);
             }
           }}
-          aria-label="Toggle fullscreen"
+          aria-label={lang === 'fa' ? 'تغییر حالت تمام‌صفحه' : 'Toggle fullscreen'}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" />
@@ -419,8 +451,8 @@ function PhotoViewer({
 
         {images.length > 1 && (
           <>
-            <button type="button" className="photo-prev" onClick={showPrevious} aria-label="Previous image">←</button>
-            <button type="button" className="photo-next" onClick={showNext} aria-label="Next image">→</button>
+            <button type="button" className="photo-prev" onClick={showPrevious} aria-label={text('previous_image', 'Previous image', 'تصویر قبلی')}>←</button>
+            <button type="button" className="photo-next" onClick={showNext} aria-label={text('next_image', 'Next image', 'تصویر بعدی')}>→</button>
             <span className="photo-counter">
               {String(index + 1).padStart(2, '0')} / {String(images.length).padStart(2, '0')}
             </span>
@@ -434,6 +466,8 @@ function PhotoViewer({
             <button
               type="button"
               key={`${item}-${itemIndex}`}
+              aria-label={`${text('view_image', 'View image', 'مشاهده تصویر')} ${itemIndex + 1}`}
+              aria-pressed={itemIndex === index}
               className={itemIndex === index ? 'active' : ''}
               onClick={() => setIndex(itemIndex)}
             >
@@ -454,77 +488,55 @@ export default function ProjectPage() {
   const [attachedMedia, setAttachedMedia] = useState<AttachedMedia[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [error, setError] = useState(false);
+  const [retry, setRetry] = useState(0);
+
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
+    setProject(null);
+    setAttachedMedia([]);
+
     async function load() {
-
-
-      const projectId = Number(id);
-
-      const [projectResult, linksResult] = await Promise.all([
-        supabase
-          .from('portfolio')
-          .select('*')
-          .eq('id', projectId)
-          .eq('published', true)
-          .maybeSingle(),
-
-        supabase
-          .from('project_media')
-          .select('media_asset_id,sort_order')
-          .eq('project_id', projectId)
-          .order('sort_order', { ascending: true }),
-      ]);
-
-      if (projectResult.data) {
+      try {
+        const projectId = Number(id);
+        if (!Number.isSafeInteger(projectId) || projectId <= 0) return;
+        const [projectResult, linksResult] = await Promise.all([
+          supabase.from('portfolio').select('*').eq('id', projectId).eq('published', true).abortSignal(AbortSignal.timeout(12000)).maybeSingle(),
+          supabase.from('project_media').select('media_asset_id,sort_order').eq('project_id', projectId).order('sort_order', { ascending: true }).abortSignal(AbortSignal.timeout(12000)),
+        ]);
+        if (projectResult.error) throw projectResult.error;
+        if (linksResult.error) throw linksResult.error;
+        if (cancelled) return;
         setProject(projectResult.data);
-      }
-
-      const mediaIds = (linksResult.data || [])
-        .map((row) => row.media_asset_id)
-        .filter((value): value is number => value != null);
-
-      if (mediaIds.length) {
-        const mediaResult = await supabase
-          .from('media_assets')
-          .select('id,file_url,file_type,mime_type,name')
-          .in('id', mediaIds);
-
-        if (mediaResult.data) {
-          const byId = new Map(
-            mediaResult.data.map((item) => [item.id, item])
-          );
-
-          const orderedMedia: AttachedMedia[] = [];
-
-          for (const mediaId of mediaIds) {
+        if (!projectResult.data) return;
+        const mediaIds = (linksResult.data || []).map(row => row.media_asset_id).filter((value): value is number => value != null);
+        if (mediaIds.length) {
+          const mediaResult = await supabase.from('media_assets').select('id,file_url,file_type,mime_type,name').in('id', mediaIds).abortSignal(AbortSignal.timeout(12000));
+          if (mediaResult.error) throw mediaResult.error;
+          const byId = new Map((mediaResult.data || []).map(item => [item.id, item]));
+          if (!cancelled) setAttachedMedia(mediaIds.flatMap(mediaId => {
             const item = byId.get(mediaId);
-
-            if (item) {
-              orderedMedia.push({
-                id: item.id,
-                file_url: item.file_url,
-                file_type: item.file_type ?? null,
-                mime_type: item.mime_type ?? null,
-                name: item.name ?? null,
-              });
-            }
-          }
-
-          setAttachedMedia(orderedMedia);
+            return item ? [item] : [];
+          }));
         }
-      } else {
-        setAttachedMedia([]);
+      } catch (error) {
+        console.error('Could not load project:', error);
+        if (!cancelled) setError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-
-      setLoading(false);
     }
     void load();
-  }, [id]);
+    return () => { cancelled = true; };
+  }, [id, retry]);
 
   if (loading) {
     return (
       <main className="project-page">
-        <div className="project-loading">
+        <SiteHeader />
+        <div className="project-loading" role="status">
           {text(
             'loading',
             'Loading project…',
@@ -533,6 +545,13 @@ export default function ProjectPage() {
         </div>
       </main>
     );
+  }
+  if (error) {
+    return <main className="project-page"><SiteHeader /><div className="project-not-found">
+      <ContentStatus error onRetry={() => setRetry(value => value + 1)} retryLabel={text('retry', 'Try again', 'تلاش دوباره')}>
+        {text('load_error', 'This project could not be loaded.', 'این پروژه بارگذاری نشد.')}
+      </ContentStatus><Link href="/work">{text('return_to_work', 'Return to work ↗', 'بازگشت به پروژه‌ها ↗')}</Link>
+    </div></main>;
   }
   if (!project) {
     return (
@@ -565,30 +584,22 @@ export default function ProjectPage() {
     );
   }
 
-  const title = lang === 'fa' ? project.title_fa : project.title_en || project.title_fa;
-  const description = lang === 'fa' ? project.description_fa : project.description_en || project.description_fa;
-  const attachedImages = attachedMedia
-    .filter((item) => !(item.mime_type || '').toLowerCase().startsWith('video'))
-    .map((item) => item.file_url);
-
-  const attachedVideo = attachedMedia.find(
-    (item) =>
-      (item.mime_type || '').toLowerCase().startsWith('video') ||
-      (item.file_type || '').toLowerCase() === 'video'
-  );
-
-  const gallery = attachedImages.length
-    ? attachedImages
-    : project.gallery_urls?.length
-      ? project.gallery_urls
-      : project.cover_url
-        ? [project.cover_url]
-        : [];
-
-  const effectiveVideoUrl =
-    attachedVideo?.file_url ||
-    (isVideo(project) ? project.media_url : undefined);
-
+  const title = localizedValue(lang, project.title_en, project.title_fa, text('untitled', 'Untitled', 'بدون عنوان'));
+  const description = localizedValue(lang, project.description_en, project.description_fa);
+  const attachedImages = attachedMedia.filter(item => !isVideoAsset(item)).map(item => item.file_url);
+  const attachedVideos = attachedMedia.filter(isVideoAsset);
+  const mainImage = project.media_url && !isVideo(project) ? project.media_url : '';
+  const gallery = Array.from(new Set([
+    ...(mainImage ? [mainImage] : []),
+    ...attachedImages,
+    ...(project.gallery_urls || []).filter(url => !isVideoAsset({ file_url: url })),
+    ...(!isVideo(project) && !attachedVideos.length && !mainImage && !attachedImages.length && !project.gallery_urls?.length && project.cover_url ? [project.cover_url] : []),
+  ]));
+  const effectiveVideoUrl = isVideo(project) ? project.media_url : !project.media_url ? attachedVideos[0]?.file_url : undefined;
+  const galleryVideos = Array.from(new Set([
+    ...attachedVideos.map(item => item.file_url),
+    ...(project.gallery_urls || []).filter(url => isVideoAsset({ file_url: url })),
+  ])).filter(url => url !== effectiveVideoUrl);
   const video = !!effectiveVideoUrl;
 
   return (
@@ -614,6 +625,7 @@ export default function ProjectPage() {
       {video && effectiveVideoUrl ? (
         <section className="project-media-block">
           <VideoPlayer
+            key={effectiveVideoUrl}
             src={effectiveVideoUrl}
             sources={project.media_sources}
             poster={project.cover_url}
@@ -629,28 +641,7 @@ export default function ProjectPage() {
         </section>
       )}
 
-      <section className="project-details">
-        <div>
-          <span>01</span>
-          <h2>
-            {text(
-              'the_project',
-              'THE PROJECT',
-              'پروژه'
-            )}
-          </h2>
-        </div>
-        <p>
-          {description ||
-            text(
-              'project_fallback',
-              'A NURANICO visual project.',
-              'یک پروژه تصویری از NURANICO.'
-            )}
-        </p>
-      </section>
-
-      {gallery.length > 1 ? (
+      {gallery.length > 1 || (video && gallery.length > 0) ? (
         <section className="project-gallery">
           {gallery.map((image, index) => (
             <figure key={image} className={index % 3 === 0 ? 'wide' : ''}>
@@ -664,16 +655,12 @@ export default function ProjectPage() {
         </section>
       ) : null}
 
-      <section className="project-end">
-        <span>
-          {text(
-            'next_project',
-            'NURANICO / NEXT PROJECT',
-            'NURANICO / پروژه بعدی'
-          )}
-        </span>
+      {galleryVideos.length > 0 && <section className="project-gallery-videos" aria-label={text('video_gallery', 'Video gallery', 'گالری ویدیو')}>
+        {galleryVideos.map(url => <VideoPlayer key={url} src={url} />)}
+      </section>}
 
-        <Link href="/#work">
+      <section className="project-end">
+        <Link href="/work">
           {text(
             'explore_more',
             'Explore more work',
@@ -684,7 +671,7 @@ export default function ProjectPage() {
       </section>
 
       <footer className="project-footer">
-        <span>NURANICO®</span>
+        <span lang="en" dir="ltr">NURANICO®</span>
         <span>
           {text(
             'footer_studio',

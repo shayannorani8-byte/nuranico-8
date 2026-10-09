@@ -2,14 +2,19 @@ import './globals.css';
 import './home.css';
 import './work/project.css';
 import './content-page.css';
+import './site-refinements.css';
 
 import type { Metadata } from 'next';
 
 import GlobalTypography from '../components/GlobalTypography';
 import CMSRealtime from '../components/CMSRealtime';
+import { SiteLanguage } from '../components/SiteLanguage';
+import { SiteData } from '../components/SiteData';
+import { getSiteTypography } from '../lib/site-typography';
 import { getAdminSupabase } from '../lib/supabase-admin';
 
 const SITE_URL = 'https://nuranico.com';
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const fallbackTitle = 'NURANICO — Creative Studio';
@@ -91,13 +96,23 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const typography = await getSiteTypography();
+  const selectedFonts = typography.fonts.filter(font =>
+    [typography.settings.font_en, typography.settings.font_fa].includes(font.family_name)
+  );
   return (
-    <html lang="en" dir="ltr">
+    <html lang="en" dir="ltr" data-scroll-behavior="smooth">
+      <head>
+        <link rel="preload" href="/fonts/DM-Sans.ttf" as="font" type="font/ttf" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/Vazirmatn.ttf" as="font" type="font/ttf" crossOrigin="anonymous" />
+        {selectedFonts.map(font => <link key={font.id} rel="preload" href={font.file_url} as="font" crossOrigin="anonymous" />)}
+        <GlobalTypography {...typography} />
+      </head>
       <body>
         <script
           type="application/ld+json"
@@ -132,9 +147,12 @@ export default function RootLayout({
           }}
         />
 
-        <GlobalTypography />
-        <CMSRealtime />
-        {children}
+        <SiteData data={typography}>
+          <SiteLanguage>
+            <CMSRealtime />
+            {children}
+          </SiteLanguage>
+        </SiteData>
       </body>
     </html>
   );

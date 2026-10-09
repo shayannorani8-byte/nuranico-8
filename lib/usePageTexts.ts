@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useSiteLanguage } from '../components/SiteLanguage';
+import { useSiteData } from '../components/SiteData';
 
 export type PageTextRow = {
   id: number;
@@ -12,37 +14,11 @@ export type PageTextRow = {
   sort_order: number;
 };
 
-type Language = 'en' | 'fa';
-
 export function usePageTexts(page: string) {
-  const [rows, setRows] = useState<PageTextRow[]>([]);
-  const [lang, setLang] = useState<Language>('en');
+  const { pageTexts } = useSiteData();
+  const [rows, setRows] = useState<PageTextRow[]>(() => pageTexts.filter(row => row.page === page));
+  const { lang, setLang } = useSiteLanguage();
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const saved =
-      typeof window !== 'undefined'
-        ? window.localStorage.getItem('nuranico-lang')
-        : null;
-
-    if (saved === 'fa' || saved === 'en') {
-      setLang(saved);
-    }
-
-    const handleStorage = () => {
-      const current = window.localStorage.getItem('nuranico-lang');
-
-      if (current === 'fa' || current === 'en') {
-        setLang(current);
-      }
-    };
-
-    window.addEventListener('storage', handleStorage);
-
-    return () => {
-      window.removeEventListener('storage', handleStorage);
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,15 +34,12 @@ export function usePageTexts(page: string) {
 
         const data = await response.json();
 
-        if (!cancelled) {
-          setRows(response.ok ? data.items || [] : []);
+        if (!cancelled && response.ok) {
+          setRows(data.items || []);
         }
       } catch (error) {
         console.error(`Could not load page texts for ${page}:`, error);
 
-        if (!cancelled) {
-          setRows([]);
-        }
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -117,6 +90,7 @@ export function usePageTexts(page: string) {
   return {
     rows,
     lang,
+    setLang,
     loading,
     text,
   };

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 
 const TABLES = [
@@ -11,12 +12,20 @@ const TABLES = [
   'services',
   'font_assets',
   'media_assets',
+  'page_texts',
+  'hero_slides',
+  'project_destinations',
+  'project_media',
+  'bts_media',
 ];
 
 export default function CMSRealtime() {
+  const pathname = usePathname();
   const reloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    // Reload published pages only. A reload in the CMS would discard unsaved edits.
+    if (pathname.startsWith('/admin')) return;
     const scheduleReload = () => {
       if (reloadTimer.current) {
         clearTimeout(reloadTimer.current);
@@ -58,7 +67,7 @@ export default function CMSRealtime() {
 
       void supabase.removeChannel(channel);
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }

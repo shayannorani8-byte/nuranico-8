@@ -2,6 +2,8 @@
 
 import SiteHeader from '../../../components/SiteHeader';
 import { useEffect, useRef, useState } from 'react';
+import ContentStatus from '../../../components/ContentStatus';
+import { localizedValue } from '../../../lib/media';
 import { usePageTexts } from '../../../lib/usePageTexts';
 
 type BtsItem = {
@@ -18,10 +20,13 @@ type BtsItem = {
 };
 
 export default function BehindTheScenesPage() {
-  const { text } = usePageTexts('bts');
+  const { lang, text } = usePageTexts('bts');
   const [items, setItems] = useState<BtsItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [activeItem, setActiveItem] = useState<BtsItem | null>(null);
 
   const photoRailRef = useRef<HTMLDivElement>(null);
@@ -47,7 +52,10 @@ export default function BehindTheScenesPage() {
   };
 
   useEffect(() => {
-    fetch('/api/public/bts', { cache: 'no-store' })
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
+    fetch('/api/public/bts', { cache: 'no-store', signal: AbortSignal.timeout(12000) })
       .then(async (res) => {
         const data = await res.json();
 
@@ -55,25 +63,31 @@ export default function BehindTheScenesPage() {
           throw new Error(data?.error || 'Could not load BTS');
         }
 
-        setItems(data.items || []);
+        if (!cancelled) setItems(data.items || []);
       })
       .catch((err) => {
         console.error(err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'Could not load BTS'
-        );
+        if (!cancelled) setError(true);
       })
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [retry]);
 
   useEffect(() => {
     if (!activeItem) return;
 
     const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Tab') {
+        const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button, a[href], input, video[controls], [tabindex="0"]') || []);
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      }
       if (event.key === 'Escape') {
         setActiveItem(null);
       }
@@ -85,6 +99,7 @@ export default function BehindTheScenesPage() {
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', handleKeyDown);
+      previousFocus?.focus();
     };
   }, [activeItem]);
 
@@ -114,8 +129,7 @@ export default function BehindTheScenesPage() {
             <img
               src={item.file_url}
               alt={
-                item.alt_text_en ||
-                item.alt_text_fa ||
+                localizedValue(lang, item.alt_text_en, item.alt_text_fa) ||
                 item.name ||
                 text('media_alt', 'Behind the scenes', 'پشت صحنه')
               }
@@ -138,14 +152,6 @@ export default function BehindTheScenesPage() {
       <SiteHeader />
 
       <section className="nur-bts-hero">
-        <p>
-          {text(
-            'eyebrow',
-            'BEHIND THE SCENES',
-            'پشت صحنه'
-          )}
-        </p>
-
         <h1>
           {text(
             'hero_title',
@@ -162,9 +168,9 @@ export default function BehindTheScenesPage() {
       )}
 
       {!loading && error && (
-        <div className="nur-bts-status">
-          {error}
-        </div>
+        <ContentStatus error onRetry={() => setRetry(value => value + 1)} retryLabel={text('retry', 'Try again', 'تلاش دوباره')}>
+          {text('load_error', 'Behind the scenes could not be loaded.', 'پشت صحنه بارگذاری نشد.')}
+        </ContentStatus>
       )}
 
       {!loading && !error && (
@@ -281,6 +287,7 @@ export default function BehindTheScenesPage() {
 
       {activeItem && (
         <div
+          ref={dialogRef}
           className="nur-bts-lightbox"
           role="dialog"
           aria-modal="true"
@@ -289,6 +296,7 @@ export default function BehindTheScenesPage() {
         >
           <button
             type="button"
+            ref={closeRef}
             className="nur-bts-close"
             aria-label={text('close_viewer', 'Close viewer', 'بستن نمایشگر')}
             onClick={() => setActiveItem(null)}
@@ -304,6 +312,7 @@ export default function BehindTheScenesPage() {
               <video
                 src={activeItem.file_url}
                 controls
+                tabIndex={0}
                 autoPlay
                 playsInline
                 className="nur-bts-lightbox-media"
@@ -312,8 +321,7 @@ export default function BehindTheScenesPage() {
               <img
                 src={activeItem.file_url}
                 alt={
-                  activeItem.alt_text_en ||
-                  activeItem.alt_text_fa ||
+                  localizedValue(lang, activeItem.alt_text_en, activeItem.alt_text_fa) ||
                   activeItem.name ||
                   'Behind the scenes'
                 }

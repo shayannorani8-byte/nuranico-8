@@ -1,0 +1,201 @@
+/* Shared CTA treatment: a drawn arrow, consistent label weight and no emoji glyph. */
+.site .primary-button {
+  display: inline-flex !important; align-items: center !important; justify-content: space-between !important;
+  gap: 24px !important; min-height: 52px !important; width: fit-content !important;
+  padding: 14px 22px !important; border: 1px solid color-mix(in srgb, currentColor 18%, transparent) !important;
+  border-radius: 8px !important; box-shadow: none !important;
+  font-family: var(--font-body), 'Vazirmatn', sans-serif !important;
+  font-size: 13px !important; font-weight: 600 !important; line-height: 1.6 !important;
+  text-decoration: none; transition: background .2s, transform .2s;
+}
+.site .primary-button > span { font-weight: 600 !important; letter-spacing: 0 !important; }
+.site .primary-button > b {
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  flex: 0 0 20px !important; width: 20px !important; height: 20px !important;
+  padding: 0 !important; margin: 0 !important; background: none !important;
+  border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+}
+.site .primary-button .arrow-up-right { width: 20px; height: 20px; display: block; }
+.site .primary-button:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
+html[lang='fa'] .site .primary-button { font-family: var(--font-fa-body, var(--font-fa)), 'Vazirmatn', sans-serif !important; }
+html[lang='fa'] .site .primary-button .arrow-up-right { transform: scaleX(-1); }
+html[lang='fa'] :is(.hero-copy, .project-description, .about-copy > p, .copy-section > p, .contact-inner > p, .service-card p) { line-height: 1.9 !important; letter-spacing: 0 !important; }
+html[lang='fa'] :is(.site-nav, .filter-row, .service-card, .project-meta, .content-page, .project-page) { letter-spacing: 0; }
+@media (max-width: 700px) { .site .primary-button { min-height: 48px !important; padding: 12px 18px !important; gap: 22px !important; } }
+
+html body .site .hero h1 { font-size: min(var(--cms-heading-size, 100px), 12vw) !important; text-wrap: balance; }
+html[lang='fa'] body .site .hero h1 { font-size: min(var(--cms-heading-size, 50px), 10vw) !important; }
+html[lang='fa'] body :is(.content-page, .project-page) h1 { line-height: max(var(--cms-line-height, 1.3), 1.3) !important; }
+
+/* Internal pages share readable typography and the same navigation controls. */
+.site-nav .menu-button span { display: block; background: var(--nav-text, #f1efe9) !important; flex: 0 0 1px; }
+.site-nav .mobile-menu { background: var(--nav-bg, #171716) !important; }
+.site-nav .mobile-menu a { font-size: 13px !important; line-height: 1.7; }
+.site-nav :is(button,a):focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
+html body :is(.content-page,.project-page) :is(.inner-hero h1,.contact-inner h1,.project-hero h1,.project-not-found h1) {
+  font-size: min(var(--cms-heading-size, 100px), 9vw) !important;
+  max-width: 100%; overflow-wrap: anywhere; text-wrap: balance;
+}
+html body .content-page :is(.copy-section h2,.service-list h2) { font-size: min(var(--cms-heading-size, 64px), 7vw) !important; overflow-wrap: anywhere; }
+.contact-link { max-width: 100%; overflow-wrap: anywhere; }
+.contact-link[href^='mailto:'] { direction: ltr; }
+.content-page .contact-link svg { width: 36px; height: 36px; flex-shrink: 0; }
+.work-page-head { padding: 130px 3vw 38px; }
+.work-page-head p { font-size: 11px; letter-spacing: .12em; color: #99958d; }
+.work-page-head h1 { font-size: clamp(36px, 6vw, 76px); line-height: 1.15; margin: 14px 0 0; }
+.work-gallery-page .work-clean-grid { padding-top: 0; }
+.content-status { padding: 32px 3vw; color: #a7a49e; font-size: 14px; line-height: 1.8; }
+.content-status p { margin: 0; }
+.content-status button { margin-top: 16px; background: transparent; color: inherit; border: 1px solid #ffffff40; padding: 10px 18px; border-radius: 6px; cursor: pointer; }
+.content-status button:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+.content-status-error { color: #e7b7b7; }
+.project-gallery-videos { display: grid; gap: 36px; padding: 0 5vw 80px; }
+.nur-bts-rail { direction: ltr; }
+html[lang='fa'] body :is(.service-page,.nur-bts-page,.project-library,.work-gallery-page) :is(h1,h2,h3,p) { letter-spacing: 0 !important; line-height: 1.5 !important; }
+html body .project-library-head h1 { font-size: clamp(30px, 4vw, 56px); line-height: 1.15; text-wrap: balance; }
+html body .service-page > .project-library { padding-top: 130px; }
+html body .project-library-head > div > span { font-size: 11px; line-height: 1.5; }
+html body .project-library-viewall { font-size: 11px !important; line-height: 1.5 !important; padding: 8px 0; }
+html body .library-empty { font-size: 13px; line-height: 1.8; letter-spacing: .03em; }
+html body .library-card h3 { font-size: 14px; line-height: 1.5; white-space: normal; }
+html body .service-page .film-bts-head :is(span,a) { font-size: 11px !important; line-height: 1.5 !important; }
+html body .service-page .film-bts-meta h3 { font-size: 14px !important; line-height: 1.5 !important; }
+@media(max-width:700px) {
+  html body :is(.content-page,.project-page) :is(.inner-hero h1,.contact-inner h1,.project-hero h1,.project-not-found h1) { font-size: min(var(--cms-heading-size, 54px), 11vw) !important; }
+  html body .content-page :is(.copy-section h2,.service-list h2) { font-size: min(var(--cms-heading-size, 38px), 9vw) !important; }
+  .work-page-head { padding: 110px 18px 30px; }
+  .work-gallery-page .work-clean-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px 12px; padding-inline: 18px; }
+  html body .work-clean-info h2 { font-size: 14px !important; line-height: 1.5; }
+  .work-clean-type { font-size: 10px !important; }
+  html body .service-page > .project-library { padding-top: 110px; }
+  html body .library-grid, html body .service-page .film-bts-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 24px 12px !important; }
+  html body .project-library-head { align-items: flex-start; flex-direction: column; gap: 14px; }
+  html body .project-library-head h1 { font-size: 32px; }
+}
+.admin-login { --font-fa: 'Vazirmatn'; --font-en: 'DM Sans'; --font-en-body: 'DM Sans'; --font-fa-body: 'Vazirmatn'; --font-body: var(--font-fa); --font-heading: var(--font-fa); }
+.admin-login > div { border-radius: 16px; }
+.admin-login input { border-radius: 8px; }
+.admin-login input:focus-visible { outline: 2px solid #bcd0ff !important; outline-offset: 3px; }
+.admin-login button { border-radius: 8px; }
+/* The uploaded monochrome logo needs a light treatment on dark inner pages. */
+.content-page:not(.contact-page) .site-logo-image,
+.service-page .site-logo-image,
+.nur-bts-page .site-logo-image,
+.project-page .site-logo-image { filter: brightness(0) invert(1); }
+.content-page .inner-hero:not(.split) { display: block; min-height: auto; padding: 140px 5vw 64px; }
+html[lang='fa'] body :is(.service-list p,.project-details p,.copy-section > p:not(.eyebrow),.statement > p:last-child) { line-height: 1.9 !important; letter-spacing: 0 !important; }
+@media(max-width:700px) { .content-page .inner-hero:not(.split) { padding: 110px 18px 42px; } }
+.project-page .player-toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.project-page .player-error { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; color: #ddd; font-size: 13px; background: #090909; }
+.project-page .player-error button { padding: 9px 16px; border: 1px solid #ffffff50; border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
+.contact-page .site-nav { --nav-text: #151514; --nav-active: #000; --nav-bg: #dedbd4; --site-line: #0003; background: #dedbd4ed; color: #151514; }
+html body .inner-footer { font-size: 12px !important; line-height: 1.7; letter-spacing: 0; }
+html body :is(.inner-hero p,.contact-inner > p:first-child) { font-size: 11px !important; line-height: 1.5; }
+html body .contact-page .site-nav :is(.lang-switch,.menu-button) { color: #151514 !important; border-color: #0003 !important; background: transparent !important; }
+
+/* Display faces retain their genuine ExtraBold/Black weight. Smaller UI uses the
+   regular companion family, whose variable font supplies real medium/bold faces. */
+html body :is(.site,.content-page,.project-page,.service-page,.nur-bts-page) :is(h1,h2) {
+  font-weight: var(--display-weight, 700) !important;
+  font-synthesis: none;
+}
+html body :is(.site,.content-page,.project-page,.service-page,.nur-bts-page) :is(h1,h2)[lang='en'] { font-weight: var(--display-weight-en, 800) !important; }
+html body :is(.site,.content-page,.project-page,.service-page,.nur-bts-page) :is(h1,h2)[lang='fa'] { font-weight: var(--display-weight-fa, 900) !important; }
+html body :is(.site,.content-page,.project-page,.service-page,.nur-bts-page) :is(h3,h4,h5,h6,.work-clean-info h2) {
+  font-family: var(--font-body), 'DM Sans', 'Vazirmatn', sans-serif !important;
+  font-weight: 600 !important;
+  font-synthesis: none;
+}
+html body :is(.site,.content-page,.project-page,.service-page,.nur-bts-page) :is(h3,h4,h5,h6,.work-clean-info h2)[lang='en'] { font-family: var(--font-en-body), 'DM Sans', sans-serif !important; }
+html body :is(.site,.content-page,.project-page,.service-page,.nur-bts-page) :is(h3,h4,h5,h6,.work-clean-info h2)[lang='fa'] { font-family: var(--font-fa-body), 'Vazirmatn', sans-serif !important; }
+html body :is(.site,.content-page,.project-page,.service-page,.nur-bts-page) :is(p,input,textarea,select) { font-weight: var(--body-weight, 400); }
+html body :is(.site,.content-page,.project-page,.service-page,.nur-bts-page) :is(button,.project-library-viewall,.global-cta,.filter-row button,.content-status button) { font-weight: 600 !important; }
+html body .site-nav :is(a,button) { font-weight: 500 !important; }
+html body .site-nav :is(.active,[aria-current='page']) { font-weight: 600 !important; }
+html body :is(.site,.content-page,.project-page,.service-page,.nur-bts-page) :is(p,li) :is(strong,b) { font-weight: 700 !important; }
+.admin-login h1 { font-weight: 700 !important; }
+.admin-login :is(input,p) { font-weight: 400; }
+.admin-login :is(label,button) { font-weight: 600; }
+
+/* Section landing pages put the gallery directly beneath a compact title. */
+html body .service-page > .project-library { padding: 116px max(24px, calc((100vw - 1280px) / 2)) 56px; border-top: 0; }
+html body :is(.project-library-head h1,.work-page-head h1,.nur-bts-hero h1) { font-size: clamp(28px, 3.2vw, 44px) !important; line-height: 1.3 !important; letter-spacing: -.02em !important; margin: 0; }
+html body .project-library-head { flex-direction: row; align-items: center; gap: 20px; margin-bottom: 28px; }
+html body .library-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important; gap: 28px 20px !important; }
+html body .library-card { width: 100%; max-width: 410px; }
+html body .work-page-head { padding: 116px max(24px, calc((100vw - 1280px) / 2)) 28px; }
+html body .work-gallery-page .work-clean-grid { max-width: 1328px; margin-inline: auto; padding: 0 24px 64px; gap: 28px 20px; }
+html body .work-clean-media { border-radius: 8px; }
+html body .nur-bts-hero { min-height: 0 !important; padding: 116px max(24px, calc((100vw - 1280px) / 2)) 32px !important; }
+html body .film-bts { padding: 40px max(24px, calc((100vw - 1280px) / 2)) 56px; }
+html body .film-bts-head h2 { font-size: clamp(24px, 2.8vw, 36px) !important; line-height: 1.3 !important; }
+html body .film-bts-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important; gap: 24px 20px !important; }
+html body .services-index .inner-hero h1 { font-size: clamp(28px, 3.2vw, 44px) !important; }
+html body .services-index .inner-hero { padding: 116px 5vw 32px; }
+html body .services-index .service-list article { padding-block: 32px; }
+html body .services-index .service-list h2 { font-size: clamp(24px, 2.5vw, 34px) !important; }
+html body .project-page .project-hero { min-height: 0 !important; padding: 116px max(24px, calc((100vw - 1200px) / 2)) 32px !important; }
+html body .project-page .project-hero h1 { font-size: clamp(28px, 3.5vw, 48px) !important; line-height: 1.3 !important; letter-spacing: -.025em !important; margin: 10px 0 0; }
+html body .project-page .project-description { margin-top: 16px; font-size: 15px !important; line-height: 1.8 !important; }
+html body .project-page :is(.project-media-block,.project-gallery,.project-gallery-videos) { width: 100%; max-width: 1280px; margin-inline: auto; padding: 0 24px 48px; }
+html body .project-page .photo-stage { height: min(68svh, 720px) !important; min-height: 0 !important; }
+html body .project-page .photo-stage > img { object-fit: contain; }
+html body .project-page .project-gallery { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
+html body .project-page .project-gallery figure { aspect-ratio: auto; overflow: visible; background: transparent; }
+html body .project-page .project-gallery figure.wide { grid-column: auto; aspect-ratio: auto; }
+html body .project-page .project-gallery img { height: auto; object-fit: contain; border-radius: 6px; }
+html body .project-page .project-end { min-height: 0; padding: 32px max(24px, calc((100vw - 1200px) / 2)); }
+html body .project-page .project-end a { font-family: var(--font-body), sans-serif !important; font-size: clamp(18px, 2vw, 26px) !important; font-weight: 600; line-height: 1.6 !important; letter-spacing: 0 !important; }
+@media(max-width:700px) {
+  html body .service-page > .project-library { padding: 100px 18px 36px; }
+  html body :is(.project-library-head h1,.work-page-head h1,.nur-bts-hero h1) { font-size: 28px !important; }
+  html body :is(.library-grid,.service-page .film-bts-grid) { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 24px 12px !important; }
+  html body .project-library-head { gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+  html body .work-page-head, html body .nur-bts-hero { padding: 100px 18px 24px !important; }
+  html body .work-gallery-page .work-clean-grid { padding: 0 18px 40px; gap: 24px 12px; }
+  html body .film-bts { padding: 28px 18px 36px; }
+  html body .project-page .project-hero { padding: 100px 18px 24px !important; }
+  html body .project-page :is(.project-media-block,.project-gallery,.project-gallery-videos) { padding: 0 12px 32px; }
+  html body .project-page .project-gallery { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+  html body .project-page .photo-stage { height: min(58svh, 560px) !important; }
+  html body .services-index .inner-hero { padding: 100px 18px 24px; }
+}
+
+/* One header control and popover on every page and viewport. */
+html body .site-nav .menu-button {
+  display: flex !important; flex-direction: column; align-items: center; justify-content: center;
+  flex: 0 0 42px; width: 42px; height: 42px; padding: 0; gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--nav-text, #f1efe9) 32%, transparent) !important;
+  border-radius: 10px; background: var(--nav-bg, #171716) !important; color: var(--nav-text, #f1efe9) !important;
+  position: relative; z-index: 3; cursor: pointer;
+}
+html body .site-nav .menu-button span { display: block !important; flex: 0 0 2px !important; height: 2px; width: 18px; border-radius: 1px; background: currentColor !important; }
+html body .site-nav.is-open .menu-button span:first-child { transform: translateY(4px) rotate(45deg); }
+html body .site-nav.is-open .menu-button span:last-child { transform: translateY(-4px) rotate(-45deg); }
+html body .site-nav .lang-switch { flex-shrink: 0; width: 42px; height: 42px; border-radius: 10px; background: var(--nav-bg, #171716); }
+html body .site-nav .mobile-menu {
+  display: flex !important; position: absolute; top: calc(100% + 12px); left: auto; right: auto;
+  inset-inline-end: 5vw; width: min(340px, 90vw); max-height: calc(100svh - 110px); overflow-y: auto;
+  padding: 12px; gap: 4px; flex-direction: column; border: 1px solid var(--site-line, #3a3936) !important;
+  border-radius: 16px; background: var(--nav-bg, #171716) !important; box-shadow: 0 20px 60px #0005;
+  visibility: hidden; opacity: 0; transform: translateY(-8px); pointer-events: none; z-index: 3;
+  transition: opacity .18s, transform .18s, visibility .18s; text-align: start;
+}
+html body .site-nav.is-open .mobile-menu { visibility: visible; opacity: 1; transform: none; pointer-events: auto; }
+html body .site-nav .mobile-menu a { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; min-height: 48px; border: 0; border-radius: 8px; color: var(--nav-text, #f1efe9) !important; font-size: 15px !important; font-weight: 500 !important; letter-spacing: 0 !important; }
+html body .site-nav .mobile-menu a:hover, html body .site-nav .mobile-menu a[aria-current='page'] { background: color-mix(in srgb, var(--nav-text, #f1efe9) 9%, transparent); }
+html body .site-nav .mobile-menu .menu-project-link { margin-top: 8px; border-top: 1px solid var(--site-line, #3a3936); border-radius: 0 0 8px 8px; padding-top: 18px; font-weight: 600 !important; }
+html body .site-nav .menu-backdrop { position: fixed; top: 100%; left: 0; width: 100vw; height: 100svh; padding: 0; border: 0; border-radius: 0; background: #0005; backdrop-filter: blur(3px); z-index: 1; cursor: default; }
+@media(max-width:1100px) { html body .site-nav { grid-template-columns: 1fr auto; } html body .site-nav .desktop-nav { display: none; } }
+@media(prefers-reduced-motion:reduce) { html body .site-nav .mobile-menu, html body .site-nav .menu-button span { transition: none; } }
+/* Menu controls use a coherent palette even when saved nav colors conflict. */
+html body .site-nav { --menu-bg: #1b1d20; --menu-text: #f1efe9; --menu-border: #ffffff24; }
+html body .contact-page .site-nav { --menu-bg: #e9e6df; --menu-text: #151514; --menu-border: #0003; }
+html body .site-nav :is(.menu-button,.lang-switch) { background: var(--menu-bg) !important; color: var(--menu-text) !important; border: 1px solid var(--menu-border) !important; width: 42px !important; height: 42px !important; }
+html body .site-nav .mobile-menu { background: var(--menu-bg) !important; border-color: var(--menu-border) !important; }
+html body .site-nav .mobile-menu a { color: var(--menu-text) !important; }
+html body .site-nav .mobile-menu a:hover, html body .site-nav .mobile-menu a[aria-current='page'] { background: color-mix(in srgb, var(--menu-text) 9%, transparent); }
+html body .site-nav .mobile-menu .menu-project-link { border-color: var(--menu-border); }
+html body .site-nav :is(.desktop-nav a,.nav-cta,.lang-switch,.mobile-menu a) { font-family: var(--font-body), 'DM Sans', 'Vazirmatn', sans-serif !important; }
+html body .site-nav .desktop-nav a { font-size: 12px !important; letter-spacing: .04em !important; line-height: 1.6; }
+html body .site-nav .nav-cta { font-size: 12px !important; letter-spacing: 0 !important; }

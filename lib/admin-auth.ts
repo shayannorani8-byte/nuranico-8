@@ -68,6 +68,11 @@ export async function verifyAdminToken(token: string | undefined) {
 
   const payload = token.slice(0, separator);
   const signature = token.slice(separator + 1);
+  const match = /^nuranico-admin:(\d+)$/.exec(payload);
+  if (!match) return false;
+  const issuedAt = Number(match[1]);
+  const age = Date.now() - issuedAt;
+  if (!Number.isSafeInteger(issuedAt) || age < -60_000 || age > 7 * 24 * 60 * 60 * 1000) return false;
 
   try {
     const key = await crypto.subtle.importKey(

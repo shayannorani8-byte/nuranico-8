@@ -1,13 +1,27 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { usePageTexts } from '../lib/usePageTexts';
+import { useSiteData } from './SiteData';
 
 export default function SiteHeader() {
-  const { lang, text } = usePageTexts('global');
+  const { lang, setLang, text } = usePageTexts('global');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [logoUrl, setLogoUrl] = useState('');
+  const pathname = usePathname();
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setMenuOpen(false); menuButtonRef.current?.focus(); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
+  const initialData = useSiteData();
+  const [logoUrl, setLogoUrl] = useState(String(initialData.settings.logo_url || ''));
 
   useEffect(() => {
     let active = true;
@@ -39,7 +53,7 @@ export default function SiteHeader() {
     };
   }, []);
 
-  const [startProjectUrl, setStartProjectUrl] = useState('/contact');
+  const [startProjectUrl, setStartProjectUrl] = useState(String(initialData.content.start_project_url || '/contact'));
 
   useEffect(() => {
     let active = true;
@@ -115,18 +129,7 @@ export default function SiteHeader() {
         <button
           className="lang-switch"
           type="button"
-          onClick={() => {
-            const next = lang === 'en' ? 'fa' : 'en';
-
-            window.localStorage.setItem('nuranico-lang', next);
-
-            window.dispatchEvent(
-              new StorageEvent('storage', {
-                key: 'nuranico-lang',
-                newValue: next,
-              })
-            );
-          }}
+          onClick={() => setLang(lang === 'en' ? 'fa' : 'en')}
           aria-label={text(
             'change_language',
             'Change language',
@@ -136,22 +139,20 @@ export default function SiteHeader() {
           {lang === 'en' ? 'FA' : 'EN'}
         </button>
 
-        <a
+        <Link
           className="nav-cta"
           href={startProjectUrl || '/contact'}
         >
           {t.cta}
-        </a>
+        </Link>
 
         <button
+          ref={menuButtonRef}
+          aria-controls="site-mobile-menu"
           className="menu-button"
           type="button"
           onClick={() => setMenuOpen((open) => !open)}
-          aria-label={text(
-            'open_menu',
-            'Open menu',
-            'باز کردن منو'
-          )}
+          aria-label={menuOpen ? text('close_menu', 'Close menu', 'بستن منو') : text('open_menu', 'Open menu', 'باز کردن منو')}
           aria-expanded={menuOpen}
         >
           <span />
@@ -159,16 +160,17 @@ export default function SiteHeader() {
         </button>
       </div>
 
-      <div className="mobile-menu">
-        <Link href="/work" onClick={closeMenu}>
+      {menuOpen && <button className="menu-backdrop" type="button" tabIndex={-1} aria-label={text('close_menu', 'Close menu', 'بستن منو')} onClick={closeMenu} />}
+      <nav className="mobile-menu" id="site-mobile-menu" aria-label={text('main_navigation', 'Main navigation', 'ناوبری اصلی')} inert={!menuOpen} aria-hidden={!menuOpen}>
+        <Link href="/work" onClick={closeMenu} aria-current={pathname.startsWith('/work') ? 'page' : undefined}>
           {t.work}
         </Link>
 
-        <Link href="/services" onClick={closeMenu}>
+        <Link href="/services" onClick={closeMenu} aria-current={pathname.startsWith('/services') ? 'page' : undefined}>
           {t.services}
         </Link>
 
-        <Link href="/about" onClick={closeMenu}>
+        <Link href="/about" onClick={closeMenu} aria-current={pathname === '/about' ? 'page' : undefined}>
           {t.about}
         </Link>
 
@@ -176,10 +178,11 @@ export default function SiteHeader() {
           {t.brands}
         </Link>
 
-        <Link href="/contact" onClick={closeMenu}>
+        <Link href="/contact" onClick={closeMenu} aria-current={pathname === '/contact' ? 'page' : undefined}>
           {t.contact}
         </Link>
-      </div>
+        <Link className="menu-project-link" href={startProjectUrl || '/contact'} onClick={closeMenu}>{t.cta}<span aria-hidden="true">↗</span></Link>
+      </nav>
     </header>
   );
 }

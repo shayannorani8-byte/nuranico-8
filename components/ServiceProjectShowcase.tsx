@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import ContentStatus from './ContentStatus';
+import { localizedValue, isVideoAsset } from '../lib/media';
 import { usePageTexts } from '../lib/usePageTexts';
 
 type ProjectItem = {
@@ -10,6 +12,7 @@ type ProjectItem = {
   title_fa?: string;
   cover_url?: string | null;
   media_url?: string | null;
+  media_type?: string | null;
 };
 
 type Props = {
@@ -33,28 +36,32 @@ export default function ServiceProjectShowcase({
         ? 'photography'
         : 'content';
 
-  const { text } = usePageTexts(page);
+  const { lang, text } = usePageTexts(page);
+
+  const [error, setError] = useState(false);
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setError(false);
 
     async function load() {
       try {
         const response = await fetch(
           `/api/public/projects?destination=${destination}`,
-          { cache: 'no-store' }
+          { cache: 'no-store', signal: AbortSignal.timeout(12000) }
         );
 
         const result = await response.json();
 
-        if (!cancelled) {
-          setItems(response.ok ? result.items || [] : []);
-        }
+        if (!response.ok) throw new Error(result?.error || 'Could not load projects');
+        if (!cancelled) setItems(result.items || []);
       } catch (error) {
         console.error(`Could not load ${destination} projects:`, error);
 
         if (!cancelled) {
-          setItems([]);
+          setError(true);
         }
       } finally {
         if (!cancelled) {
@@ -68,14 +75,7 @@ export default function ServiceProjectShowcase({
     return () => {
       cancelled = true;
     };
-  }, [destination]);
-
-  const fallbackEyebrowFa =
-    destination === 'film'
-      ? 'پروژه‌های منتخب فیلم'
-      : destination === 'photography'
-        ? 'عکاسی منتخب'
-        : 'محتوای منتخب';
+  }, [destination, retry]);
 
   const fallbackTitleFa =
     destination === 'film'
@@ -88,15 +88,12 @@ export default function ServiceProjectShowcase({
     <section className={`project-library project-library-${destination}`}>
       <div className="project-library-head">
         <div>
-          <span>
-            {text('projects_eyebrow', eyebrow, fallbackEyebrowFa)}
-          </span>
-          <h2>
+          <h1>
             {text('projects_title', title, fallbackTitleFa)}
-          </h2>
+          </h1>
         </div>
 
-        <Link className="project-library-viewall" href="/work">
+        <Link className="project-library-viewall" href={`/work?destination=${destination}`}>
           {text('view_all', 'VIEW ALL ↗', 'مشاهده همه ↗')}
         </Link>
       </div>
@@ -105,6 +102,8 @@ export default function ServiceProjectShowcase({
         <div className="library-empty">
           {text('loading', 'LOADING...', 'در حال بارگذاری...')}
         </div>
+      ) : error ? (
+        <ContentStatus error onRetry={() => setRetry(value => value + 1)} retryLabel={text('retry', 'Try again', 'تلاش دوباره')}>{text('load_error', 'Projects could not be loaded.', 'پروژه‌ها بارگذاری نشدند.')}</ContentStatus>
       ) : items.length === 0 ? (
         <div className="library-empty">
           {text(
@@ -117,13 +116,11 @@ export default function ServiceProjectShowcase({
         <div className="library-grid">
           {items.map((item) => {
             const projectTitle =
-              item.title_en ||
-              item.title_fa ||
-              text('untitled', 'Untitled', 'بدون عنوان');
+              localizedValue(lang, item.title_en, item.title_fa, text('untitled', 'Untitled', 'بدون عنوان'));
 
             const image =
               item.cover_url ||
-              item.media_url ||
+              (!isVideoAsset(item) ? item.media_url : '') ||
               '';
 
             return (
@@ -177,7 +174,7 @@ export default function ServiceProjectShowcase({
           margin-bottom: 9px;
         }
 
-        .project-library-head h2 {
+        .project-library-head h1 {
           margin: 0;
           color: #f2f2f2;
           font-size: clamp(26px, 2.7vw, 40px);
@@ -310,7 +307,7 @@ export default function ServiceProjectShowcase({
             margin-bottom: 6px;
           }
 
-          .project-library-head h2 {
+          .project-library-head h1 {
             font-size: 23px;
           }
 

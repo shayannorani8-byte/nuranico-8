@@ -1,9 +1,4 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
-
-type Settings = {
+export type TypographySettings = {
   font_en?: string | null;
   font_fa?: string | null;
   heading_size?: number | null;
@@ -25,7 +20,7 @@ type Settings = {
   letter_spacing_fa?: number | null;
 };
 
-type FontAsset = {
+export type FontAsset = {
   id: number;
   family_name: string;
   file_url: string;
@@ -49,63 +44,41 @@ function fontFormat(format: string) {
   }
 }
 
-export default function GlobalTypography() {
-  const [settings, setSettings] = useState<Settings | null>(null);
-  const [fonts, setFonts] = useState<FontAsset[]>([]);
+// Static uploaded faces have an intrinsic weight; a Black face cannot render Regular.
+function assetWeight(font: FontAsset) {
+  const name = `${font.family_name} ${font.file_url}`;
+  if (/black|heavy/i.test(name)) return 900;
+  if (/extra[\s_-]*bold|ultra[\s_-]*bold/i.test(name)) return 800;
+  if (/semi[\s_-]*bold|demi[\s_-]*bold/i.test(name)) return 600;
+  if (/bold/i.test(name)) return 700;
+  return font.font_weight || 400;
+}
 
-  useEffect(() => {
-    let active = true;
-
-    async function load() {
-      const [settingsResult, fontsResult] = await Promise.all([
-        supabase
-          .from('site_settings')
-          .select(
-            'font_en,font_fa,heading_size,body_size,small_size,heading_weight,body_weight,letter_spacing,heading_size_en,heading_size_fa,body_size_en,body_size_fa,small_size_en,small_size_fa,line_height_en,line_height_fa,letter_spacing_en,letter_spacing_fa'
-          )
-          .eq('id', 1)
-          .maybeSingle(),
-
-        supabase
-          .from('font_assets')
-          .select(
-            'id,family_name,file_url,format,font_weight,font_style'
-          )
-          .order('id', { ascending: true }),
-      ]);
-
-      if (!active) return;
-
-      if (settingsResult.data) {
-        setSettings(settingsResult.data);
-      }
-
-      if (fontsResult.data) {
-        setFonts(fontsResult.data);
-      }
-    }
-
-    void load();
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  if (!settings) {
-    return null;
-  }
-
+export default function GlobalTypography({ settings, fonts }: {
+  settings: TypographySettings & Record<string, unknown>;
+  fonts: FontAsset[];
+}) {
   const resolveFont = (family: string | null | undefined, fallback: string) => {
     if (!family) return fallback;
 
     const asset = fonts.find(font => font.family_name === family);
 
-    return asset ? `CMSFont-${asset.id}` : family;
+    return asset ? `CMSFont-${asset.id}` : ['DM Sans', 'Space Grotesk', 'Vazirmatn'].includes(family) ? family : fallback;
   };
 
   const fontEn = resolveFont(settings.font_en, 'DM Sans');
-  const fontFa = resolveFont(settings.font_fa, 'DimaMostanad');
+  const fontFa = resolveFont(settings.font_fa, 'Vazirmatn');
+  const displayWeight = (family: string | null | undefined) => {
+    const asset = fonts.find(font => font.family_name === family);
+    return asset && assetWeight(asset) >= 700 ? assetWeight(asset) : settings.heading_weight || 700;
+  };
+  const readableBodyFont = (family: string | null | undefined, resolved: string, fallback: string) => {
+    const asset = fonts.find(font => font.family_name === family);
+    const heavy = !!asset && assetWeight(asset) >= 700;
+    return heavy && (settings.body_weight || 400) < 600 ? fallback : resolved;
+  };
+  const bodyEn = readableBodyFont(settings.font_en, fontEn, 'DM Sans');
+  const bodyFa = readableBodyFont(settings.font_fa, fontFa, 'Vazirmatn');
 
   const faces = fonts
     .filter(font => font.family_name && font.file_url)
@@ -113,9 +86,9 @@ export default function GlobalTypography() {
       @font-face {
         font-family: 'CMSFont-${font.id}';
         src: url('${font.file_url}') format('${fontFormat(font.format)}');
-        font-weight: ${font.font_weight || 400};
+        font-weight: ${assetWeight(font)};
         font-style: ${font.font_style || 'normal'};
-        font-display: swap;
+        font-display: block;
       }
     `)
     .join('\n');
@@ -125,11 +98,24 @@ export default function GlobalTypography() {
       ${faces}
 
       :root {
+        --nav-text: ${String(settings.nav_text || '#f1efe9')};
+        --nav-bg: ${String(settings.nav_bg || '#171716')};
+        --nav-active: ${String(settings.nav_active || '#ffffff')};
+        --site-line: ${String(settings.border_color || '#3a3936')};
+        --site-logo: ${String(settings.logo_color || '#f1efe9')};
+        --site-accent: ${String(settings.button_color || '#e9e6df')};
+        --button-text: ${String(settings.button_text || '#151514')};
+        --button-hover: ${String(settings.button_hover || '#ffffff')};
         --font-en: '${fontEn.replace(/'/g, "\\'")}';
         --font-fa: '${fontFa.replace(/'/g, "\\'")}';
+        --font-en-body: '${bodyEn.replace(/'/g, "\\'")}';
+        --font-fa-body: '${bodyFa.replace(/'/g, "\\'")}';
 
-        --font-body: var(--font-en);
+        --font-body: var(--font-en-body);
         --font-heading: var(--font-en);
+        --display-weight-en: ${displayWeight(settings.font_en)};
+        --display-weight-fa: ${displayWeight(settings.font_fa)};
+        --display-weight: var(--display-weight-en);
 
         --cms-heading-size: ${settings.heading_size_en ?? settings.heading_size ?? 48}px;
         --cms-body-size: ${settings.body_size_en ?? settings.body_size ?? 16}px;
@@ -142,8 +128,9 @@ export default function GlobalTypography() {
       }
 
       html[lang='en'] {
-        --font-body: var(--font-en);
+        --font-body: var(--font-en-body);
         --font-heading: var(--font-en);
+        --display-weight: var(--display-weight-en);
 
         --cms-heading-size: ${settings.heading_size_en ?? settings.heading_size ?? 48}px;
         --cms-body-size: ${settings.body_size_en ?? settings.body_size ?? 16}px;
@@ -153,13 +140,14 @@ export default function GlobalTypography() {
       }
 
       html[lang='fa'] {
-        --font-body: var(--font-fa);
+        --font-body: var(--font-fa-body);
         --font-heading: var(--font-fa);
+        --display-weight: var(--display-weight-fa);
 
         --cms-heading-size: ${settings.heading_size_fa ?? settings.heading_size ?? 48}px;
         --cms-body-size: ${settings.body_size_fa ?? settings.body_size ?? 16}px;
         --cms-small-size: ${settings.small_size_fa ?? settings.small_size ?? 11}px;
-        --cms-line-height: ${settings.line_height_fa ?? 1.35};
+        --cms-line-height: ${Math.max(settings.line_height_fa ?? 1.5, 1.3)};
         --cms-letter-spacing: ${settings.letter_spacing_fa ?? settings.letter_spacing ?? 0}px;
       }
 
@@ -259,7 +247,7 @@ export default function GlobalTypography() {
       .content-page,
       .project-page,
       .page {
-        font-family: var(--font-body), Arial, sans-serif !important;
+        font-family: var(--font-body), 'DM Sans', 'Vazirmatn', sans-serif !important;
         font-weight: var(--body-weight);
       }
 
@@ -275,7 +263,7 @@ export default function GlobalTypography() {
       .contact-link,
       .about-stats strong,
       .landscape-copy strong {
-        font-family: var(--font-heading), Arial, sans-serif !important;
+        font-family: var(--font-heading), 'DM Sans', 'Vazirmatn', sans-serif !important;
       }
 
       h1,
@@ -293,20 +281,22 @@ export default function GlobalTypography() {
       html[lang='fa'] h4,
       html[lang='fa'] h5,
       html[lang='fa'] h6 {
-        font-weight: 400;
+        font-weight: var(--heading-weight);
         font-synthesis: none;
       }
 
       html[lang='fa'] body {
-        font-family: var(--font-fa), Arial, sans-serif !important;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        font-family: var(--font-fa-body, var(--font-fa)), 'Vazirmatn', sans-serif !important;
       }
 
       /*
        * Explicit element language always wins over page language.
        */
-      [lang='en'],
-      [lang='en'] * {
-        font-family: var(--font-en), Arial, sans-serif !important;
+      [lang='en']:not(html),
+      [lang='en']:not(html) * {
+        font-family: var(--font-en-body, var(--font-en)), 'DM Sans', Arial, sans-serif !important;
       }
 
       /*
@@ -316,12 +306,12 @@ export default function GlobalTypography() {
        */
       html body [lang='en'],
       html body [lang='en'] * {
-        font-family: var(--font-en), Arial, sans-serif !important;
+        font-family: var(--font-en-body, var(--font-en)), 'DM Sans', Arial, sans-serif !important;
       }
 
       html body [lang='fa'],
       html body [lang='fa'] * {
-        font-family: var(--font-fa), Arial, sans-serif !important;
+        font-family: var(--font-fa-body, var(--font-fa)), 'Vazirmatn', sans-serif !important;
       }
 
       /*
@@ -330,17 +320,20 @@ export default function GlobalTypography() {
        */
       .latin,
       [lang='en'] {
-        font-family: var(--font-en), Arial, sans-serif !important;
+        font-family: var(--font-en-body, var(--font-en)), 'DM Sans', Arial, sans-serif !important;
         font-synthesis: none;
       }
 
-      html[lang='fa'] .eyebrow,
+      html body :is(h1,h2,h3,h4,h5,h6)[lang='en'],
+      html body [lang='en'] :is(h1,h2,h3,h4,h5,h6) { font-family: var(--font-en), 'DM Sans', sans-serif !important; }
+      html body :is(h1,h2,h3,h4,h5,h6)[lang='fa'],
+      html body [lang='fa'] :is(h1,h2,h3,h4,h5,h6) { font-family: var(--font-fa), 'Vazirmatn', sans-serif !important; }
+
       html[lang='fa'] .brand,
       html[lang='fa'] .brand-mark,
       html[lang='fa'] .section-index,
-      html[lang='fa'] .scroll-indicator,
       html[lang='fa'] .footer .brand {
-        font-family: var(--font-en), Arial, sans-serif !important;
+        font-family: var(--font-en-body, var(--font-en)), 'DM Sans', Arial, sans-serif !important;
         font-synthesis: none;
       }
 

@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import './admin-ui.css';
+import { isVideoAsset } from '../../lib/media';
 
 type Section =
   | 'dashboard'
@@ -183,6 +185,33 @@ type Content = {
   seo_description_en: string;
 };
 
+const navigation: { group: string; items: { id: Section; label: string; description: string; icon: string }[] }[] = [
+  { group: 'Workspace', items: [
+    { id: 'dashboard', label: 'Overview', description: 'Your content at a glance', icon: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z' },
+  ] },
+  { group: 'Website content', items: [
+    { id: 'projects', label: 'Projects', description: 'Portfolio, galleries and publication', icon: 'M3 7h18v14H3zM8 7V3h8v4M3 12h18' },
+    { id: 'bts', label: 'Behind the scenes', description: 'Curate your behind-the-scenes gallery', icon: 'M3 6h18v15H3zM8 6l2-3h4l2 3M9 13a3 3 0 1 0 6 0 3 3 0 0 0-6 0' },
+    { id: 'hero', label: 'Hero slides', description: 'The first impression of your website', icon: 'M3 4h18v16H3zM3 15l5-5 4 4 3-3 6 6' },
+    { id: 'brands', label: 'Brands', description: 'Clients, logos and links', icon: 'M12 3l9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8' },
+    { id: 'services', label: 'Services', description: 'What your studio offers', icon: 'M4 5h16M4 12h16M4 19h16M8 3v4M16 10v4M10 17v4' },
+    { id: 'content', label: 'Pages & text', description: 'English and Persian copy, contact and SEO', icon: 'M5 3h10l4 4v14H5zM15 3v5h4M8 12h8M8 16h6' },
+  ] },
+  { group: 'Assets & appearance', items: [
+    { id: 'media', label: 'Media library', description: 'Upload once. Reuse anywhere.', icon: 'M3 3h18v18H3zM3 16l6-6 4 4 3-3 5 5M15 7h.01' },
+    { id: 'settings', label: 'Appearance', description: 'Colors, logo and bilingual typography', icon: 'M4 5h16M4 12h16M4 19h16M9 3v4M15 10v4M7 17v4' },
+  ] },
+];
+const navigationItems = navigation.flatMap(group => group.items);
+
+function SectionIcon({ path }: { path: string }) {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={path} /></svg>;
+}
+
+function fieldLanguage(label: string, value: unknown) {
+  return /[\u0600-\u06ff]/.test(label + String(value || '')) ? 'fa' : 'en';
+}
+
 const destinations = [
   ['home', 'Home'],
   ['work', 'Work'],
@@ -282,6 +311,7 @@ async function api<T = any>(
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
     cache: 'no-store',
+    signal: method === 'GET' ? AbortSignal.timeout(12000) : undefined,
   });
 
   const data = await response.json().catch(() => ({}));
@@ -305,7 +335,7 @@ function Input({
   return (
     <label className="field">
       <span>{label}</span>
-      <input type={type} value={value ?? ''} placeholder={placeholder} onChange={e => onChange(e.target.value)} />
+      <input lang={fieldLanguage(label, value)} dir={fieldLanguage(label, value) === 'fa' ? 'rtl' : 'ltr'} type={type} step={type === 'number' ? 'any' : undefined} value={value ?? ''} placeholder={placeholder} onChange={e => onChange(e.target.value)} />
     </label>
   );
 }
@@ -324,7 +354,7 @@ function Textarea({
   return (
     <label className="field">
       <span>{label}</span>
-      <textarea rows={rows} value={value ?? ''} onChange={e => onChange(e.target.value)} />
+      <textarea lang={fieldLanguage(label, value)} dir={fieldLanguage(label, value) === 'fa' ? 'rtl' : 'ltr'} rows={rows} value={value ?? ''} onChange={e => onChange(e.target.value)} />
     </label>
   );
 }
@@ -364,7 +394,11 @@ function EmptyState({ text }: { text: string }) {
 
 export default function AdminPage() {
   const [section, setSection] = useState<Section>('dashboard');
+  const [navigationOpen, setNavigationOpen] = useState(false);
+  const [pageTextFilter, setPageTextFilter] = useState('home');
+  const [projectMediaSearch, setProjectMediaSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -398,6 +432,8 @@ export default function AdminPage() {
   }
 
   async function loadAll() {
+    setLoading(true);
+    setLoadFailed(false);
     setError('');
     try {
       const data = await api<{
@@ -446,6 +482,7 @@ export default function AdminPage() {
       );
       setSettings({ ...emptySettings, ...(data.settings || {}) });
     } catch (e) {
+      setLoadFailed(true);
       setError(e instanceof Error ? e.message : 'Could not load admin data.');
     } finally {
       setLoading(false);
@@ -501,6 +538,8 @@ export default function AdminPage() {
       setProjects(current => current.some(p => p.id === saved.id)
         ? current.map(p => p.id === saved.id ? saved.row : p)
         : [...current, saved.row]);
+      setDestMap(current => ({ ...current, [saved.id]: current[editingProject.id] || [] }));
+      setProjectMediaMap(current => ({ ...current, [saved.id]: current[editingProject.id] || [] }));
       setEditingProject(null);
       flash('Project saved.');
     } catch (e) {
@@ -734,80 +773,84 @@ export default function AdminPage() {
 
   const filteredProjects = useMemo(() => {
     const q = projectSearch.trim().toLowerCase();
-    if (!q) return projects;
-    return projects.filter(p =>
+    return projects.filter(p => !q ||
       [p.title_en, p.title_fa, p.category].some(v => (v || '').toLowerCase().includes(q))
-    );
+    ).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
   }, [projects, projectSearch]);
 
   const filteredMedia = useMemo(() => {
     const q = mediaSearch.trim().toLowerCase();
     return media.filter(m => {
       const matchesQ = !q || [m.name, m.file_type, m.mime_type].some(v => (v || '').toLowerCase().includes(q));
-      const matchesType = mediaFilter === 'all' || (m.file_type || '').toLowerCase() === mediaFilter;
+      const matchesType = mediaFilter === 'all' || (mediaFilter === 'video' ? isVideoAsset(m) : !isVideoAsset(m));
       return matchesQ && matchesType;
     });
   }, [media, mediaSearch, mediaFilter]);
 
-  if (loading) return <div className="admin-loading">Loading NURANICO CMS…</div>;
+  const activeSection = navigationItems.find(item => item.id === section)!;
+  const publishedProjects = projects.filter(project => project.published).length;
+  const mediaOptions = media.filter(item => !projectMediaSearch.trim() ||
+    (item.name || '').toLowerCase().includes(projectMediaSearch.trim().toLowerCase()));
+
+  function navigateTo(next: Section) {
+    setSection(next);
+    setNavigationOpen(false);
+    setMessage('');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
 
   return (
-    <main className="admin">
+    <main className={`admin${navigationOpen ? ' menu-open' : ''}`} lang="en" dir="ltr">
       <style>{styles}</style>
-
-      <aside className="sidebar">
-        <div className="brand">
-          <strong>NURANICO</strong>
-          <span>CMS / ADMIN</span>
-        </div>
-
+      <button className="admin-nav-backdrop" aria-label="Close navigation" onClick={() => setNavigationOpen(false)} />
+      <aside className="sidebar" id="admin-sidebar" aria-label="Admin navigation">
+        <a className="admin-brand" href="/" target="_blank" rel="noreferrer">
+          <span className="admin-brand-symbol">N<span>®</span></span>
+          <span><strong>NURANICO</strong><small>Studio workspace</small></span>
+        </a>
         <nav>
-          {([
-            ['dashboard', 'Dashboard'],
-            ['projects', 'Projects'],
-            ['media', 'Media'],
-            ['bts', 'Behind the Scenes'],
-            ['hero', 'Hero'],
-            ['brands', 'Brands'],
-            ['services', 'Services'],
-            ['content', 'Content'],
-            ['settings', 'Settings'],
-          ] as [Section, string][]).map(([id, label]) => (
-            <button key={id} className={section === id ? 'nav-active' : ''} onClick={() => { setSection(id); setMessage(''); }}>
-              <span>{label}</span>
-            </button>
-          ))}
+          {navigation.map(group => <div className="nav-group" key={group.group}>
+            <p className="nav-group-label">{group.group}</p>
+            {group.items.map(item => <button key={item.id} type="button" aria-current={section === item.id ? 'page' : undefined} className={section === item.id ? 'nav-active' : ''} onClick={() => navigateTo(item.id)}>
+              <SectionIcon path={item.icon} /><span>{item.label}</span>
+              {item.id === 'projects' && <small>{projects.length}</small>}
+              {item.id === 'media' && <small>{media.length}</small>}
+            </button>)}
+          </div>)}
         </nav>
-
-        <button className="logout" onClick={logout}>Log out</button>
+        <div className="sidebar-footer"><span>Website management</span><button className="logout" onClick={logout}>Log out <span aria-hidden="true">↗</span></button></div>
       </aside>
-
-      <section className="workspace">
-        {(message || error) && (
-          <div className={error ? 'notice error' : 'notice'}>{error || message}</div>
-        )}
-
+      <section className="workspace" aria-label={activeSection.label}>
+        <header className="admin-topbar">
+          <div className="admin-breadcrumb"><button className="admin-menu-toggle" aria-label="Toggle navigation" aria-controls="admin-sidebar" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(!navigationOpen)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button><span>Workspace</span><span aria-hidden="true">/</span><strong>{activeSection.label}</strong></div>
+          <a className="admin-site-link" href="/" target="_blank" rel="noreferrer">View website <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12" /></svg></a>
+        </header>
+        <div className="workspace-content">
+        {(message || error) && <div role={error ? 'alert' : 'status'} className={error ? 'notice error' : 'notice'}>{error || message}</div>}
+        {loading ? <div className="admin-loading-state" role="status"><span className="admin-loader" />Loading your workspace…</div> : loadFailed ? <div className="panel"><h2>Your workspace could not be loaded.</h2><p>Try again to load your existing content before editing.</p><button className="primary" onClick={() => void loadAll()}>Try again</button></div> : <>
         {section === 'dashboard' && (
           <>
-            <SectionHeader title="Dashboard" description="A single place to manage the NURANICO website." />
+            <div className="dashboard-intro"><span className="admin-eyebrow">NURANICO / CONTENT STUDIO</span><SectionHeader title="Make your next update." description="Projects, media and every detail of your website, in one workspace." /></div>
             <div className="stats">
-              {[
-                ['Projects', projects.length],
-                ['Media', media.length],
-                ['Hero slides', hero.length],
-                ['Brands', brands.length],
-                ['Services', services.length],
-              ].map(([label, value]) => (
-                <div className="stat" key={label as string}><b>{value as number}</b><span>{label}</span></div>
+              {([
+                ['projects', 'Projects', projects.length, `${publishedProjects} published · ${projects.length - publishedProjects} drafts`],
+                ['media', 'Media files', media.length, 'Your reusable asset library'],
+                ['hero', 'Hero slides', hero.length, 'Homepage introductions'],
+                ['brands', 'Brands', brands.length, 'The people you work with'],
+                ['services', 'Services', services.length, 'What your studio offers'],
+              ] as [Section, string, number, string][]).map(([id, label, value, detail]) => (
+                <button className="stat" key={id} onClick={() => navigateTo(id)}><span>{label}<span aria-hidden="true">↗</span></span><b>{value}</b><small>{detail}</small></button>
               ))}
             </div>
-            <div className="panel">
-              <h2>Workflow</h2>
-              <p>Upload a media file once, then attach it to projects. A project can be published to multiple destinations without duplicating the file.</p>
-              <div className="chips">
-                {destinations.map(([, label]) => <span key={label}>{label}</span>)}
-              </div>
+            <div className="dashboard-section-head"><h2>A place for every update</h2><p>Choose where you want to start.</p></div>
+            <div className="quick-actions">
+              {([
+                ['media', '01', 'Prepare your media', 'Upload photos and videos once, then reuse them across your projects.'],
+                ['projects', '02', 'Curate your work', 'Build galleries, choose destinations and control what is published.'],
+                ['content', '03', 'Refine your pages', 'Keep English and Persian copy, contact details and SEO in sync.'],
+              ] as [Section, string, string, string][]).map(([id, number, title, description]) => <button key={id} onClick={() => navigateTo(id)}><span className="quick-number">{number}</span><h3>{title}</h3><p>{description}</p><span className="quick-link">Open {navigationItems.find(item => item.id === id)?.label.toLowerCase()} <span aria-hidden="true">→</span></span></button>)}
             </div>
+            <div className="panel dashboard-workflow"><div><h2>One project. Multiple destinations.</h2><p>Attach your media once and choose where each project appears.</p></div><div className="chips">{destinations.map(([, label]) => <span key={label}>{label}</span>)}</div></div>
           </>
         )}
 
@@ -937,7 +980,7 @@ export default function AdminPage() {
               })}>+ New project</button>}
             />
             <div className="toolbar">
-              <input placeholder="Search projects…" value={projectSearch} onChange={e => setProjectSearch(e.target.value)} />
+              <input aria-label="Search projects" placeholder="Search projects…" value={projectSearch} onChange={e => setProjectSearch(e.target.value)} />
             </div>
 
             {editingProject && (
@@ -1004,6 +1047,7 @@ export default function AdminPage() {
 
                 <div className="editor-block">
                   <h3>Project Media</h3>
+                  <label className="field"><span>Find media for this project</span><input placeholder="Search the media library…" aria-label="Search project media" value={projectMediaSearch} onChange={event => setProjectMediaSearch(event.target.value)} /></label>
                   <p style={{ opacity: .65, marginBottom: 18 }}>
                     Choose cover, main media, optional video preview and gallery files independently.
                   </p>
@@ -1015,7 +1059,7 @@ export default function AdminPage() {
                     </p>
 
                     <div className="media-picker">
-                      {media
+                      {mediaOptions
                         .filter(item => !item.mime_type?.startsWith('video'))
                         .map(item => {
                           const selected = editingProject.cover_url === item.file_url;
@@ -1066,7 +1110,7 @@ export default function AdminPage() {
                     </p>
 
                     <div className="media-picker">
-                      {media.map(item => {
+                      {mediaOptions.map(item => {
                         const selected = editingProject.media_url === item.file_url;
                         const isVideo = !!item.mime_type?.startsWith('video');
 
@@ -1134,7 +1178,7 @@ export default function AdminPage() {
                     </div>
 
                     <div className="media-picker">
-                      {media
+                      {mediaOptions
                         .filter(item => item.mime_type?.startsWith('video'))
                         .map(item => {
                           const selected = editingProject.preview_url === item.file_url;
@@ -1188,7 +1232,7 @@ export default function AdminPage() {
                     </p>
 
                     <div className="media-picker">
-                      {media.map(item => {
+                      {mediaOptions.map(item => {
                         const currentIds =
                           projectMediaMap[editingProject.id] || [];
 
@@ -1263,8 +1307,8 @@ export default function AdminPage() {
           <>
             <SectionHeader title="Media Library" description="Upload images and videos once and reuse them across the site." action={<MediaUploader onDone={loadAll} onError={setError} />} />
             <div className="toolbar">
-              <input placeholder="Search media…" value={mediaSearch} onChange={e => setMediaSearch(e.target.value)} />
-              <select value={mediaFilter} onChange={e => setMediaFilter(e.target.value)}>
+              <input aria-label="Search media" placeholder="Search media…" value={mediaSearch} onChange={e => setMediaSearch(e.target.value)} />
+              <select aria-label="Filter media type" value={mediaFilter} onChange={e => setMediaFilter(e.target.value)}>
                 <option value="all">All</option>
                 <option value="image">Images</option>
                 <option value="video">Videos</option>
@@ -1373,8 +1417,8 @@ export default function AdminPage() {
           <>
             <SectionHeader title="Content" description="Homepage, About, Contact and SEO text." action={<button className="primary" disabled={saving} onClick={saveContent}>{saving ? 'Saving…' : 'Save content'}</button>} />
             <div className="editor">
-              <h2>Hero</h2><div className="grid2"><Input label="Hero title — English" value={content.hero_title_en} onChange={v => setContent({...content,hero_title_en:v})}/><Input label="Hero title — فارسی" value={content.hero_title_fa} onChange={v => setContent({...content,hero_title_fa:v})}/><Textarea label="Hero description — English" value={content.hero_description_en} onChange={v => setContent({...content,hero_description_en:v})}/><Textarea label="Hero description — فارسی" value={content.hero_description_fa} onChange={v => setContent({...content,hero_description_fa:v})}/><Input label="Hero button — English" value={content.hero_button_en} onChange={v => setContent({...content,hero_button_en:v})}/><Input label="Hero button — فارسی" value={content.hero_button_fa} onChange={v => setContent({...content,hero_button_fa:v})}/></div>
-              <h2>About</h2>
+              <details className="content-group" open><summary>Hero</summary><div className="content-group-body"><div className="grid2"><Input label="Hero title — English" value={content.hero_title_en} onChange={v => setContent({...content,hero_title_en:v})}/><Input label="Hero title — فارسی" value={content.hero_title_fa} onChange={v => setContent({...content,hero_title_fa:v})}/><Textarea label="Hero description — English" value={content.hero_description_en} onChange={v => setContent({...content,hero_description_en:v})}/><Textarea label="Hero description — فارسی" value={content.hero_description_fa} onChange={v => setContent({...content,hero_description_fa:v})}/><Input label="Hero button — English" value={content.hero_button_en} onChange={v => setContent({...content,hero_button_en:v})}/><Input label="Hero button — فارسی" value={content.hero_button_fa} onChange={v => setContent({...content,hero_button_fa:v})}/></div>
+              </div></details><details className="content-group"><summary>About</summary><div className="content-group-body">
               <div className="grid2">
                 <Input
                   label="About title — English"
@@ -1453,8 +1497,9 @@ export default function AdminPage() {
                   </p>
                 )}
               </div>
-              <h2>Contact</h2><div className="grid2"><Input label="Contact title — English" value={content.contact_title_en} onChange={v => setContent({...content,contact_title_en:v})}/><Input label="Contact title — فارسی" value={content.contact_title_fa} onChange={v => setContent({...content,contact_title_fa:v})}/><Input label="Email" value={content.contact_email} onChange={v => setContent({...content,contact_email:v})}/><Input label="Phone" value={content.contact_phone} onChange={v => setContent({...content,contact_phone:v})}/><Input label="NURANICO Instagram URL" value={content.contact_instagram} onChange={v => setContent({...content,contact_instagram:v})}/><Input label="Shayan Instagram URL" value={content.personal_instagram} onChange={v => setContent({...content,personal_instagram:v})}/><Input label="Start Project URL" value={content.start_project_url || ''} onChange={v => setContent({...content,start_project_url:v})} placeholder="/contact or https://..."/></div>
-              <h2>SEO</h2><div className="grid2"><Input label="SEO title — English" value={content.seo_title_en} onChange={v => setContent({...content,seo_title_en:v})}/><Input label="SEO title — فارسی" value={content.seo_title_fa} onChange={v => setContent({...content,seo_title_fa:v})}/><Textarea label="SEO description — English" value={content.seo_description_en} onChange={v => setContent({...content,seo_description_en:v})}/><Textarea label="SEO description — فارسی" value={content.seo_description_fa} onChange={v => setContent({...content,seo_description_fa:v})}/></div>
+              </div></details><details className="content-group"><summary>Contact</summary><div className="content-group-body"><div className="grid2"><Input label="Contact title — English" value={content.contact_title_en} onChange={v => setContent({...content,contact_title_en:v})}/><Input label="Contact title — فارسی" value={content.contact_title_fa} onChange={v => setContent({...content,contact_title_fa:v})}/><Input label="Email" value={content.contact_email} onChange={v => setContent({...content,contact_email:v})}/><Input label="Phone" value={content.contact_phone} onChange={v => setContent({...content,contact_phone:v})}/><Input label="NURANICO Instagram URL" value={content.contact_instagram} onChange={v => setContent({...content,contact_instagram:v})}/><Input label="Shayan Instagram URL" value={content.personal_instagram} onChange={v => setContent({...content,personal_instagram:v})}/><Input label="Start Project URL" value={content.start_project_url || ''} onChange={v => setContent({...content,start_project_url:v})} placeholder="/contact or https://..."/></div>
+              </div></details><details className="content-group"><summary>SEO</summary><div className="content-group-body"><div className="grid2"><Input label="SEO title — English" value={content.seo_title_en} onChange={v => setContent({...content,seo_title_en:v})}/><Input label="SEO title — فارسی" value={content.seo_title_fa} onChange={v => setContent({...content,seo_title_fa:v})}/><Textarea label="SEO description — English" value={content.seo_description_en} onChange={v => setContent({...content,seo_description_en:v})}/><Textarea label="SEO description — فارسی" value={content.seo_description_fa} onChange={v => setContent({...content,seo_description_fa:v})}/></div>
+              </div></details>
             </div>
 
             <div className="editor">
@@ -1475,10 +1520,11 @@ export default function AdminPage() {
                 </button>
               </div>
 
+              <label className="field page-text-filter"><span>Choose a page</span><select value={pageTextFilter} onChange={event => setPageTextFilter(event.target.value)}><option value="all">All pages</option>{Array.from(new Set(pageTexts.map(item => item.page))).map(page => <option key={page} value={page}>{page.replace(/-/g, ' ')}</option>)}</select></label>
               {pageTexts.length === 0 ? (
                 <EmptyState text="No page texts found in CMS." />
               ) : (
-                Array.from(new Set(pageTexts.map(item => item.page))).map(page => {
+                Array.from(new Set(pageTexts.map(item => item.page))).filter(page => pageTextFilter === 'all' || page === pageTextFilter).map(page => {
                   const rows = pageTexts
                     .filter(item => item.page === page)
                     .sort((a, b) => {
@@ -1639,7 +1685,7 @@ export default function AdminPage() {
                 <div>
                   <h2>Typography</h2>
                   <p className="hint">
-                    Upload custom fonts and assign them to English or Persian.
+                    Choose heading fonts for each language. Black and ExtraBold fonts use a regular companion for body text when the body weight is below 600.
                   </p>
                 </div>
 
@@ -1838,9 +1884,9 @@ export default function AdminPage() {
                     <div
                       className="font-preview"
                       style={{
-                        fontFamily: `'${font.family_name}', sans-serif`,
+                        '--preview-font': `'${font.family_name}', sans-serif`,
                         fontWeight: font.font_weight || 400
-                      }}
+                      } as React.CSSProperties}
                     >
                       <div>
                         The quick brown fox jumps over the lazy dog.
@@ -1888,6 +1934,8 @@ export default function AdminPage() {
             </div>
           </>
         )}
+        </>}
+        </div>
       </section>
     </main>
   );
@@ -2300,7 +2348,7 @@ function MediaUploader({ onDone, onError }: { onDone: () => Promise<void>; onErr
 
 const styles = `
 
-.logo-admin-control {
+.admin .logo-admin-control {
   width:100%;
   display:flex;
   flex-direction:column;
@@ -2308,19 +2356,19 @@ const styles = `
   margin-top:8px;
 }
 
-.settings-logo-field {
+.admin .settings-logo-field {
   grid-column:1 / -1;
   width:100%;
 }
 
-.settings-field-title {
+.admin .settings-field-title {
   display:block;
   margin-bottom:10px;
   color:#aaa;
   font-size:11px;
 }
 
-.logo-admin-preview {
+.admin .logo-admin-preview {
   width:100%;
   min-height:130px;
   display:flex;
@@ -2333,7 +2381,7 @@ const styles = `
   background:#0d0d0c;
 }
 
-.logo-admin-preview img {
+.admin .logo-admin-preview img {
   display:block;
   width:auto;
   height:auto;
@@ -2342,7 +2390,7 @@ const styles = `
   object-fit:contain;
 }
 
-.logo-admin-placeholder {
+.admin .logo-admin-placeholder {
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -2350,35 +2398,35 @@ const styles = `
   color:#666;
 }
 
-.logo-admin-placeholder strong {
+.admin .logo-admin-placeholder strong {
   color:#aaa;
   font-size:20px;
   letter-spacing:.18em;
 }
 
-.logo-admin-placeholder span {
+.admin .logo-admin-placeholder span {
   font-size:10px;
 }
 
-.logo-admin-actions {
+.admin .logo-admin-actions {
   display:flex;
   align-items:center;
   gap:8px;
   flex-wrap:wrap;
 }
 
-.logo-admin-url {
+.admin .logo-admin-url {
   display:flex;
   flex-direction:column;
   gap:7px;
 }
 
-.logo-admin-url label {
+.admin .logo-admin-url label {
   color:#777;
   font-size:10px;
 }
 
-.logo-admin-url input {
+.admin .logo-admin-url input {
   width:100%;
   min-height:40px;
   padding:9px 11px;
@@ -2391,43 +2439,43 @@ const styles = `
   font-size:11px;
 }
 
-.logo-admin-url input:focus {
+.admin .logo-admin-url input:focus {
   border-color:#666;
 }
 
-.logo-admin-help {
+.admin .logo-admin-help {
   color:#666;
   font-size:9px;
   line-height:1.6;
 }
 
 
-:root { color-scheme: dark; }
-* { box-sizing:border-box; }
+.admin { color-scheme: dark; }
+.admin * { box-sizing:border-box; }
 .admin { min-height:100vh; display:flex; background:#141413; color:#eee; font-family:Arial,Helvetica,sans-serif; }
-.sidebar { width:235px; min-height:100vh; position:sticky; top:0; display:flex; flex-direction:column; padding:28px 18px; border-right:1px solid #292927; background:#111110; }
-.brand { padding:5px 10px 30px; display:flex; flex-direction:column; gap:7px; }
-.brand strong { letter-spacing:.22em; font-size:18px; font-weight:600; }
-.brand span { font-size:9px; color:#777; letter-spacing:.18em; }
-.sidebar nav { display:grid; gap:3px; }
-.sidebar nav button,.logout { border:0; background:transparent; color:#888; padding:11px 12px; text-align:left; border-radius:7px; cursor:pointer; font-size:12px; }
-.sidebar nav button:hover,.nav-active { background:#20201e !important; color:#f4f2ec !important; }
-.logout { margin-top:auto; border:1px solid #2d2d2a; }
-.workspace { width:min(1400px,100%); padding:42px clamp(20px,4vw,55px); }
-.section-header { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:28px; }
-.section-header h1 { margin:0 0 7px; font-size:31px; font-weight:450; letter-spacing:-.02em; }
-.section-header p { margin:0; color:#777; font-size:12px; }
-button { font:inherit; }
-.primary,.ghost,.danger,.upload { display:inline-flex; align-items:center; justify-content:center; border-radius:7px; padding:10px 15px; cursor:pointer; font-size:12px; }
-.primary { background:#eee; color:#151515; border:1px solid #eee; }
-.primary:disabled,.upload.disabled { opacity:.5; cursor:wait; }
-.ghost { background:#191918; color:#bbb; border:1px solid #30302d; }
-.danger { background:#241818; color:#e9aaaa; border:1px solid #4b2929; }
-.upload { background:#eee; color:#151515; border:1px solid #eee; }
+.admin .sidebar { width:235px; min-height:100vh; position:sticky; top:0; display:flex; flex-direction:column; padding:28px 18px; border-right:1px solid #292927; background:#111110; }
+.admin .brand { padding:5px 10px 30px; display:flex; flex-direction:column; gap:7px; }
+.admin .brand strong { letter-spacing:.22em; font-size:18px; font-weight:600; }
+.admin .brand span { font-size:9px; color:#777; letter-spacing:.18em; }
+.admin .sidebar nav { display:grid; gap:3px; }
+.admin .sidebar nav button,.admin .logout { border:0; background:transparent; color:#888; padding:11px 12px; text-align:left; border-radius:7px; cursor:pointer; font-size:12px; }
+.admin .sidebar nav button:hover,.admin .nav-active { background:#20201e !important; color:#f4f2ec !important; }
+.admin .logout { margin-top:auto; border:1px solid #2d2d2a; }
+.admin .workspace { width:min(1400px,100%); padding:42px clamp(20px,4vw,55px); }
+.admin .section-header { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:28px; }
+.admin .section-header h1 { margin:0 0 7px; font-size:31px; font-weight:450; letter-spacing:-.02em; }
+.admin .section-header p { margin:0; color:#777; font-size:12px; }
+.admin button { font:inherit; }
+.admin .primary,.admin .ghost,.admin .danger,.admin .upload { display:inline-flex; align-items:center; justify-content:center; border-radius:7px; padding:10px 15px; cursor:pointer; font-size:12px; }
+.admin .primary { background:#eee; color:#151515; border:1px solid #eee; }
+.admin .primary:disabled,.admin .upload.disabled { opacity:.5; cursor:wait; }
+.admin .ghost { background:#191918; color:#bbb; border:1px solid #30302d; }
+.admin .danger { background:#241818; color:#e9aaaa; border:1px solid #4b2929; }
+.admin .upload { background:#eee; color:#151515; border:1px solid #eee; }
 
-.upload input { display:none; }
+.admin .upload input { display:none; }
 
-.about-media-editor {
+.admin .about-media-editor {
   margin:18px 0 28px;
   padding:18px;
   border:1px solid #30302d;
@@ -2435,7 +2483,7 @@ button { font:inherit; }
   background:#141413;
 }
 
-.about-media-preview {
+.admin .about-media-preview {
   margin-top:14px;
   display:flex;
   align-items:flex-end;
@@ -2443,7 +2491,7 @@ button { font:inherit; }
   flex-wrap:wrap;
 }
 
-.about-media-preview img {
+.admin .about-media-preview img {
   width:min(420px,100%);
   height:240px;
   object-fit:cover;
@@ -2452,106 +2500,106 @@ button { font:inherit; }
   border:1px solid #30302d;
 }
 
-.notice { padding:13px 15px; margin-bottom:20px; border:1px solid #383834; background:#1b1b19; color:#ddd; border-radius:7px; font-size:12px; }
-.notice.error { border-color:#5a3030; color:#efb5b5; }
-.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:20px; }
-.stat { padding:22px; border:1px solid #292927; background:#1a1a18; border-radius:8px; }
-.stat b { display:block; font-size:29px; font-weight:400; margin-bottom:8px; }
-.stat span { color:#777; font-size:11px; }
-.panel,.editor { border:1px solid #292927; background:#181817; border-radius:8px; padding:22px; margin-bottom:18px; }
-.panel h2,.editor h2 { font-size:14px; font-weight:500; margin:0 0 16px; }
-.panel p,.hint { color:#858580; font-size:12px; line-height:1.8; }
-.chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:18px; }
-.chips span { padding:7px 9px; border:1px solid #30302d; border-radius:20px; color:#999; font-size:10px; }
-.toolbar { display:flex; gap:8px; margin-bottom:15px; }
-.toolbar input { flex:1; }
-input,textarea,select,.field-select { width:100%; background:#121211; border:1px solid #30302d; color:#eee; border-radius:6px; padding:11px 12px; outline:none; font:inherit; font-size:12px; }
-input:focus,textarea:focus,select:focus { border-color:#777; }
-.field { display:grid; gap:7px; margin-bottom:14px; }
-.field > span { color:#8d8d88; font-size:10px; }
-.field-select { margin-bottom:14px; }
-.grid2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:2px 15px; }
-.editor-top,.editor-actions { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px; margin-bottom:20px; }
-.editor-top { grid-template-columns:1fr auto; }
-.editor-top h2 { margin:0; }
-.editor-actions { margin:22px 0 0; }
-.editor-block { border-top:1px solid #2a2a27; padding-top:18px; margin-top:5px; }
-.editor-block h3 { font-size:11px; color:#aaa; font-weight:500; }
-.checks { display:flex; flex-wrap:wrap; gap:8px; }
-.checks label,.toggle { font-size:11px; color:#aaa; padding:8px 10px; border:1px solid #30302d; border-radius:6px; }
-.toggle { display:inline-flex; align-items:center; gap:8px; margin-top:4px; cursor:pointer; }
-.toggle input,.checks input,.media-pick input { width:auto; }
-.list { display:grid; gap:8px; }
-.row-card { display:flex; align-items:center; gap:14px; border:1px solid #292927; background:#181817; padding:11px; border-radius:8px; }
-.thumb { width:68px; height:52px; background:#111; border-radius:5px; overflow:hidden; display:grid; place-items:center; color:#555; font-size:8px; flex:none; }
-.thumb img { width:100%; height:100%; object-fit:cover; }
-.row-main { min-width:0; flex:1; display:grid; gap:5px; }
-.row-main b { font-size:13px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.row-main span,.row-main small { color:#777; font-size:10px; }
-.media-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; }
-.media-card { overflow:hidden; border:1px solid #292927; border-radius:8px; background:#181817; }
-.preview { aspect-ratio:16/10; background:#0d0d0c; display:grid; place-items:center; overflow:hidden; }
-.preview img,.preview video { width:100%; height:100%; object-fit:cover; }
-.media-meta { padding:13px; display:grid; gap:6px; }
-.media-meta b { font-size:12px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.media-meta span { color:#777; font-size:10px; }
-.media-actions { display:flex; gap:6px; margin-top:6px; }
-.media-actions button { padding:7px 9px; font-size:10px; }
-.media-picker { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:7px; }
-.media-pick { padding:9px; border:1px solid #30302d; border-radius:6px; color:#999; font-size:10px; cursor:pointer; }
-.media-pick.selected { border-color:#777; color:#eee; background:#20201e; }
-.color-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; margin-bottom:25px; }
-.color-field { display:grid; grid-template-columns:1fr auto; align-items:center; gap:8px; border:1px solid #30302d; padding:9px; border-radius:6px; color:#888; font-size:10px; }
-.color-field input { width:35px; height:28px; padding:0; }
-.color-field code { grid-column:1/-1; color:#aaa; font-size:10px; }
-.empty { border:1px dashed #343430; color:#666; padding:30px; text-align:center; border-radius:8px; font-size:11px; }
-.admin-loading { min-height:100vh; display:grid; place-items:center; background:#141413; color:#777; font:12px Arial; }
-@media(max-width:800px){ .admin{display:block}.sidebar{position:relative;width:100%;min-height:auto;border-right:0;border-bottom:1px solid #292927}.sidebar nav{grid-template-columns:repeat(4,1fr)}.logout{margin-top:15px}.grid2{grid-template-columns:1fr}.workspace{padding:25px 16px}.section-header{align-items:flex-start;flex-direction:column}.row-card{align-items:flex-start}.row-card>.ghost{margin-left:auto}.editor-actions{grid-template-columns:auto 1fr auto}.stats{grid-template-columns:repeat(2,1fr)} }
+.admin .notice { padding:13px 15px; margin-bottom:20px; border:1px solid #383834; background:#1b1b19; color:#ddd; border-radius:7px; font-size:12px; }
+.admin .notice.error { border-color:#5a3030; color:#efb5b5; }
+.admin .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:20px; }
+.admin .stat { padding:22px; border:1px solid #292927; background:#1a1a18; border-radius:8px; }
+.admin .stat b { display:block; font-size:29px; font-weight:400; margin-bottom:8px; }
+.admin .stat span { color:#777; font-size:11px; }
+.admin .panel,.admin .editor { border:1px solid #292927; background:#181817; border-radius:8px; padding:22px; margin-bottom:18px; }
+.admin .panel h2,.admin .editor h2 { font-size:14px; font-weight:500; margin:0 0 16px; }
+.admin .panel p,.admin .hint { color:#858580; font-size:12px; line-height:1.8; }
+.admin .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:18px; }
+.admin .chips span { padding:7px 9px; border:1px solid #30302d; border-radius:20px; color:#999; font-size:10px; }
+.admin .toolbar { display:flex; gap:8px; margin-bottom:15px; }
+.admin .toolbar input { flex:1; }
+.admin input,.admin textarea,.admin select,.admin .field-select { width:100%; background:#121211; border:1px solid #30302d; color:#eee; border-radius:6px; padding:11px 12px; outline:none; font:inherit; font-size:12px; }
+.admin input:focus,.admin textarea:focus,.admin select:focus { border-color:#777; }
+.admin .field { display:grid; gap:7px; margin-bottom:14px; }
+.admin .field > span { color:#8d8d88; font-size:10px; }
+.admin .field-select { margin-bottom:14px; }
+.admin .grid2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:2px 15px; }
+.admin .editor-top,.admin .editor-actions { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px; margin-bottom:20px; }
+.admin .editor-top { grid-template-columns:1fr auto; }
+.admin .editor-top h2 { margin:0; }
+.admin .editor-actions { margin:22px 0 0; }
+.admin .editor-block { border-top:1px solid #2a2a27; padding-top:18px; margin-top:5px; }
+.admin .editor-block h3 { font-size:11px; color:#aaa; font-weight:500; }
+.admin .checks { display:flex; flex-wrap:wrap; gap:8px; }
+.admin .checks label,.admin .toggle { font-size:11px; color:#aaa; padding:8px 10px; border:1px solid #30302d; border-radius:6px; }
+.admin .toggle { display:inline-flex; align-items:center; gap:8px; margin-top:4px; cursor:pointer; }
+.admin .toggle input,.admin .checks input,.admin .media-pick input { width:auto; }
+.admin .list { display:grid; gap:8px; }
+.admin .row-card { display:flex; align-items:center; gap:14px; border:1px solid #292927; background:#181817; padding:11px; border-radius:8px; }
+.admin .thumb { width:68px; height:52px; background:#111; border-radius:5px; overflow:hidden; display:grid; place-items:center; color:#555; font-size:8px; flex:none; }
+.admin .thumb img { width:100%; height:100%; object-fit:cover; }
+.admin .row-main { min-width:0; flex:1; display:grid; gap:5px; }
+.admin .row-main b { font-size:13px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.admin .row-main span,.admin .row-main small { color:#777; font-size:10px; }
+.admin .media-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; }
+.admin .media-card { overflow:hidden; border:1px solid #292927; border-radius:8px; background:#181817; }
+.admin .preview { aspect-ratio:16/10; background:#0d0d0c; display:grid; place-items:center; overflow:hidden; }
+.admin .preview img,.admin .preview video { width:100%; height:100%; object-fit:cover; }
+.admin .media-meta { padding:13px; display:grid; gap:6px; }
+.admin .media-meta b { font-size:12px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.admin .media-meta span { color:#777; font-size:10px; }
+.admin .media-actions { display:flex; gap:6px; margin-top:6px; }
+.admin .media-actions button { padding:7px 9px; font-size:10px; }
+.admin .media-picker { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:7px; }
+.admin .media-pick { padding:9px; border:1px solid #30302d; border-radius:6px; color:#999; font-size:10px; cursor:pointer; }
+.admin .media-pick.selected { border-color:#777; color:#eee; background:#20201e; }
+.admin .color-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; margin-bottom:25px; }
+.admin .color-field { display:grid; grid-template-columns:1fr auto; align-items:center; gap:8px; border:1px solid #30302d; padding:9px; border-radius:6px; color:#888; font-size:10px; }
+.admin .color-field input { width:35px; height:28px; padding:0; }
+.admin .color-field code { grid-column:1/-1; color:#aaa; font-size:10px; }
+.admin .empty { border:1px dashed #343430; color:#666; padding:30px; text-align:center; border-radius:8px; font-size:11px; }
+.admin .admin-loading { min-height:100vh; display:grid; place-items:center; background:#141413; color:#777; font:12px Arial; }
+@media(max-width:800px){ .admin{display:block}.admin .sidebar{position:relative;width:100%;min-height:auto;border-right:0;border-bottom:1px solid #292927}.admin .sidebar nav{grid-template-columns:repeat(4,1fr)}.admin .logout{margin-top:15px}.admin .grid2{grid-template-columns:1fr}.admin .workspace{padding:25px 16px}.admin .section-header{align-items:flex-start;flex-direction:column}.admin .row-card{align-items:flex-start}.admin .row-card>.ghost{margin-left:auto}.admin .editor-actions{grid-template-columns:auto 1fr auto}.admin .stats{grid-template-columns:repeat(2,1fr)} }
 
-.font-section-head{
+.admin .font-section-head{
   display:flex;
   justify-content:space-between;
   align-items:flex-end;
   gap:20px;
   margin-top:30px;
 }
-.font-section-head h2{margin-bottom:6px}
-.typography-controls{margin-top:20px}
-.font-library{
+.admin .font-section-head h2{margin-bottom:6px}
+.admin .typography-controls{margin-top:20px}
+.admin .font-library{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:14px;
   margin-top:15px;
 }
-.font-card{
+.admin .font-card{
   border:1px solid #343432;
   background:#181817;
   padding:18px;
   min-width:0;
 }
-.font-card-top{
+.admin .font-card-top{
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
   gap:15px;
 }
-.font-card-top>div{
+.admin .font-card-top>div{
   display:flex;
   flex-direction:column;
   gap:6px;
   min-width:0;
 }
-.font-card-top b{
+.admin .font-card-top b{
   font-size:14px;
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.font-card-top span{
+.admin .font-card-top span{
   color:#777;
   font-size:10px;
   letter-spacing:.08em;
 }
-.font-preview{
+.admin .font-preview{
   margin:20px 0;
   padding:18px 0;
   border-top:1px solid #30302e;
@@ -2560,17 +2608,17 @@ input:focus,textarea:focus,select:focus { border-color:#777; }
   line-height:1.7;
   overflow-wrap:anywhere;
 }
-.font-preview div+div{
+.admin .font-preview div+div{
   margin-top:10px;
 }
-.font-actions{
+.admin .font-actions{
   display:flex;
   gap:8px;
   flex-wrap:wrap;
 }
 @media(max-width:900px){
-  .font-library{grid-template-columns:1fr}
-  .font-section-head{
+  .admin .font-library{grid-template-columns:1fr}
+  .admin .font-section-head{
     align-items:flex-start;
     flex-direction:column;
   }
