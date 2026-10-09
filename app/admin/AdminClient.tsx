@@ -567,7 +567,7 @@ export default function AdminPage() {
     setSaving(true);
     try {
       const saved = await api<{ row: Project; id: number }>('projects', 'POST', {
-        row: {...editingProject,published:publish,bts_media_ids:editingProject.bts_media_ids ?? null},
+        row: {...editingProject,category:destinations.find(([key]) => ['film','photography','content'].includes(key) && (destMap[editingProject.id] || []).includes(key))?.[1] || editingProject.category,published:publish,bts_media_ids:editingProject.bts_media_ids ?? null},
         destinations: destMap[editingProject.id] || [],
         mediaIds: projectMediaMap[editingProject.id] || [],
       });
@@ -857,14 +857,14 @@ export default function AdminPage() {
   const filteredProjects = useMemo(() => {
     const q = projectSearch.trim().toLowerCase();
     return projects.filter(p => !q ||
-      [p.title_en, p.title_fa, p.category].some(v => (v || '').toLowerCase().includes(q))
+      [p.title_en, p.title_fa, p.category, p.brand_name].some(v => (v || '').toLowerCase().includes(q))
     ).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
   }, [projects, projectSearch]);
 
   const filteredMedia = useMemo(() => {
     const q = mediaSearch.trim().toLowerCase();
     return media.filter(m => {
-      const matchesQ = !q || [m.name, m.brand_name, m.project_name, m.alt_text_en, m.alt_text_fa, m.file_type, m.mime_type, ...projects.filter(project => (project.bts_media_ids || []).includes(m.id) || (projectMediaMap[project.id] || []).includes(m.id) || [project.cover_url,project.media_url,project.preview_url].includes(m.file_url)).flatMap(project => [project.title_en,project.title_fa])].some(v => (v || '').toLowerCase().includes(q));
+      const matchesQ = !q || [m.name, m.brand_name, m.project_name, m.alt_text_en, m.alt_text_fa, m.file_type, m.mime_type, ...projects.filter(project => (project.bts_media_ids || []).includes(m.id) || (projectMediaMap[project.id] || []).includes(m.id) || [project.cover_url,project.media_url,project.preview_url].includes(m.file_url)).flatMap(project => [project.title_en,project.title_fa,project.brand_name])].some(v => (v || '').toLowerCase().includes(q));
       const matchesType = mediaFilter === 'all' || (mediaFilter === 'video' ? isVideoAsset(m) : !isVideoAsset(m));
       return matchesQ && matchesType;
     });
