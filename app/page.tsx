@@ -284,13 +284,13 @@ export default function HomePage() {
         cards.sort((a,b) => {
           const first=a.target.getBoundingClientRect(),second=b.target.getBoundingClientRect();
           return Math.abs(first.top-second.top)>10 ? first.top-second.top : first.left-second.left;
-        }).forEach((entry,index) => (entry.target as HTMLElement).style.setProperty('--motion-delay',`${index*160}ms`));
+        }).forEach((entry,index) => (entry.target as HTMLElement).style.setProperty('--motion-delay',`${index*208}ms`));
         entries.forEach(entry => {
           if (!entry.isIntersecting) return;
           if (entry.target.matches('.work .filter-row')) {
             Array.from(entry.target.querySelectorAll<HTMLElement>('button'))
               .sort((a,b) => a.getBoundingClientRect().left-b.getBoundingClientRect().left)
-              .forEach((button,index) => button.style.setProperty('--filter-delay',`${index*90}ms`));
+              .forEach((button,index) => button.style.setProperty('--filter-delay',`${index*200}ms`));
           }
           entry.target.classList.add('in-view');
           observer.unobserve(entry.target);
@@ -957,7 +957,7 @@ export default function HomePage() {
                   color: 'inherit',
                   textDecoration: 'none',
                   cursor: 'pointer',
-                  ['--motion-delay' as string]:`${index * 120}ms`,
+                  ['--motion-delay' as string]:`${index * 156}ms`,
                 }}
               >
                 <svg className="service-card-frame" aria-hidden="true"><rect x="1" y="1" rx="10" pathLength="1" /></svg>
@@ -1166,7 +1166,7 @@ export default function HomePage() {
                     }`}
                     href={href}
                     key={`${filter}-${item.id}`}
-                    style={{['--motion-delay' as string]:`${Math.min(index,8) * 160}ms`}}
+                    style={{['--motion-delay' as string]:`${Math.min(index,8) * 208}ms`}}
                   >
                     <div className="project-media"><span className="work-reveal-edge" aria-hidden="true" /><MediaCountBadge count={item.media_count} lang={lang} />
                       {item.cover_url ? (
@@ -1363,7 +1363,7 @@ export default function HomePage() {
               return (
                 <div
                   className="brand-card motion-item"
-                  style={{['--motion-delay' as string]:`${Math.min(index,10) * 90}ms`}}
+                  style={{['--motion-delay' as string]:`${Math.min(index,10) * 117}ms`}}
                   key={brand.id}
                 >
                   {brand.logo_url ? (
