@@ -81,32 +81,28 @@
  .home-motion .services .service-card-copy { min-height:60px; }
  .home-motion .services .service-card-copy h3 { min-height:18px;margin-bottom:6px !important; }
 }
-/* Images draw downward through a soft gradient edge, in visible left-to-right order. */
-.home-motion.motion-ready .work .project-card .project-media {
-  -webkit-mask-image:linear-gradient(to bottom,#000 46%,transparent 52%);
-  mask-image:linear-gradient(to bottom,#000 46%,transparent 52%);
-  -webkit-mask-size:100% 250%;mask-size:100% 250%;
-  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
-  -webkit-mask-position:0 100%;mask-position:0 100%;
-}
-.home-motion.motion-ready .work .project-card.in-view { animation:work-card-unfold .9s cubic-bezier(.2,.7,.2,1) both;animation-delay:var(--motion-delay,0ms); }
-.home-motion.motion-ready .work .project-card.in-view .project-media { animation:work-image-uncover 1.25s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(.15s + var(--motion-delay,0ms)); }
+/* A clean shutter opens downward; its highlight disappears once the image settles. */
+.home-motion.motion-ready .work .project-card .project-media { clip-path:inset(0 0 100% 0 round 12px); }
+.home-motion.motion-ready .work .project-card.in-view .project-media { animation:work-image-uncover 1.15s cubic-bezier(.22,.75,.2,1) both;animation-delay:calc(.1s + var(--motion-delay,0ms)); }
+.home-motion.motion-ready .work .project-card.in-view .project-media > :is(img,video) { animation:work-image-settle 1.4s cubic-bezier(.22,.75,.2,1) both;animation-delay:calc(.1s + var(--motion-delay,0ms)); }
+.work-reveal-edge { display:none; }
+.home-motion.motion-ready .work .work-reveal-edge { display:block;position:absolute;inset-inline:0;top:-24px;height:24px;z-index:8;pointer-events:none;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.12));border-bottom:1px solid rgba(255,255,255,.48);opacity:0; }
+.home-motion.motion-ready .work .project-card.in-view .work-reveal-edge { animation:work-edge-sweep 1.15s cubic-bezier(.22,.75,.2,1) both;animation-delay:calc(.1s + var(--motion-delay,0ms)); }
 .home-motion.motion-ready .work.in-view .section-head h2 { animation:work-title-uncover .85s cubic-bezier(.2,.7,.2,1) both; }
  .home-motion.motion-ready .work .filter-row button { opacity:0;translate:0 14px;scale:.94; }
 .home-motion.motion-ready .work .filter-row.in-view button { animation:work-filter-arrive .7s cubic-bezier(.2,.7,.2,1) both;animation-delay:var(--filter-delay,0ms); }
 .home-motion.motion-ready .work .filter-row:focus-within { opacity:1;translate:none; }
 .home-motion.motion-ready .work .filter-row button:focus-visible { opacity:1;translate:none;scale:1;animation:none; }
-@keyframes work-card-unfold { from{rotate:-2deg}to{rotate:0deg} }
-@keyframes work-image-uncover {
-  from { -webkit-mask-image:linear-gradient(to bottom,#000 46%,transparent 52%);mask-image:linear-gradient(to bottom,#000 46%,transparent 52%);-webkit-mask-position:0 100%;mask-position:0 100%; }
-  99% { -webkit-mask-image:linear-gradient(to bottom,#000 46%,transparent 52%);mask-image:linear-gradient(to bottom,#000 46%,transparent 52%);-webkit-mask-position:0 0%;mask-position:0 0%; }
-  to { -webkit-mask-image:none;mask-image:none;-webkit-mask-position:0 0%;mask-position:0 0%; }
-}
+@keyframes work-image-uncover { from{clip-path:inset(0 0 100% 0 round 12px)}to{clip-path:inset(0 0 0 round 12px)} }
+@keyframes work-image-settle { from{scale:1.08}to{scale:1} }
+@keyframes work-edge-sweep { 0%{top:-24px;opacity:0}8%{opacity:1}85%{opacity:.65}100%{top:calc(100% - 24px);opacity:0} }
 @keyframes work-title-uncover { from{clip-path:inset(0 100% 0 0);translate:0 12px}to{clip-path:inset(0);translate:0 0} }
 @keyframes work-filter-arrive { from{opacity:0;translate:0 12px;scale:.92}to{opacity:1;translate:0 0;scale:1} }
 @media(prefers-reduced-motion:reduce){
- .home-motion.motion-ready .work :is(.project-card,.project-media,.section-head h2,.filter-row button){animation:none !important;-webkit-mask-image:none !important;mask-image:none !important;clip-path:none !important;rotate:none !important;translate:none !important;scale:none !important;opacity:1 !important;}
+ .home-motion.motion-ready .work :is(.project-card,.project-media,.project-media > img,.project-media > video,.section-head h2,.filter-row button){animation:none !important;-webkit-mask-image:none !important;mask-image:none !important;clip-path:none !important;rotate:none !important;translate:none !important;scale:none !important;opacity:1 !important;}
 }
+
+@media(prefers-reduced-motion:reduce){.home-motion .work-reveal-edge{display:none !important;}}
 
 /* Brand marks settle into the grid in a short, staggered sequence. */
 .home-motion.motion-ready .brands .brand-card.in-view img { animation:brand-logo-arrive .9s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(.15s + var(--motion-delay,0ms)); }

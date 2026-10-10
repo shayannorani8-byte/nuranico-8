@@ -454,18 +454,5 @@ html body .services-index .service-details-link { display:inline-flex;align-item
 html body .services-index .service-details-link:hover { background:#ffffff0e;border-color:#ffffff70; }
 @media(max-width:800px){html body .services-index .service-list { grid-template-columns:1fr;padding:0 20px 48px;gap:16px; }html body .services-index .inner-hero { padding:108px 20px 32px !important; }html body .services-index .service-list article { padding:24px !important; }}
 
-.brands-directory-content { max-width:1280px;margin:0 auto;padding:116px 24px 64px;min-height:70svh; }
-.brands-directory-content > header { display:flex;justify-content:space-between;align-items:center;gap:24px;margin-bottom:32px; }
-html body .brands-directory h1 { font-size:clamp(30px,4vw,48px);line-height:1.2;margin:0;letter-spacing:0; }
-.brands-directory-content input { min-height:44px;width:min(100%,300px);padding:10px 14px;border:1px solid #ffffff30;border-radius:10px;background:#ffffff05;color:inherit;font:inherit;font-size:14px; }
-.brands-directory-grid { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px; }
-.directory-brand-card { min-width:0;padding:20px;border:1px solid #ffffff20;border-radius:12px;text-align:center;background:#1c1c1b;animation:directory-brand-enter .65s ease both;animation-delay:var(--brand-delay,0ms); }
-.directory-brand-card a { display:block;height:100%;border-radius:8px; }
-.directory-logo-stage { display:flex;align-items:center;justify-content:center;aspect-ratio:3/2;padding:20px;border-radius:8px;background:#e4e1da;color:#151514; }
-.directory-logo-stage img { display:block;max-width:100%;max-height:84px;object-fit:contain; }
-html body .directory-brand-card h2 { margin:18px 0 0;font-size:16px;line-height:1.5;letter-spacing:0; }
-.directory-visit { display:inline-block;margin-top:12px;font-size:12px;color:#c3c0b8;text-decoration:underline;text-underline-offset:4px; }
-.directory-brand-card a:focus-visible { outline:2px solid #e4e1da;outline-offset:6px; }
-@keyframes directory-brand-enter { from{opacity:0;translate:0 16px}to{opacity:1;translate:0 0} }
-@media(max-width:800px){.brands-directory-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.brands-directory-content{padding:108px 20px 48px}.brands-directory-content>header{align-items:stretch;flex-direction:column;gap:20px}.brands-directory-content input{width:100%}.directory-brand-card{padding:14px}.directory-logo-stage{padding:12px}.directory-logo-stage img{max-height:64px}}
-@media(prefers-reduced-motion:reduce){.directory-brand-card{animation:none;opacity:1;translate:none}}
+
+.home-motion #brands { scroll-margin-top:96px; }

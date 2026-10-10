@@ -1168,7 +1168,7 @@ export default function HomePage() {
                     key={`${filter}-${item.id}`}
                     style={{['--motion-delay' as string]:`${Math.min(index,8) * 160}ms`}}
                   >
-                    <div className="project-media"><MediaCountBadge count={item.media_count} lang={lang} />
+                    <div className="project-media"><span className="work-reveal-edge" aria-hidden="true" /><MediaCountBadge count={item.media_count} lang={lang} />
                       {item.cover_url ? (
                         <img
                           src={item.cover_url}

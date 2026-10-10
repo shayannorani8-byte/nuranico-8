@@ -136,7 +136,7 @@ export default function SiteHeader() {
         <Link href="/work">{t.work}</Link>
         <Link href="/services">{t.services}</Link>
         <Link href="/about">{t.about}</Link>
-        <Link href="/brands">{t.brands}</Link>
+        <Link href="/#brands">{t.brands}</Link>
         <Link href="/contact">{t.contact}</Link>
       </nav>
 
@@ -191,7 +191,7 @@ export default function SiteHeader() {
               ['/work', t.work, pathname.startsWith('/work')],
               ['/services', t.services, pathname.startsWith('/services')],
               ['/about', t.about, pathname === '/about'],
-              ['/brands', t.brands, pathname === '/brands'],
+              ['/#brands', t.brands, false],
               ['/contact', t.contact, pathname === '/contact'],
             ].map(([href, label, active]) => <Link key={String(href)} href={String(href)} onClick={closeMenu} aria-current={active ? 'page' : undefined}><span>{String(label)}</span></Link>)}
             <Link className="full-menu-project" href={startProjectUrl || '/contact'} onClick={closeMenu}><span>{t.cta}</span></Link>
