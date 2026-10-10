@@ -501,3 +501,26 @@ html body .services-index .service-list { max-width:none;margin-inline:0; }
 html body .services-index { --services-gutter:5vw; }
 html body .services-index :is(.site-nav,.inner-hero,.service-list,.content-footer) { padding-inline:var(--services-gutter) !important; }
 @media(max-width:800px){html body .services-index { --services-gutter:20px; }}
+
+/* Calm scroll entrances for the service directory. */
+.services-index .service-enter { opacity:1;translate:none; }
+.services-index.services-motion-ready .service-enter { opacity:0;translate:0 24px;transition:opacity 1.2s ease,translate 1.4s cubic-bezier(.22,.75,.2,1);transition-delay:var(--service-enter-delay,0ms); }
+.services-index.services-motion-ready .service-enter.service-entered,
+.services-index.services-motion-ready .service-enter:focus-within { opacity:1;translate:none; }
+.services-index.services-motion-ready .service-enter:focus-within { transition-delay:0ms; }
+@media(prefers-reduced-motion:reduce){.services-index.services-motion-ready .service-enter{opacity:1;translate:none;transition:none;}}
+
+/* Portfolio pages share header/content gutters instead of nested centered padding. */
+html body .content-page:has(.portfolio-library) { --portfolio-page-gutter:max(5vw,calc((100vw - 1280px) / 2)); }
+html body .content-page:has(.portfolio-library) :is(.site-nav,.portfolio-library,.portfolio-footer) { padding-inline:var(--portfolio-page-gutter) !important; }
+html body .content-page:has(.portfolio-library) :is(.portfolio-library,.portfolio-footer) { max-width:none;margin-inline:0; }
+@media(max-width:800px){html body .content-page:has(.portfolio-library) { --portfolio-page-gutter:20px; }}
+
+.services-index .service-type-word { display:inline-block; }
+.services-index.services-motion-ready .service-type-word { opacity:0;clip-path:inset(0 100% 0 0); }
+.services-index.services-motion-ready .service-entered .service-type-word { animation:service-type-in .9s steps(12,end) both;animation-delay:calc(.25s + var(--service-enter-delay,0ms) + var(--service-word-delay,0ms)); }
+.services-index.services-motion-ready .service-entered p .service-type-word { animation-delay:calc(.7s + var(--service-enter-delay,0ms) + var(--service-word-delay,0ms)); }
+html[lang='fa'] .services-index.services-motion-ready .service-entered .service-type-word { animation-name:service-type-in-rtl; }
+@keyframes service-type-in { from{opacity:1;clip-path:inset(0 100% 0 0)}to{opacity:1;clip-path:inset(0)} }
+@keyframes service-type-in-rtl { from{opacity:1;clip-path:inset(0 0 0 100%)}to{opacity:1;clip-path:inset(0)} }
+@media(prefers-reduced-motion:reduce){.services-index.services-motion-ready .service-type-word { opacity:1;clip-path:none;animation:none !important; }}

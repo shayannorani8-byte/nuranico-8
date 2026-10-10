@@ -128,3 +128,12 @@
  .home-motion .services .service-vector-2 { width:78% !important; }
  .home-motion .services .service-art-photo { transform:scale(1.3);transform-origin:center;overflow:visible; }
 }
+
+/* Shorter mobile service cards, with a restrained pool of light underneath. */
+@media(max-width:700px){
+ .home-motion .services .service-card { height:185px !important;min-height:185px !important;gap:8px !important;padding-block:10px !important;box-shadow:0 17px 28px -19px rgba(231,226,213,.28),inset 0 -18px 26px -24px rgba(244,241,234,.16) !important; }
+ .home-motion .services .service-vector { height:84px !important;flex-basis:84px !important; }
+}
+
+.home-motion .about .about-image { border-radius:12px !important;overflow:hidden !important; }
+.home-motion .about .about-image img { border-radius:inherit !important; }
