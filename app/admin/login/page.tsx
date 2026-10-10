@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import LoginSubmit from './LoginSubmit';
 import './login.css';
+import '../form-controls.css';
 import { createAdminToken, getAdminCookieName } from '@/lib/admin-auth';
 
 async function loginAction(formData: FormData) {

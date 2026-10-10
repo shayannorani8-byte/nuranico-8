@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import './admin-ui.css';
+import './form-controls.css';
 import { DEFAULT_ABOUT_GRADIENT } from '../../lib/site-appearance-settings';
 import { AdminLocaleProvider, useAdminLocale } from './AdminLocale';
 import {projectSections,sectionName} from '../../components/PortfolioCard';
@@ -1363,8 +1364,6 @@ function FontUploader({
   const {t} = useAdminLocale();
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState('');
-  const [fileProgress,setFileProgress]=useState<{name:string;percent:number;status:'uploading'|'done'|'error'}[]>([]);
 
   async function upload(file: File | undefined) {
     if (!file) return;
@@ -1537,8 +1536,6 @@ function LogoUploader({
   const {t} = useAdminLocale();
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState('');
-  const [fileProgress,setFileProgress]=useState<{name:string;percent:number;status:'uploading'|'done'|'error'}[]>([]);
 
   async function upload(file: File | undefined) {
     if (!file) return;

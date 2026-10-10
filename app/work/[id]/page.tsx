@@ -5,8 +5,7 @@ import {projectSections,sectionName} from '../../../components/PortfolioCard';
 import PortfolioFooter from '../../../components/PortfolioFooter';
 import SiteHeader from '../../../components/SiteHeader';
 
-
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase';
@@ -41,8 +40,6 @@ type Project = {
   brand_id?: number | null;
 };
 
-
-
 function isVideo(project: Project) {
   return isVideoAsset(project);
 }
@@ -55,11 +52,9 @@ function formatTime(value: number) {
 
 function VideoPlayer({
   src,
-  sources,
   poster,
 }: {
   src: string;
-  sources?: Record<string, string> | null;
   poster?: string;
 }) {
   const { lang } = useSiteLanguage();
@@ -69,10 +64,6 @@ function VideoPlayer({
   const [muted, setMuted] = useState(false);
   const [duration, setDuration] = useState(0);
   const [current, setCurrent] = useState(0);
-  const [quality, setQuality] = useState('Auto');
-  const [activeSrc, setActiveSrc] = useState(src);
-  const [speed, setSpeed] = useState(1);
-  const [menu, setMenu] = useState(false);
   const [videoSize, setVideoSize] = useState<{
     width: number;
     height: number;
@@ -92,21 +83,12 @@ function VideoPlayer({
           ? 'landscape'
           : 'square';
 
-
-
-  const available = useMemo(() => {
-    const entries = sources ? Object.entries(sources).filter(([, url]) => !!url) : [];
-    return entries.length ? entries : [['Auto', src] as [string, string]];
-  }, [sources, src]);
-
   useEffect(() => {
-    setActiveSrc(src);
     setVideoError(false);
     setVideoSize(null);
     setPlaying(false);
     setCurrent(0);
     setDuration(0);
-    setQuality('Auto');
   }, [src]);
 
   async function togglePlay() {
@@ -132,27 +114,6 @@ function VideoPlayer({
     video.currentTime = Math.min(Math.max(video.currentTime + delta, 0), video.duration || 0);
   }
 
-  function selectQuality(label: string, url: string) {
-    const video = videoRef.current;
-    if (!video) return;
-    const wasPlaying = !video.paused;
-    const time = video.currentTime;
-    setQuality(label);
-    setActiveSrc(url);
-    video.src = url;
-    video.load();
-    video.addEventListener('loadedmetadata', () => {
-      video.currentTime = Math.min(time, video.duration || time);
-      if (wasPlaying) void video.play().catch(() => undefined);
-    }, { once: true });
-    setMenu(false);
-  }
-
-  function changeSpeed(next: number) {
-    setSpeed(next);
-    if (videoRef.current) videoRef.current.playbackRate = next;
-  }
-
   return (
     <div
       className={`player player-${orientation}`}
@@ -168,7 +129,7 @@ function VideoPlayer({
       <div className="player-stage">
       <video
         ref={videoRef}
-        src={activeSrc}
+        src={src}
         poster={poster}
         playsInline
         controlsList="nodownload"
@@ -478,7 +439,6 @@ export default function ProjectPage() {
   ]));
   const effectiveVideoUrl = isVideo(project) ? project.media_url : !project.media_url ? attachedVideos[0]?.file_url : undefined;
 
-
   return (
     <main className="project-page">
       <SiteHeader />
@@ -491,7 +451,7 @@ export default function ProjectPage() {
         </div>
       </section>
 
-      <ProjectGallery presentation="sequence" title={text('gallery_label','Gallery','گالری')} lang={lang} renderVideo={url=><VideoPlayer src={url} sources={url===effectiveVideoUrl ? project.media_sources : undefined} poster={url===effectiveVideoUrl ? project.cover_url : undefined}/>} items={Array.from(new Set([...(project.media_url ? [project.media_url] : []),...attachedMedia.map(item=>item.file_url),...(project.gallery_urls || []),...(!project.media_url && !attachedMedia.length ? gallery : [])])).map((url,index)=>({url,video:isVideoAsset({file_url:url}),label:`${title} ${index+1}`}))}/>
+      <ProjectGallery presentation="sequence" title={text('gallery_label','Gallery','گالری')} lang={lang} renderVideo={url=><VideoPlayer src={url} poster={url===effectiveVideoUrl ? project.cover_url : undefined}/>} items={Array.from(new Set([...(project.media_url ? [project.media_url] : []),...attachedMedia.map(item=>item.file_url),...(project.gallery_urls || []),...(!project.media_url && !attachedMedia.length ? gallery : [])])).map((url,index)=>({url,video:isVideoAsset({file_url:url}),label:`${title} ${index+1}`}))}/>
 
       {behindScenes.length > 0 && <><h2 id="project-bts" className="project-bts-title">{lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'}</h2><BtsGallery title={lang === 'fa' ? 'پشت صحنه پروژه' : 'Project behind the scenes'} lang={lang} renderVideo={url => <VideoPlayer src={url} />} items={behindScenes.map((item,index) => ({url:item.file_url,video:isVideoAsset(item),label:`${title} — ${lang === 'fa' ? 'پشت صحنه' : 'Behind the scenes'} ${index+1}`}))} /></>}
 

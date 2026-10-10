@@ -1,63 +1,61 @@
-# NURANICO — Final Next.js Portfolio
+# NURANICO
 
-NURANICO is a bilingual creative-studio portfolio built for real deployment.
+Bilingual creative-studio portfolio built with Next.js 15, React 19 and TypeScript. Public content, appearance and language settings are managed through the admin panel.
 
-## Final site structure
+## Pages
 
-- `/` — cinematic home, hero slider, real video preview, services, work grid, clients and contact
-- `/work` — complete portfolio grid
-- `/work/[id]` — individual project page with photo viewer or custom video player
-- `/work/behind-the-scenes` — all Behind The Scenes projects
-- `/clients/[id]` — brand/client page showing only projects linked to that brand
-- `/services`, `/about`, `/contact`
-- `/admin` — CMS for projects, brands, media and appearance
-
-## Project content
-
-Each project can have:
-
-- Cover image
-- Main image or video
-- Video quality sources
-- Gallery images
-- Client / Brand
-- Optional Behind The Scenes image/video/gallery
-- Featured / published state
-- Display order
-
-A Behind The Scenes asset is stored once and can appear both on its project page and on the global Behind The Scenes page.
+- `/` — hero slider, services, selected work, About and brands
+- `/work` — searchable project library
+- `/work/[id]` — project information, mixed image/video gallery and behind-the-scenes media
+- `/work/behind-the-scenes` — behind-the-scenes photos and videos, grouped by project
+- `/services` — services directory
+- `/services/film-teasers`, `/services/photography`, `/services/content` — category libraries
+- `/about`, `/contact`
+- `/brands` — redirects to the homepage brands section
+- `/media/[id]` — individual media view
+- `/admin`, `/admin/login` — content and appearance management
 
 ## Local setup
 
-1. Use Node.js LTS.
-2. Copy your private `.env.local` into the project root.
-3. Install dependencies:
-   `npm install`
-4. Run:
-   `npm run dev`
-5. Open the localhost URL printed by Next.js.
+1. Install Node.js LTS and restore your private `.env.local` into the project root.
+2. Run `npm ci` to install the versions in `package-lock.json`.
+3. Run `npm run dev` and open the URL printed by Next.js.
 
-Required environment variables:
+For a production preview, run `npm run build`, then `npm start`.
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_KEY=...
-```
+## Environment
 
-## Supabase
+Configure these variables privately; never commit their values:
 
-Before using Brand ↔ Project links and Behind The Scenes fields, run:
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_KEY` — public database connection
+- `SUPABASE_SERVICE_ROLE_KEY` — server-only CMS access
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `AUTH_SECRET` — admin authentication
+- `ARVAN_ENDPOINT`, `ARVAN_BUCKET`, `ARVAN_ACCESS_KEY`, `ARVAN_SECRET_KEY` — media storage
+- `ARVAN_REGION` — optional storage region; defaults to `us-east-1`
+- `NEXT_PUBLIC_SITE_URL` — site URL for authentication redirects
 
-`supabase/portfolio-media-upgrade.sql`
+Schema upgrades are kept in `supabase/`. Apply the relevant migrations to the database before using their fields; deployments do not apply them automatically.
 
-The migration adds `brand_id`, BTS fields, video quality sources and project galleries.
+## Code organization
 
-## Deployment target
+- `app/` — pages, API routes and page styles
+- `components/` — shared header, language/data providers, galleries and media cards
+- `lib/` — database, storage, authentication and shared settings helpers
+- `app/home-motion.css` — homepage entrance and loop animations, with reduced-motion fallbacks
+- `app/site-refinements.css` — shared responsive type, gutters, controls and internal-page presentation
+- `app/admin/form-controls.css` — mobile form sizing to prevent iOS focus zoom
 
-- Website: Vercel
-- Database / Auth: Supabase
-- Media storage: ServerNet Object Storage
-- Domain: Nuranico.com
+Appearance settings include About and portfolio gradients. Website language availability and admin interface language are independent settings.
 
-Do not commit `.env.local`.
+## Checks
 
+- `npm run typecheck` — TypeScript checks, including unused locals and parameters
+- `npm run build` — production compilation and route generation
+
+Responsive layouts should be reviewed in both languages at phone, tablet and desktop widths. Real iOS focus behavior requires an iPhone/iPad check; desktop viewport emulation does not reproduce Safari's automatic field zoom.
+
+## Hosting and backups
+
+Production runs on Vercel at `https://www.nuranico.com`. Supabase stores records; Arvan Object Storage hosts uploaded media.
+
+A local project backup contains source, private configuration and Git history. Remote database records and uploaded storage objects require separate service backups. Restore `.env.local` privately and use `npm ci` / `npm run build` to recreate dependencies and build output when restoring a source-only copy.

@@ -1,0 +1,7 @@
+/* iOS zooms focused fields below 16px. Keep browser zoom available. */
+@media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+  .admin.admin :is(input, textarea, select),
+  .admin-login :is(input, textarea, select) {
+    font-size: 16px !important;
+  }
+}

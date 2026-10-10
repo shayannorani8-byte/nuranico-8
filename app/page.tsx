@@ -3,7 +3,6 @@ import {projectSections,sectionName} from '../components/PortfolioCard';
 import MediaCountBadge from '../components/MediaCountBadge';
 import SiteHeader from '../components/SiteHeader';
 
-
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePageTexts } from '../lib/usePageTexts';
@@ -12,10 +11,8 @@ import './home-mobile.css';
 import './home-motion.css';
 import { aboutGradientColor, DEFAULT_ABOUT_GRADIENT } from '../lib/site-appearance-settings';
 import { cleanUiLabel } from '../lib/ui-label';
-import ServiceWriting from '../components/ServiceWriting';
 import { localizedValue, isVideoAsset } from '../lib/media';
 import { useSiteData } from '../components/SiteData';
-type Lang = 'en' | 'fa';
 
 type Settings = {
   bg_color?: string;
@@ -58,15 +55,6 @@ type Settings = {
   heading_weight?: number;
   body_weight?: number;
   letter_spacing?: number;
-};
-
-type FontAsset = {
-  id: number;
-  family_name: string;
-  file_url: string;
-  format: string;
-  font_weight?: number | null;
-  font_style?: string | null;
 };
 
 type Content = {
@@ -133,16 +121,6 @@ type Service = {
   sort_order?: number;
 };
 
-function isVideo(item: PortfolioItem) {
-  const type = (item.media_type || '').toLowerCase();
-  const url = `${item.media_url || ''} ${item.cover_url || ''}`.toLowerCase();
-
-  return (
-    type.includes('video') ||
-    /\.(mp4|webm|mov|m4v)(\?|$)/.test(url)
-  );
-}
-
 function hasVideoPreview(item: PortfolioItem) {
   if (!item.preview_enabled || !item.preview_url) return false;
 
@@ -200,7 +178,6 @@ export default function HomePage() {
   const { text: configText } = usePageTexts('site-config');
   const initialData = useSiteData();
   const [settings, setSettings] = useState<Settings>(initialData.settings as Settings);
-  const [fonts, setFonts] = useState<FontAsset[]>(initialData.fonts);
   const [content, setContent] = useState<Content>(initialData.content as Content);
   const [heroPortfolio, setHeroPortfolio] = useState<PortfolioItem[]>([]);
   const [managedHero,setManagedHero]=useState<PortfolioItem[]>([]);
@@ -213,9 +190,7 @@ export default function HomePage() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [filter, setFilter] = useState('all');
-  const [workViewAll, setWorkViewAll] = useState(false);
   const workCarouselRef = useRef<HTMLDivElement>(null);
-  const clientsCarouselRef = useRef<HTMLDivElement>(null);
   const [heroIndex, setHeroIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [motionReady,setMotionReady] = useState(false);
@@ -342,7 +317,6 @@ export default function HomePage() {
       portfolioResult,
       brandsResult,
       servicesResult,
-      fontsResult,
       heroResult,
     ] = await Promise.all([
       supabase
@@ -378,10 +352,6 @@ export default function HomePage() {
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: false }),
 
-      supabase
-        .from('font_assets')
-        .select('id,family_name,file_url,format,font_weight,font_style')
-        .order('created_at', { ascending: false }),
       supabase.from('hero_slides').select('*').eq('published',true).order('sort_order').order('id'),
     ]);
 
@@ -457,10 +427,6 @@ export default function HomePage() {
       setServices(servicesResult.data);
     }
 
-    if (fontsResult.data) {
-      setFonts(fontsResult.data);
-    }
-
     setLoading(false);
   }
 
@@ -514,18 +480,6 @@ export default function HomePage() {
       : filter === 'advertising'
       ? '/work?category=advertising'
       : '/work';
-
-  function scrollClients(direction: 'prev' | 'next') {
-    const container = clientsCarouselRef.current;
-    if (!container) return;
-
-    const amount = container.clientWidth * 0.75;
-
-    container.scrollBy({
-      left: direction === 'next' ? amount : -amount,
-      behavior: 'smooth',
-    });
-  }
 
   function scrollWork(direction: 'prev' | 'next') {
     const container = workCarouselRef.current;
@@ -740,7 +694,6 @@ export default function HomePage() {
   return (
     <>
 
-
     <main
       className={`site home-motion${motionReady ? ' motion-ready' : ''}`}
       lang={lang}
@@ -931,8 +884,6 @@ export default function HomePage() {
                 },
               ]
           ).map((service, index) => {
-            const number = String(index + 1).padStart(2, '0');
-
             const href =
               index === 0
                 ? '/services/film-teasers'
@@ -1043,8 +994,8 @@ export default function HomePage() {
                 </div>
 
                 <div className="service-card-copy">
-                  <ServiceWriting as="h3" text={title}/>
-                  <ServiceWriting as="p" text={description}/>
+                  <h3>{title}</h3>
+                  <p>{description}</p>
                 </div>
               </Link>
             );
@@ -1160,8 +1111,6 @@ export default function HomePage() {
 
                 const title = localizedValue(lang, item.title_en, item.title_fa, pageText('untitled', 'Untitled', 'بدون عنوان'));
 
-                const description = localizedValue(lang, item.description_en, item.description_fa);
-
                 return (
                   <Link
                     className={`project-card motion-item ${item.media_count && item.media_count > 1 ? 'has-gallery' : ''} card-${
@@ -1209,7 +1158,6 @@ export default function HomePage() {
                         <h3>{title}</h3>
                         <p className="portfolio-section">{filter==='bts' ? sectionName('bts',lang) : projectSections(item).map(key=>sectionName(key,lang)).join(' · ')}</p>
 
-
                       </div>
                     </div>
                   </Link>
@@ -1255,7 +1203,6 @@ export default function HomePage() {
           ) : (
             <div className="about-image-empty" />
           )}
-
 
         </div>
 
@@ -1359,7 +1306,6 @@ export default function HomePage() {
 
             return Array.from({ length: totalSlots }, (_, index) => {
               const brand = brandBySlot.get(index);
-              const slotNumber = index + 1;
 
               if (!brand) return null;
 

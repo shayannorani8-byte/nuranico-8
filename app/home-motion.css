@@ -46,23 +46,35 @@
 .home-motion .service-art-content .art-main { animation:vector-float 5.2s ease-in-out infinite; }
 .home-motion .service-card .service-vector .art-main { animation-play-state:paused; }
 .home-motion .service-card.motion-active .service-vector .art-main { animation-play-state:running; }
-.home-motion .service-write-word { display:inline-block; }
-.home-motion.motion-ready .service-write-word { opacity:0;clip-path:inset(0 100% 0 0); }
-.home-motion.motion-ready .service-card.in-view .service-write-word { animation:write-service-word 0.455s steps(10,end) both;animation-delay:calc(0.715s + var(--motion-delay,0ms) + var(--word-delay,0ms)); }
-.home-motion.motion-ready .service-card-copy p .service-write-word { animation-delay:calc(1.105s + var(--motion-delay,0ms) + var(--word-delay,0ms)); }
-.home-motion[dir='rtl'].motion-ready .service-card.in-view .service-write-word { animation-name:write-service-word-rtl; }
+/* Whole text blocks enter together, preserving joined Persian glyphs. */
+.home-motion.motion-ready .service-card.in-view .service-card-copy h3 {
+  animation: service-copy-arrive .65s ease-out both;
+  animation-delay: calc(.35s + var(--motion-delay, 0ms));
+}
+.home-motion.motion-ready .service-card.in-view .service-card-copy p {
+  animation: service-copy-arrive .7s ease-out both;
+  animation-delay: calc(.5s + var(--motion-delay, 0ms));
+}
+@keyframes service-copy-arrive {
+  from { opacity: 0; translate: 0 8px; }
+  to { opacity: 1; translate: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-motion.motion-ready .service-card-copy :is(h3, p) {
+    animation: none !important;
+    opacity: 1;
+    translate: none;
+  }
+}
 @keyframes draw-card-frame { to{stroke-dashoffset:0} }
 @keyframes draw-service-lines { to{stroke-dashoffset:0} }
 @keyframes vector-float { 0%,100%{translate:0 0}50%{translate:6px -6px} }
-@keyframes write-service-word { 0%{opacity:0;clip-path:inset(0 100% 0 0)}1%{opacity:1}100%{opacity:1;clip-path:inset(0)} }
-@keyframes write-service-word-rtl { 0%{opacity:0;clip-path:inset(0 0 0 100%)}1%{opacity:1}100%{opacity:1;clip-path:inset(0)} }
 
 @media(prefers-reduced-motion:reduce){
   .home-motion .reveal,.home-motion.motion-ready .reveal:not(.in-view),
   .home-motion.motion-ready .motion-item { opacity:1 !important;transform:none !important;translate:none !important;transition:none !important; }
   .home-motion .service-vector * { animation:none !important;rotate:none !important;translate:none !important; }
   .home-motion.motion-ready .service-card-frame rect,.home-motion.motion-ready .service-vector svg :is(rect,circle,path) { animation:none !important;stroke-dasharray:none !important;stroke-dashoffset:0 !important; }
-  .home-motion.motion-ready .service-write-word { animation:none !important;opacity:1 !important;clip-path:none !important; }
 }
 
 .home-motion .services .service-vector { opacity:.85 !important; }
@@ -76,10 +88,7 @@
 .home-motion .services .service-card-copy h3 { min-height:24px;margin:0 auto 8px !important;display:flex;align-items:center;justify-content:center;gap:.25em;flex-wrap:wrap; }
 .home-motion .services .service-card-copy p { margin:0 auto !important;min-height:34px; }
 @media(max-width:700px){
- .home-motion .services .service-card { gap:12px !important; }
- .home-motion .services .service-vector { height:92px !important;flex-basis:92px !important; }
- .home-motion .services .service-card-copy { min-height:60px; }
- .home-motion .services .service-card-copy h3 { min-height:18px;margin-bottom:6px !important; }
+ .home-motion .services .service-card-copy h3 {margin-bottom:6px !important; }
 }
 /* A clean shutter opens downward; its highlight disappears once the image settles. */
 .home-motion.motion-ready .work .project-card .project-media { clip-path:inset(0 0 100% 0 round 12px); }

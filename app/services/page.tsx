@@ -5,13 +5,6 @@ import { useEffect, useRef } from 'react';
 import SiteHeader from "../../components/SiteHeader";
 import { usePageTexts } from "../../lib/usePageTexts";
 
-function typeCopy(value: string) {
-  let wordIndex = 0;
-  return value.split(/(\s+)/).map((part,index) => /\s+/.test(part)
-    ? part
-    : <span className="service-type-word" key={`${index}-${part}`} style={{['--service-word-delay' as string]:`${wordIndex++ * 30}ms`}}>{part}</span>);
-}
-
 export default function ServicesPage() {
   const { text } = usePageTexts('services');
   const pageRef = useRef<HTMLElement>(null);
@@ -85,11 +78,11 @@ export default function ServicesPage() {
       <SiteHeader />
 
       <section className="inner-hero service-enter">
-        <h1>{typeCopy(text(
+        <h1>{text(
           'hero_title',
           'From idea to final frame.',
           'از ایده تا فریم نهایی.'
-        ))}</h1>
+        )}</h1>
       </section>
 
       <section className="service-list">
@@ -97,8 +90,8 @@ export default function ServicesPage() {
           <article className="service-enter" key={service.number}>
 
             <div>
-              <h2>{typeCopy(service.title)}</h2>
-              <p>{typeCopy(service.text)}</p>
+              <h2>{service.title}</h2>
+              <p>{service.text}</p>
 
               <Link
                 href={service.href}
