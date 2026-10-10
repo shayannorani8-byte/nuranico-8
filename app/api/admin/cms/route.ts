@@ -1,3 +1,4 @@
+import { ABOUT_GRADIENT_KEY, PORTFOLIO_GRADIENT_KEY, aboutGradientColor, readAboutGradient, readPortfolioGradient } from '@/lib/site-appearance-settings';
 import { isBilingualEnabled, LANGUAGE_SETTINGS_PAGE, LANGUAGE_SETTINGS_KEY } from '@/lib/site-language-settings';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSupabase } from '@/lib/supabase-admin';
@@ -207,7 +208,7 @@ export async function GET(request: NextRequest) {
         destinations: destinationMap,
         projectMedia: projectMediaMap,
         content: content.data || null,
-        settings: { ...(settings.data || {}), bilingual_enabled: isBilingualEnabled(pageTexts.data || []) },
+        settings: { ...(settings.data || {}), bilingual_enabled: isBilingualEnabled(pageTexts.data || []), about_gradient_color: readAboutGradient(pageTexts.data || []), portfolio_gradient_color: readPortfolioGradient(pageTexts.data || []) },
         fonts: fonts.data || [],
         btsMedia: btsMedia.data || [],
         pageTexts: (pageTexts.data || []).filter(row => row.page !== LANGUAGE_SETTINGS_PAGE),
@@ -529,7 +530,23 @@ export async function POST(request: NextRequest) {
         ? await db.from('page_texts').update(languageRow).eq('id', existing.data.id)
         : await db.from('page_texts').insert(languageRow);
       if (languageResult.error) throw languageResult.error;
-      return NextResponse.json({ row: { ...result.data, bilingual_enabled: bilingual } });
+      const gradientColor = aboutGradientColor(body.row?.about_gradient_color);
+      const gradientExisting = await db.from('page_texts').select('id').eq('page', LANGUAGE_SETTINGS_PAGE).eq('text_key', ABOUT_GRADIENT_KEY).maybeSingle();
+      if (gradientExisting.error) throw gradientExisting.error;
+      const gradientRow = { page: LANGUAGE_SETTINGS_PAGE, text_key: ABOUT_GRADIENT_KEY, label: 'About bottom gradient', value_en: gradientColor, value_fa: gradientColor, sort_order: 1 };
+      const gradientResult = gradientExisting.data
+        ? await db.from('page_texts').update(gradientRow).eq('id', gradientExisting.data.id)
+        : await db.from('page_texts').insert(gradientRow);
+      if (gradientResult.error) throw gradientResult.error;
+      const portfolioColor = aboutGradientColor(body.row?.portfolio_gradient_color);
+      const portfolioExisting = await db.from('page_texts').select('id').eq('page', LANGUAGE_SETTINGS_PAGE).eq('text_key', PORTFOLIO_GRADIENT_KEY).maybeSingle();
+      if (portfolioExisting.error) throw portfolioExisting.error;
+      const portfolioRow = { page: LANGUAGE_SETTINGS_PAGE, text_key: PORTFOLIO_GRADIENT_KEY, label: 'Portfolio background gradient', value_en: portfolioColor, value_fa: portfolioColor, sort_order: 2 };
+      const portfolioResult = portfolioExisting.data
+        ? await db.from('page_texts').update(portfolioRow).eq('id', portfolioExisting.data.id)
+        : await db.from('page_texts').insert(portfolioRow);
+      if (portfolioResult.error) throw portfolioResult.error;
+      return NextResponse.json({ row: { ...result.data, bilingual_enabled: bilingual, about_gradient_color: gradientColor, portfolio_gradient_color: portfolioColor } });
     }
 
     throw new Error('Unknown resource');

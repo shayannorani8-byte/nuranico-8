@@ -6,11 +6,15 @@ import { usePathname } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { usePageTexts } from '../lib/usePageTexts';
 import { useSiteLanguage } from './SiteLanguage';
+import { aboutGradientColor, DEFAULT_PORTFOLIO_GRADIENT } from '../lib/site-appearance-settings';
 import { useSiteData } from './SiteData';
 
 export default function SiteHeader() {
   const { lang, setLang, text } = usePageTexts('global');
   const { bilingual } = useSiteLanguage();
+  const { text: appearanceText } = usePageTexts('site-config');
+  const portfolioGradient = aboutGradientColor(appearanceText('portfolio_gradient_color', DEFAULT_PORTFOLIO_GRADIENT, DEFAULT_PORTFOLIO_GRADIENT));
+  useEffect(() => { document.documentElement.style.setProperty('--portfolio-gradient-color', portfolioGradient); }, [portfolioGradient]);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -119,6 +123,7 @@ export default function SiteHeader() {
             src={logoUrl}
             alt="NURANICO"
             className="site-logo-image"
+            onError={() => setLogoUrl('')}
           />
         ) : (
           <span>
@@ -181,7 +186,7 @@ export default function SiteHeader() {
         <dialog ref={dialogRef} className="full-menu" id="site-mobile-menu" lang={lang} dir={lang === 'fa' ? 'rtl' : 'ltr'} aria-label={text('main_navigation', 'Main navigation', 'ناوبری اصلی')} onCancel={event => { event.preventDefault(); closeMenu(); }}>
           <div className="full-menu-top">
             <Link className="full-menu-brand" href="/" onClick={closeMenu} aria-label="NURANICO">
-              {logoUrl ? <img src={logoUrl} alt="NURANICO" /> : <span lang="en">NURANICO</span>}
+              {logoUrl ? <img src={logoUrl} alt="NURANICO" onError={() => setLogoUrl('')} /> : <span lang="en">NURANICO</span>}
             </Link>
             <div className="full-menu-actions">
               {bilingual && <button type="button" onClick={() => setLang(lang === 'en' ? 'fa' : 'en')} aria-label={text('change_language', 'Change language', 'تغییر زبان')}>{lang === 'en' ? 'FA' : 'EN'}</button>}

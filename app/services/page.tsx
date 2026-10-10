@@ -9,7 +9,7 @@ function typeCopy(value: string) {
   let wordIndex = 0;
   return value.split(/(\s+)/).map((part,index) => /\s+/.test(part)
     ? part
-    : <span className="service-type-word" key={index} style={{['--service-word-delay' as string]:`${wordIndex++ * 75}ms`}}>{part}</span>);
+    : <span className="service-type-word" key={`${index}-${part}`} style={{['--service-word-delay' as string]:`${wordIndex++ * 30}ms`}}>{part}</span>);
 }
 
 export default function ServicesPage() {
@@ -23,7 +23,7 @@ export default function ServicesPage() {
       cards.sort((a,b) => {
         const first=a.target.getBoundingClientRect(),second=b.target.getBoundingClientRect();
         return Math.abs(first.top-second.top)>10 ? first.top-second.top : first.left-second.left;
-      }).forEach((entry,index) => (entry.target as HTMLElement).style.setProperty('--service-enter-delay',`${index * 420}ms`));
+      }).forEach((entry,index) => (entry.target as HTMLElement).style.setProperty('--service-enter-delay',`${index * 260}ms`));
       entries.forEach(entry => {
         if (!entry.isIntersecting) return;
         entry.target.classList.add('service-entered');

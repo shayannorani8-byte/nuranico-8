@@ -45,125 +45,28 @@ export default function ContactPage() {
 
 
 
+  const channels = [
+    { label:text('email_label','Email','ایمیل'),value:email,href:`mailto:${email}`,icon:'M4 6h16v12H4z M4 6l8 6 8-6',external:false },
+    ...(phone ? [{label:text('phone_label','Phone','تلفن'),value:phone,href:`tel:${phone.replace(/[۰-۹]/g,digit=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))).replace(/[٠-٩]/g,digit=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit))).replace(/[^0-9+]/g,'')}`,icon:'M6 3h4l1 5-2 2c1 3 2 4 5 5l2-2 5 1v4c-9 2-19-8-15-15z',external:false}] : []),
+    ...[instagram,personalInstagram].filter(Boolean).map((url,index)=>({label:index===0?text('studio_instagram','Studio Instagram','اینستاگرام استودیو'):text('director_instagram','Director Instagram','اینستاگرام کارگردان'),value:'@'+url.replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/^@/,'').split(/[/?#]/)[0],href:url,icon:'M7 3h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V7a4 4 0 014-4z M16 12a4 4 0 11-8 0 4 4 0 018 0 M17.5 6.5h.01',external:true})),
+  ];
   return (
     <main className="content-page contact-page">
       <SiteHeader />
-
       <section className="contact-inner">
-
-        <h1>
-          {localizedValue(lang, titles.en, titles.fa, text('title', 'Let’s create something.', 'بیایید چیزی بسازیم.'))}
-        </h1>
-
-        <p>
-          {text(
-            'description',
-            'Tell us about the next project.',
-            'پروژه بعدی‌تان را برای ما بفرستید.'
-          )}
-        </p>
-
-        <a
-          className="contact-link"
-          lang="en"
-          dir="ltr"
-          href={`mailto:${email}`}
-        >
-          {email}
-        </a>
-
-        {phone && <a className="contact-link" lang="en" dir="ltr" href={`tel:${phone.replace(/[۰-۹]/g, digit => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))).replace(/[٠-٩]/g, digit => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit))).replace(/[^0-9+]/g, '')}`}>{phone}</a>}
-
-        {instagram ? (
-          <a
-            className="contact-link"
-            href={instagram}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Instagram"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}
-          >
-            <svg
-              width="60"
-              height="60"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="5" />
-              <circle cx="12" cy="12" r="4" />
-              <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-            </svg>
-
-            <span lang="en" dir="ltr">
-              @{instagram
-                .replace(/^https?:\/\/(www\.)?instagram\.com\//i, '')
-                .replace(/^@/, '')
-                .split(/[/?#]/)[0]
-                .replace(/\/$/, '')}
-            </span>
-          </a>
-        ) : null}
-
-        {personalInstagram ? (
-          <a
-            className="contact-link"
-            href={personalInstagram}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Instagram"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}
-          >
-            <svg
-              width="60"
-              height="60"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="5" />
-              <circle cx="12" cy="12" r="4" />
-              <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-            </svg>
-
-            <span lang="en" dir="ltr">
-              @{personalInstagram
-                .replace(/^https?:\/\/(www\.)?instagram\.com\//i, '')
-                .replace(/^@/, '')
-                .split(/[/?#]/)[0]
-                .replace(/\/$/, '')}
-            </span>
-          </a>
-        ) : null}
+        <div className="contact-intro">
+          <p className="contact-kicker">{text('contact_label','Contact','تماس')}</p>
+          <h1>{localizedValue(lang,titles.en,titles.fa,text('title','Let’s create something.','بیایید چیزی بسازیم.'))}</h1>
+          <p className="contact-description">{text('description','Tell us about the next project.','پروژه بعدی‌تان را برای ما بفرستید.')}</p>
+        </div>
+        <div className="contact-channels">
+          {channels.map(channel=><a key={channel.href} className="contact-channel" href={channel.href} target={channel.external?'_blank':undefined} rel={channel.external?'noreferrer':undefined}>
+            <span className="contact-channel-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d={channel.icon}/></svg></span>
+            <span className="contact-channel-copy"><span className="contact-channel-label">{channel.label}</span><span className="contact-channel-value" lang="en" dir="ltr">{channel.value}</span></span>
+          </a>)}
+        </div>
       </section>
-
-      <footer className="inner-footer">
-        <span lang="en" dir="ltr">NURANICO®</span>
-
-        <Link href="/">
-          {text(
-            'back_home',
-            'Back home',
-            'بازگشت به خانه'
-          )}
-        </Link>
-      </footer>
+      <footer className="inner-footer"><span lang="en" dir="ltr">NURANICO®</span><Link href="/">{text('back_home','Back home','بازگشت به خانه')}</Link></footer>
     </main>
   );
 }

@@ -10,6 +10,7 @@ import { usePageTexts } from '../lib/usePageTexts';
 import './home.css';
 import './home-mobile.css';
 import './home-motion.css';
+import { aboutGradientColor, DEFAULT_ABOUT_GRADIENT } from '../lib/site-appearance-settings';
 import { cleanUiLabel } from '../lib/ui-label';
 import ServiceWriting from '../components/ServiceWriting';
 import { localizedValue, isVideoAsset } from '../lib/media';
@@ -196,6 +197,7 @@ function PreviewVideo({
 
 export default function HomePage() {
   const { lang, text: pageText } = usePageTexts('home');
+  const { text: configText } = usePageTexts('site-config');
   const initialData = useSiteData();
   const [settings, setSettings] = useState<Settings>(initialData.settings as Settings);
   const [fonts, setFonts] = useState<FontAsset[]>(initialData.fonts);
@@ -600,6 +602,7 @@ export default function HomePage() {
     '--footer-text':
       settings.footer_text || '#e8e5de',
 
+    '--about-gradient-color': aboutGradientColor(configText('about_gradient_color', DEFAULT_ABOUT_GRADIENT, DEFAULT_ABOUT_GRADIENT)),
     '--brands-bg':
       settings.brands_bg || '#e2dfd8',
 
@@ -1238,7 +1241,7 @@ export default function HomePage() {
         id="about"
         className="section about reveal"
       >
-        <div className="about-image">
+        <div className="about-image"><span className="about-glass-edge" aria-hidden="true" />
           {content.about_image_url ? (
             <img
               src={content.about_image_url}

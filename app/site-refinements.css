@@ -480,7 +480,7 @@ html body .services-index .service-details-link:hover { background:#ffffff0e;bor
 }
 
 /* Keep desktop headings proportionate to the content rather than a shared 100px size. */
-@media(min-width:901px){
+@media(min-width:701px){
  html body .site.home-motion .hero h1 { font-size:clamp(44px,4.5vw,64px) !important;line-height:1.15 !important;max-width:760px; }
  html body .site.home-motion .section-head h2 { font-size:clamp(34px,3.2vw,46px) !important;line-height:1.25 !important;max-width:24ch; }
  html body .site.home-motion .about-copy h2 { font-size:clamp(32px,2.8vw,40px) !important;line-height:1.3 !important; }
@@ -504,7 +504,7 @@ html body .services-index :is(.site-nav,.inner-hero,.service-list,.content-foote
 
 /* Calm scroll entrances for the service directory. */
 .services-index .service-enter { opacity:1;translate:none; }
-.services-index.services-motion-ready .service-enter { opacity:0;translate:0 24px;transition:opacity 1.2s ease,translate 1.4s cubic-bezier(.22,.75,.2,1);transition-delay:var(--service-enter-delay,0ms); }
+.services-index.services-motion-ready .service-enter { opacity:0;translate:0 24px;transition:opacity .65s ease,translate .9s cubic-bezier(.22,.75,.2,1);transition-delay:var(--service-enter-delay,0ms); }
 .services-index.services-motion-ready .service-enter.service-entered,
 .services-index.services-motion-ready .service-enter:focus-within { opacity:1;translate:none; }
 .services-index.services-motion-ready .service-enter:focus-within { transition-delay:0ms; }
@@ -517,10 +517,93 @@ html body .content-page:has(.portfolio-library) :is(.portfolio-library,.portfoli
 @media(max-width:800px){html body .content-page:has(.portfolio-library) { --portfolio-page-gutter:20px; }}
 
 .services-index .service-type-word { display:inline-block; }
-.services-index.services-motion-ready .service-type-word { opacity:0;clip-path:inset(0 100% 0 0); }
-.services-index.services-motion-ready .service-entered .service-type-word { animation:service-type-in .9s steps(12,end) both;animation-delay:calc(.25s + var(--service-enter-delay,0ms) + var(--service-word-delay,0ms)); }
-.services-index.services-motion-ready .service-entered p .service-type-word { animation-delay:calc(.7s + var(--service-enter-delay,0ms) + var(--service-word-delay,0ms)); }
+.services-index.services-motion-ready .service-type-word { opacity:1;clip-path:none; }
+.services-index.services-motion-ready .service-entered .service-type-word { animation:service-type-in .22s steps(8,end) both;animation-delay:calc(.12s + var(--service-enter-delay,0ms) + var(--service-word-delay,0ms)); }
+.services-index.services-motion-ready .service-entered p .service-type-word { animation-delay:calc(.25s + var(--service-enter-delay,0ms) + var(--service-word-delay,0ms)); }
 html[lang='fa'] .services-index.services-motion-ready .service-entered .service-type-word { animation-name:service-type-in-rtl; }
 @keyframes service-type-in { from{opacity:1;clip-path:inset(0 100% 0 0)}to{opacity:1;clip-path:inset(0)} }
 @keyframes service-type-in-rtl { from{opacity:1;clip-path:inset(0 0 0 100%)}to{opacity:1;clip-path:inset(0)} }
 @media(prefers-reduced-motion:reduce){.services-index.services-motion-ready .service-type-word { opacity:1;clip-path:none;animation:none !important; }}
+
+.services-index.services-motion-ready .service-list article.service-entered { animation:service-card-open .9s cubic-bezier(.22,.75,.2,1) both;animation-delay:var(--service-enter-delay,0ms); }
+.services-index.services-motion-ready .service-entered .service-details-link { animation:service-action-open .45s ease both;animation-delay:calc(.45s + var(--service-enter-delay,0ms)); }
+@keyframes service-card-open { from{scale:.97}to{scale:1} }
+@keyframes service-action-open { from{opacity:0;translate:0 8px}to{opacity:1;translate:none} }
+@media(prefers-reduced-motion:reduce){.services-index.services-motion-ready :is(.service-list article,.service-details-link){animation:none !important;scale:1;opacity:1;translate:none;}}
+
+/* Contact reads as an introduction and a clear list of ways to get in touch. */
+html body .content-page.contact-page { --contact-gutter:max(5vw,calc((100vw - 1280px) / 2));background:#dedbd4;color:#151514; }
+html body .contact-page .site-nav { padding-inline:var(--contact-gutter) !important; }
+html body .contact-page .contact-inner { min-height:calc(100svh - 96px);padding:132px var(--contact-gutter) 64px !important;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:64px;background:radial-gradient(ellipse at 15% 20%,#ebe8e1,transparent 70%),#dedbd4; }
+html body .contact-page .contact-intro h1 { font-size:clamp(32px,3.5vw,48px) !important;line-height:1.25 !important;letter-spacing:-.025em;max-width:16ch;margin:14px 0 20px; }
+html body .contact-page .contact-kicker { font-size:12px !important;line-height:1.5;letter-spacing:0;margin:0;color:#68655f; }
+html body .contact-page .contact-description { font-size:16px !important;line-height:1.7 !important;max-width:34ch;color:#68655f;margin:0; }
+.contact-channels { display:grid;gap:12px;min-width:0; }
+html body .contact-page .contact-channel { display:flex;align-items:center;gap:16px;min-width:0;padding:20px;border:1px solid #15151420;border-radius:12px;background:#ffffff28;transition:background .2s,border-color .2s; }
+.contact-channel:hover { background:#ffffff60 !important;border-color:#15151450 !important; }
+.contact-channel:focus-visible { outline:2px solid #151514;outline-offset:4px; }
+.contact-channel-icon { width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;border-radius:10px;background:#15151407; }
+.contact-channel-icon svg { width:22px;height:22px; }
+.contact-channel-copy { display:grid;gap:5px;min-width:0; }
+html body .contact-page .contact-channel-label { font-size:12px !important;line-height:1.5;color:#68655f; }
+html body .contact-page .contact-channel-value { font-size:clamp(16px,1.5vw,22px) !important;line-height:1.5;font-weight:500;letter-spacing:0;overflow-wrap:anywhere; }
+html body .contact-page .inner-footer { padding:24px var(--contact-gutter);background:#d4d1ca;color:#57544f;border-top:1px solid #15151412; }
+html body .contact-page .inner-footer a { font-size:12px !important; }
+@media(max-width:800px){
+ html body .content-page.contact-page { --contact-gutter:20px; }
+ html body .contact-page .contact-inner { grid-template-columns:1fr;gap:32px;min-height:calc(100svh - 88px);padding-top:110px !important;padding-bottom:40px !important; }
+ html body .contact-page .contact-intro h1 { font-size:32px !important;max-width:20ch; }
+ html body .contact-page .contact-description { font-size:14px !important; }
+ html body .contact-page .contact-channel { padding:16px;gap:12px; }
+}
+@media(orientation:landscape) and (max-height:600px){html body .contact-page .contact-inner { min-height:0; }}
+
+/* Keep the three service actions on one baseline despite different copy lengths. */
+html body .services-index .service-list article { display:flex !important;flex-direction:column; }
+html body .services-index .service-list article > div { display:flex;flex-direction:column;flex:1; }
+html body .services-index .service-list article p { flex:1;margin-bottom:0 !important; }
+html body .services-index .service-details-link { align-self:center;flex-shrink:0;margin-top:24px !important; }
+
+@media(min-width:701px){
+ html body .site.home-motion .hero .eyebrow { margin:0 0 14px !important;line-height:1.5 !important; }
+ html body .site.home-motion .hero h1 { margin:0 !important;line-height:1.1 !important; }
+ html body .site.home-motion .hero-copy { margin:16px 0 22px !important;line-height:1.55 !important;max-width:46ch; }
+}
+
+html body .site.home-motion .work-view-all { font-size:10px !important;line-height:1.5 !important;letter-spacing:.02em !important; }
+@media(max-width:800px){
+ html body .services-index .site-nav .brand:has(.site-logo-image) { translate:-8px 0; }
+ html[lang='fa'] body .services-index .site-nav .brand:has(.site-logo-image) { translate:8px 0; }
+}
+
+html body :is(.project-page,.content-page:has(.portfolio-library)) {
+ background:linear-gradient(145deg,#171716 12%,var(--portfolio-gradient-color,#292928) 65%,#171716 100%) !important;
+}
+html body .content-page:has(.portfolio-library) .portfolio-library { background:transparent !important; }
+html body .contact-page .contact-channel-value { font-family:Arial,sans-serif !important;font-weight:400; }
+
+/* Use logical gutters so English and Persian share the same alignment. */
+@media(max-width:800px){
+ html body :is(.site,.content-page,.project-page) .site-nav { padding-inline:20px !important; }
+ html body .site.home-motion :is(.hero,.section) { padding-inline:20px !important; }
+ html body .content-page :is(.inner-hero,.copy-section,.portfolio-library),
+ html body .project-page :is(.project-hero,.project-details) { padding-inline:20px !important; }
+ html body :is(.site,.content-page,.project-page) .site-nav .brand:has(.site-logo-image) { translate:-8px 0; }
+ html[lang='fa'] body :is(.site,.content-page,.project-page) .site-nav .brand:has(.site-logo-image) { translate:8px 0; }
+}
+@media(min-width:801px){
+ html body .content-page:not(:has(.portfolio-library)):not(.contact-page) :is(.site-nav,.inner-hero,.copy-section) { padding-inline:5vw !important; }
+ html body .project-page :is(.site-nav,.project-hero,.project-details) { padding-inline:5vw !important; }
+}
+@media(max-width:700px){
+ html body .site.home-motion .hero h1 { line-height:1.12 !important; }
+ html body .site.home-motion .hero-copy { line-height:1.55 !important;margin:12px 0 18px !important; }
+ html body .site.home-motion .hero .eyebrow { margin:0 0 10px !important;line-height:1.5 !important; }
+}
+
+@media(max-width:700px){
+ html body .site.home-motion .hero h1 { font-size:clamp(28px,8.7vw,36px) !important;line-height:1.12 !important; }
+ html body .site.home-motion .hero-copy { font-size:14px !important;line-height:1.55 !important;max-width:32ch !important; }
+ html body .site.home-motion .about-copy p { font-size:14px !important;line-height:1.7 !important; }
+ html body .site.home-motion :is(.section-head h2,.about-copy h2) { font-size:26px !important;line-height:1.25 !important; }
+}

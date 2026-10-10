@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import './admin-ui.css';
+import { DEFAULT_ABOUT_GRADIENT } from '../../lib/site-appearance-settings';
 import { AdminLocaleProvider, useAdminLocale } from './AdminLocale';
 import {projectSections,sectionName} from '../../components/PortfolioCard';
 import ProjectMediaEditor from './ProjectMediaEditor';
@@ -90,6 +91,8 @@ type Service = {
 
 type Settings = {
   bilingual_enabled: boolean;
+  about_gradient_color: string;
+  portfolio_gradient_color: string;
   id?: number;
   heading_color: string;
   logo_color: string;
@@ -219,6 +222,8 @@ const destinations = [
 
 const emptySettings: Settings = {
   bilingual_enabled: true,
+  about_gradient_color: DEFAULT_ABOUT_GRADIENT,
+  portfolio_gradient_color: '#292928',
   heading_color: '#f1efe9',
   logo_color: '#f1efe9',
   link_color: '#f1efe9',
@@ -1271,7 +1276,7 @@ function AdminWorkspace() {
             {settingsTab === 'language' && <section><h2>{t("Website language")}</h2><Toggle label="Bilingual website" value={settings.bilingual_enabled} onChange={value => setSettings({...settings,bilingual_enabled:value})} /><p className="hint">{settings.bilingual_enabled ? t("English and Persian, with a language switch.") : t("English only. The language switch is hidden.")}</p></section>}
             {settingsTab === 'identity' && <section aria-labelledby="settings-logo-title"><h2 id="settings-logo-title">{t("Website logo")}</h2><p className="hint">{t("Upload your logo or replace the current one.")}</p><LogoUploader value={settings.logo_url} onChange={url => setSettings({...settings,logo_url:url})} onError={setError} /></section>}
             {settingsTab === 'colors' && <section aria-labelledby="settings-colors-title"><h2 id="settings-colors-title">{t("Website colors")}</h2><p className="hint">{t("Choose the area you want to adjust.")}</p>{([
-              [t("Backgrounds & text"), [['bg_color',t("Main background")],['surface_color',t("About background")],['card_bg',t("Cards background")],['text_color',t("Main text")],['heading_color',t("Headings")],['muted_color',t("Secondary text")],['tag_color',t("Labels")],['border_color',t("Borders")]]],
+              [t("Backgrounds & text"), [['bg_color',t("Main background")],['surface_color',t("About background")],['about_gradient_color',t("About bottom gradient")],['portfolio_gradient_color',t("Portfolio background gradient")],['card_bg',t("Cards background")],['text_color',t("Main text")],['heading_color',t("Headings")],['muted_color',t("Secondary text")],['tag_color',t("Labels")],['border_color',t("Borders")]]],
               [t("Navigation & logo"), [['nav_bg',t("Navigation background")],['nav_text',t("Navigation text")],['nav_active',t("Active navigation")],['logo_color',t("Logo color")]]],
               [t("Buttons & links"), [['button_color',t("Button background")],['button_text',t("Button text")],['button_hover',t("Button hover")],['link_color',t("Links")]]],
               [t("Brands section"), [['brands_bg',t("Background")],['brands_text',t("Text")],['brands_muted',t("Secondary text")],['brands_hover',t("Card hover")]]],
