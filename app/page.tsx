@@ -278,13 +278,24 @@ export default function HomePage() {
     setMotionReady(true);
 
     const observer = new IntersectionObserver(
-      (entries) =>
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('in-view');
-            observer.unobserve(entry.target);
+      (entries) => {
+        // Sequence by visible position so Persian and English both start at the left.
+        const cards = entries.filter(entry => entry.isIntersecting && entry.target.matches('.work .project-card'));
+        cards.sort((a,b) => {
+          const first=a.target.getBoundingClientRect(),second=b.target.getBoundingClientRect();
+          return Math.abs(first.top-second.top)>10 ? first.top-second.top : first.left-second.left;
+        }).forEach((entry,index) => (entry.target as HTMLElement).style.setProperty('--motion-delay',`${index*160}ms`));
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          if (entry.target.matches('.work .filter-row')) {
+            Array.from(entry.target.querySelectorAll<HTMLElement>('button'))
+              .sort((a,b) => a.getBoundingClientRect().left-b.getBoundingClientRect().left)
+              .forEach((button,index) => button.style.setProperty('--filter-delay',`${index*90}ms`));
           }
-        }),
+          entry.target.classList.add('in-view');
+          observer.unobserve(entry.target);
+        });
+      },
       { threshold: 0.06,rootMargin:'0px 0px -5% 0px' }
     );
 
@@ -292,7 +303,7 @@ export default function HomePage() {
     const loops=new IntersectionObserver(entries=>entries.forEach(entry=>entry.target.classList.toggle('motion-active',entry.isIntersecting)),{threshold:0.01});
     document.querySelectorAll('.home-motion .service-card').forEach(node=>loops.observe(node));
     return () => {observer.disconnect();loops.disconnect();};
-  }, [loading,filter,portfolio.length,brands.length,services.length]);
+  }, [loading,filter,portfolio.length,brands.length,services.length,lang]);
 
   const heroSlides = useMemo(() => {
     const availableManaged=managedHero.filter(item=>!failedHeroImages.includes(item.cover_url || ''));
@@ -1050,7 +1061,7 @@ export default function HomePage() {
         </div>
 
         <div
-          className="filter-row"
+          className="filter-row motion-item"
           role="tablist"
         >
           {categories.map((category) => (
@@ -1154,8 +1165,8 @@ export default function HomePage() {
                       index % 3
                     }`}
                     href={href}
-                    key={item.id}
-                    style={{['--motion-delay' as string]:`${Math.min(index,8) * 65}ms`}}
+                    key={`${filter}-${item.id}`}
+                    style={{['--motion-delay' as string]:`${Math.min(index,8) * 160}ms`}}
                   >
                     <div className="project-media"><MediaCountBadge count={item.media_count} lang={lang} />
                       {item.cover_url ? (
