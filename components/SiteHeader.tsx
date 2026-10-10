@@ -141,6 +141,13 @@ export default function SiteHeader() {
       </nav>
 
       <div className="nav-actions">
+        <Link
+          className="nav-cta"
+          href={startProjectUrl || '/contact'}
+        >
+          {t.cta}
+        </Link>
+
         {bilingual && <button
           className="lang-switch"
           type="button"
@@ -154,12 +161,7 @@ export default function SiteHeader() {
           {lang === 'en' ? 'FA' : 'EN'}
         </button>}
 
-        <Link
-          className="nav-cta"
-          href={startProjectUrl || '/contact'}
-        >
-          {t.cta}
-        </Link>
+
 
         <button
           ref={menuButtonRef}
