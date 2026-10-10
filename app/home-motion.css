@@ -122,3 +122,9 @@
 @media(prefers-reduced-motion:reduce){
  .home-motion.motion-ready .about :is(.about-image img,.about-copy h2,.about-copy p){animation:none !important;clip-path:none !important;scale:none !important;translate:none !important;opacity:1 !important;}
 }
+
+/* Match the optical mark's visual footprint to the wider film/content artwork. */
+@media(min-width:901px){
+ .home-motion .services .service-vector-2 { width:78% !important; }
+ .home-motion .services .service-art-photo { transform:scale(1.3);transform-origin:center;overflow:visible; }
+}
