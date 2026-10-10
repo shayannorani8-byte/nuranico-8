@@ -570,7 +570,7 @@ html body .services-index .service-details-link { align-self:center;flex-shrink:
  html body .site.home-motion .hero-copy { margin:16px 0 22px !important;line-height:1.55 !important;max-width:46ch; }
 }
 
-html body .site.home-motion .work-view-all { font-size:10px !important;line-height:1.5 !important;letter-spacing:.02em !important; }
+html body .site.home-motion .work-view-all { font-size:9px !important;line-height:1.5 !important;letter-spacing:.02em !important; }
 @media(max-width:800px){
  html body .services-index .site-nav .brand:has(.site-logo-image) { translate:-8px 0; }
  html[lang='fa'] body .services-index .site-nav .brand:has(.site-logo-image) { translate:8px 0; }
